@@ -11,11 +11,12 @@ const (
 	RuleLeagueNameLow MatchRule = "LEAGUE_NAME_LOW" // 名称低相似（≥0.55）
 	RuleLeagueNoMatch MatchRule = "LEAGUE_NO_MATCH" // 未匹配
 
-	RuleEventL1      MatchRule = "EVENT_L1"       // 时差≤5min + 名称
-	RuleEventL2      MatchRule = "EVENT_L2"       // 时差≤6h + 名称
-	RuleEventL3      MatchRule = "EVENT_L3"       // 同日 + 名称
-	RuleEventL4      MatchRule = "EVENT_L4"       // 球队ID精确对（兜底）
-	RuleEventNoMatch MatchRule = "EVENT_NO_MATCH" // 未匹配
+	RuleEventL1      MatchRule = "EVENT_L1"        // 时差≤5min + 名称
+	RuleEventL2      MatchRule = "EVENT_L2"        // 时差≤6h + 名称
+	RuleEventL3      MatchRule = "EVENT_L3"        // 同日 + 名称
+	RuleEventL4      MatchRule = "EVENT_L4"        // 超宽时间（≤72h）+ 别名强匹配（≥0.85），require_alias=true
+	RuleEventL4b     MatchRule = "EVENT_L4B"       // 球队 ID 精确对兜底（无时间限制）
+	RuleEventNoMatch MatchRule = "EVENT_NO_MATCH"  // 未匹配
 
 	RuleTeamDerived MatchRule = "TEAM_DERIVED" // 从比赛推导
 	RuleTeamNoMatch MatchRule = "TEAM_NO_MATCH"
@@ -115,6 +116,7 @@ type MatchStats struct {
 	EventL2           int     `json:"event_l2"`
 	EventL3           int     `json:"event_l3"`
 	EventL4           int     `json:"event_l4"`
+	EventL4b          int     `json:"event_l4b"`
 	EventAvgConf      float64 `json:"event_avg_confidence"`
 
 	TeamTotal      int     `json:"team_total"`

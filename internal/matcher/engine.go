@@ -97,17 +97,20 @@ func (e *Engine) RunLeague(tournamentID, sport, tier, tsCompetitionID string) (*
 	}
 	log.Printf("    SR 球队: %d, TS 球队: %d", len(srTeamNames), len(tsTeamNames))
 
-	// ── Step 5: 比赛匹配第一轮（L1/L2/L3）──────────────────────────────
-	log.Printf("  [4/5] 比赛匹配第一轮（L1/L2/L3）...")
+	// ── Step 5: 比赛匹配第一轮（L1/L2/L3/L4）────────────────────────────
+	// L4（超宽时间+别名）由 MatchEvents 内部的 TeamAliasIndex 驱动，无需外部传入 teamIDMap。
+	log.Printf("  [4/5] 比赛匹配第一轮（L1/L2/L3/L4）...")
 	eventMatches := MatchEvents(srEvents, tsEvents, srTeamNames, tsTeamNames, nil)
-	l1, l2, l3, l4, matched := countEventLevels(eventMatches)
-	log.Printf("    → 第一轮: %d/%d [L1=%d, L2=%d, L3=%d]", matched, len(eventMatches), l1, l2, l3)
+	l1, l2, l3, l4, _, matched := countEventLevels(eventMatches)
+	log.Printf("    → 第一轮: %d/%d [L1=%d, L2=%d, L3=%d, L4=%d]", matched, len(eventMatches), l1, l2, l3, l4)
 
 	// 推导球队映射（第一轮）
 	teamMappings := DeriveTeamMappings(eventMatches, srTeamNames, tsTeamNames)
 	log.Printf("    → 球队映射（第一轮）: %d 条", len(teamMappings))
 
-	// ── Step 6: 比赛匹配第二轮（L4 球队ID兜底）─────────────────────────
+	// ── Step 6: 比赛匹配第二轮（L4b 球队ID兜底）─────────────────────────
+	// 将第一轮推导的球队映射作为 teamIDMap 传入，激活 L4b 球队 ID 精确对兜底。
+	// 注意：L4（超宽时间+别名）已在第一轮内部由 TeamAliasIndex 驱动，无需第二轮重跑。
 	if len(teamMappings) > 0 {
 		teamIDMap := make(map[string]string, len(teamMappings))
 		for _, tm := range teamMappings {
@@ -115,12 +118,12 @@ func (e *Engine) RunLeague(tournamentID, sport, tier, tsCompetitionID string) (*
 				teamIDMap[tm.SRTeamID] = tm.TSTeamID
 			}
 		}
-		log.Printf("  [4b] 比赛匹配第二轮（L4 球队ID兜底）...")
+		log.Printf("  [4b] 比赛匹配第二轮（L4b 球队ID兜底）...")
 		eventMatches = MatchEvents(srEvents, tsEvents, srTeamNames, tsTeamNames, teamIDMap)
-		_, _, _, l4, matched = countEventLevels(eventMatches)
-		log.Printf("    → 第二轮: %d/%d [L4新增=%d]", matched, len(eventMatches), l4)
+		_, _, _, _, l4b, matched := countEventLevels(eventMatches)
+		log.Printf("    → 第二轮: %d/%d [L4b新增=%d]", matched, len(eventMatches), l4b)
 
-		// 重新推导球队映射（包含 L4 场次贡献）
+		// 重新推导球队映射（包含 L4/L4b 场次贡献）
 		teamMappings = DeriveTeamMappings(eventMatches, srTeamNames, tsTeamNames)
 		log.Printf("    → 球队映射（第二轮）: %d 条", len(teamMappings))
 	}
@@ -201,6 +204,8 @@ func computeStats(r *MatchResult, sport, tier string, elapsed time.Duration) Mat
 				s.EventL3++
 			case RuleEventL4:
 				s.EventL4++
+			case RuleEventL4b:
+				s.EventL4b++
 			}
 		}
 	}
@@ -239,7 +244,7 @@ func computeStats(r *MatchResult, sport, tier string, elapsed time.Duration) Mat
 }
 
 // countEventLevels 统计各级匹配数量
-func countEventLevels(events []EventMatch) (l1, l2, l3, l4, matched int) {
+func countEventLevels(events []EventMatch) (l1, l2, l3, l4, l4b, matched int) {
 	for _, ev := range events {
 		if !ev.Matched {
 			continue
@@ -254,6 +259,8 @@ func countEventLevels(events []EventMatch) (l1, l2, l3, l4, matched int) {
 			l3++
 		case RuleEventL4:
 			l4++
+		case RuleEventL4b:
+			l4b++
 		}
 	}
 	return
