@@ -151,30 +151,28 @@ func playerNameSimilarity(srName, tsName string) float64 {
 	return maxSim
 }
 
-// teamNameSimilarity 计算球队名称相似度
+// teamNameSimilarity 计算球队名称相似度，取原始 Jaccard 和辅助归一化后 Jaccard 的最大値。
+//
+// 【辅助归一化优先级说明】
+// normalizedTeamSimilarity 作为辅助分数，与原始 Jaccard 取最大値。
+// 它不单独决定匹配结果，主匹配引擎的优先级顺序为：
+//  1. 预设映射表（KnownLeagueMap / KnownTeamMap）
+//  2. TeamAliasIndex 动态别名学习
+//  3. 本函数归一化后的 Jaccard 相似度（辅助/尼底）
 func teamNameSimilarity(a, b string) float64 {
 	// 直接 Jaccard
 	direct := jaccardSimilarity(a, b)
 
-	// 去掉常见后缀再比较
-	cleanA := cleanTeamName(a)
-	cleanB := cleanTeamName(b)
-	cleaned := jaccardSimilarity(cleanA, cleanB)
+	// 【辅助规则 - 低优先级】归一化后 Jaccard（去俘乐部类型缩写、变音符、特殊符号等）
+	normalized := normalizedTeamSimilarity(a, b)
 
-	if cleaned > direct {
-		return cleaned
+	if normalized > direct {
+		return normalized
 	}
 	return direct
 }
 
-// cleanTeamName 去掉球队名称中的常见后缀/前缀
+// cleanTeamName 去掉球队名称中的常见后缀/前缀（已被 NormalizeTeamName 替代，保留为兼容）
 func cleanTeamName(name string) string {
-	norm := normalizeName(name)
-	suffixes := []string{" fc", " cf", " sc", " ac", " afc", " fk", " sk", " bk", " united", " city", " town"}
-	for _, suf := range suffixes {
-		if strings.HasSuffix(norm, suf) {
-			norm = strings.TrimSuffix(norm, suf)
-		}
-	}
-	return strings.TrimSpace(norm)
+	return NormalizeTeamName(name, false)
 }
