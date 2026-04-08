@@ -247,6 +247,17 @@ func MatchEvents(
 			}
 		}
 
+		// L5: 无时间约束的唯一性匹配（L1~L4 均未命中时激活）
+		// 规则：名称相似度 ≥ 0.90 且主客场顺序一致，且 TS 侧满足条件的候选有且仅有一场。
+		// 时差上限：30 天（防止跨赛季误匹配）。
+		if !matched {
+			if m, ok := tryMatchL5(sr, tsEvents, srTeamNames, tsTeamNames, usedTSIDs, aliasIdx); ok {
+				em = m
+				usedTSIDs[m.TSMatchID] = true
+				matched = true
+			}
+		}
+
 		// L4b: 球队 ID 精确对兜底（仅当 teamIDMap 非空且前四级未命中）
 		if !matched && len(teamIDMap) > 0 {
 			if m, ok := tryMatchL4b(sr, tsEvents, teamIDMap, usedTSIDs); ok {
@@ -348,6 +359,73 @@ func tryMatchLevel(
 	}
 
 	em := buildEventMatch(sr, *bestTS, tsTeamNames, cfg.rule, bestScore, bestTimeDiff)
+	return em, true
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// tryMatchL5 — 无时间约束的唯一性匹配
+// ─────────────────────────────────────────────────────────────────────────────
+
+const (
+	l5NameThreshold = 0.90
+	l5MaxTimeDiff   = 30 * 24 * 3600 // 30 天，防止跨赛季误匹配
+)
+
+// tryMatchL5 尝试 L5 级别匹配：无时间约束 + 唯一性排他。
+// 在 TS 侧所有未使用的比赛中，找到名称高度一致（≥0.90）且主客场顺序正确的候选。
+// 满足条件的候选有且仅有一场时才匹配（防止同赛季两回合混淆）。
+// 时差上限 30 天，防止跨赛季误匹配。
+func tryMatchL5(
+	sr db.SREvent,
+	tsEvents []db.TSEvent,
+	srTeamNames, tsTeamNames map[string]string,
+	usedTSIDs map[string]bool,
+	aliasIdx *TeamAliasIndex,
+) (EventMatch, bool) {
+	type candidate struct {
+		score   float64
+		ts      db.TSEvent
+		timeDiff int64
+	}
+	var candidates []candidate
+
+	for i := range tsEvents {
+		ts := &tsEvents[i]
+		if usedTSIDs[ts.ID] {
+			continue
+		}
+
+		// 时差上限预筛：超过 30 天直接跳过
+		timeDiff := sr.StartUnix - ts.MatchTime
+		if timeDiff < 0 {
+			timeDiff = -timeDiff
+		}
+		if ts.MatchTime > 0 && timeDiff > l5MaxTimeDiff {
+			continue
+		}
+
+		// 使用别名增强的名称相似度（正向：主对主、客对客）
+		homeFwd := aliasIdx.NameSimWithAlias(sr.HomeID, sr.HomeName, ts.HomeID, tsTeamNames[ts.HomeID])
+		awayFwd := aliasIdx.NameSimWithAlias(sr.AwayID, sr.AwayName, ts.AwayID, tsTeamNames[ts.AwayID])
+		homRev := aliasIdx.NameSimWithAlias(sr.HomeID, sr.HomeName, ts.AwayID, tsTeamNames[ts.AwayID])
+		awayRev := aliasIdx.NameSimWithAlias(sr.AwayID, sr.AwayName, ts.HomeID, tsTeamNames[ts.HomeID])
+
+		fwdScore := (homeFwd + awayFwd) / 2.0
+		revScore := (homRev + awayRev) / 2.0
+
+		// 名称阈值：正向得分必须满足，且正向 > 反向（主客场顺序一致）
+		if fwdScore >= l5NameThreshold && fwdScore >= revScore {
+			candidates = append(candidates, candidate{fwdScore, *ts, timeDiff})
+		}
+	}
+
+	// 唯一性排他：有且仅有一个候选才匹配
+	if len(candidates) != 1 {
+		return EventMatch{}, false
+	}
+
+	c := candidates[0]
+	em := buildEventMatch(sr, c.ts, tsTeamNames, RuleEventL5, c.score, c.timeDiff)
 	return em, true
 }
 
