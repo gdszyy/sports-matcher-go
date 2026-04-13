@@ -34,7 +34,7 @@ func Default() *Config {
 	return &Config{
 		SSHHost:    getEnv("SSH_HOST", "54.69.237.139"),
 		SSHUser:    getEnv("SSH_USER", "ubuntu"),
-		SSHKeyPath: getEnv("SSH_KEY_PATH", "/home/ubuntu/skills/thesports-db-connector/templates/id_ed25519"),
+		SSHKeyPath: getEnv("SSH_KEY_PATH", "/home/ubuntu/skills/xp-bet-db-connector/templates/id_ed25519"),
 		SSHPort:    getEnvInt("SSH_PORT", 22),
 
 		DBHost:     getEnv("DB_HOST", "test-db.cluster-cdgqiwig2x00.us-west-2.rds.amazonaws.com"),

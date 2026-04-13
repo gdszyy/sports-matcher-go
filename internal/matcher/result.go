@@ -41,7 +41,7 @@ type LeagueMatch struct {
 	Confidence      float64   `json:"confidence"`
 }
 
-// EventMatch 比赛匹配结果
+// EventMatch 比赛匹配结果（SR ↔ TS）
 type EventMatch struct {
 	SREventID   string    `json:"sr_event_id"`
 	SRStartTime string    `json:"sr_start_time"`
@@ -133,11 +133,97 @@ type MatchStats struct {
 	ElapsedMs int64 `json:"elapsed_ms"`
 }
 
-// MatchResult 单联赛完整匹配结果
+// MatchResult 单联赛完整匹配结果（SR ↔ TS）
 type MatchResult struct {
 	League  *LeagueMatch  `json:"league"`
 	Events  []EventMatch  `json:"events"`
 	Teams   []TeamMapping `json:"teams"`
 	Players []PlayerMatch `json:"players"`
 	Stats   MatchStats    `json:"stats"`
+}
+
+// ─── LSports ↔ TheSports 专用结构 ────────────────────────────────────────────
+
+// LSLeagueMatch LS 联赛匹配结果
+type LSLeagueMatch struct {
+	LSTournamentID  string    `json:"ls_tournament_id"`
+	LSName          string    `json:"ls_name"`
+	LSCategory      string    `json:"ls_category"`
+	TSCompetitionID string    `json:"ts_competition_id"`
+	TSName          string    `json:"ts_name"`
+	TSCountry       string    `json:"ts_country"`
+	Matched         bool      `json:"matched"`
+	MatchRule       MatchRule `json:"match_rule"`
+	Confidence      float64   `json:"confidence"`
+}
+
+// LSEventMatch LS ↔ TS 比赛匹配结果
+type LSEventMatch struct {
+	LSEventID   string    `json:"ls_event_id"`
+	LSStartTime string    `json:"ls_start_time"`
+	LSStartUnix int64     `json:"ls_start_unix"`
+	LSHomeName  string    `json:"ls_home_name"`
+	LSHomeID    string    `json:"ls_home_id"`
+	LSAwayName  string    `json:"ls_away_name"`
+	LSAwayID    string    `json:"ls_away_id"`
+
+	TSMatchID   string    `json:"ts_match_id,omitempty"`
+	TSMatchTime int64     `json:"ts_match_time,omitempty"`
+	TSHomeName  string    `json:"ts_home_name,omitempty"`
+	TSHomeID    string    `json:"ts_home_id,omitempty"`
+	TSAwayName  string    `json:"ts_away_name,omitempty"`
+	TSAwayID    string    `json:"ts_away_id,omitempty"`
+
+	Matched     bool      `json:"matched"`
+	MatchRule   MatchRule `json:"match_rule"`
+	Confidence  float64   `json:"confidence"`
+	TimeDiffSec int64     `json:"time_diff_sec,omitempty"`
+}
+
+// LSTeamMapping LS ↔ TS 球队映射
+type LSTeamMapping struct {
+	LSTeamID   string    `json:"ls_team_id"`
+	LSTeamName string    `json:"ls_team_name"`
+	TSTeamID   string    `json:"ts_team_id"`
+	TSTeamName string    `json:"ts_team_name"`
+	MatchRule  MatchRule `json:"match_rule"`
+	Confidence float64   `json:"confidence"`
+	VoteCount  int       `json:"vote_count"`
+}
+
+// LSMatchStats LS ↔ TS 匹配统计
+type LSMatchStats struct {
+	Sport string `json:"sport"`
+	Tier  string `json:"tier"`
+
+	LeagueLSName    string    `json:"league_ls_name"`
+	LeagueTSName    string    `json:"league_ts_name"`
+	LeagueMatched   bool      `json:"league_matched"`
+	LeagueRule      MatchRule `json:"league_rule"`
+	LeagueConf      float64   `json:"league_confidence"`
+
+	EventTotal     int     `json:"event_total"`
+	EventMatched   int     `json:"event_matched"`
+	EventMatchRate float64 `json:"event_match_rate"`
+	EventL1        int     `json:"event_l1"`
+	EventL2        int     `json:"event_l2"`
+	EventL3        int     `json:"event_l3"`
+	EventL4        int     `json:"event_l4"`
+	EventL5        int     `json:"event_l5"`
+	EventL4b       int     `json:"event_l4b"`
+	EventAvgConf   float64 `json:"event_avg_confidence"`
+
+	TeamTotal     int     `json:"team_total"`
+	TeamMatched   int     `json:"team_matched"`
+	TeamMatchRate float64 `json:"team_match_rate"`
+
+	ElapsedMs int64 `json:"elapsed_ms"`
+}
+
+// LSMatchResult LS ↔ TS 单联赛完整匹配结果
+type LSMatchResult struct {
+	League *LSLeagueMatch  `json:"league"`
+	Events []LSEventMatch  `json:"events"`
+	Teams  []LSTeamMapping `json:"teams"`
+	Stats  LSMatchStats    `json:"stats"`
 }

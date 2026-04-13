@@ -80,3 +80,28 @@ type TSPlayer struct {
 	Nationality string
 	TeamID      string
 }
+
+// ─── LSports 模型 ─────────────────────────────────────────────────────────────
+
+// LSTournament LSports 联赛
+type LSTournament struct {
+	ID           string // tournament_id（整数字符串）
+	Name         string
+	SportID      string // 如 "6046"（足球）
+	CategoryID   string
+	CategoryName string
+	Sport        string // 推导后的运动类型名称：football / basketball / tennis 等
+}
+
+// LSEvent LSports 赛事
+type LSEvent struct {
+	ID           string // event_id
+	TournamentID string
+	StartTime    string // scheduled，ISO8601 字符串
+	StartUnix    int64  // Unix 时间戳（秒）
+	HomeID       string // home_competitor_id
+	HomeName     string
+	AwayID       string // away_competitor_id
+	AwayName     string
+	StatusID     int
+}
