@@ -76,7 +76,7 @@ LSports DB (test-xp-lsports)      TheSports DB (test-thesports-db)
 2. **`competitor_id` 类型不匹配**：`ls_competitor_en.competitor_id` 是 `bigint`（Python int），`ls_sport_event.home_competitor_id` 是 `varchar`（Python str）→ 构建字典必须 `{str(r[0]): r[1]}`
 3. **`ls_category_en` JOIN 放大**：同一 `category_id` 对应多个 `sport_id`，JOIN 必须加 `AND cat.sport_id = e.sport_id`
 4. **TS `match_time` 是 Unix 时间戳**：2026 年范围 = `[1767225600, 1798761600)`
-5. **虚拟体育识别**：联赛名以 `E-`、`E |` 开头，或含 `(E)`、`eSports`、`Cyber`、`2K`、`Blitz`、`H2H GG` 等关键词
+5. **虚拟体育识别（v4 `is_virtual_sport()` 已实现）**：联赛名以 `E-`、`E |` 开头，或含 `(E)`、`eSports`、`Cyber`、`2K`、`Blitz`、`H2H GG`、时间格式（`8 Minutes`/`2x5 Mins`）等关键词→跳过 TS 匹配，橙色标注
 
 ## 3. 全局禁止行为清单
 

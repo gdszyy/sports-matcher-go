@@ -1,11 +1,12 @@
-#!/usr/bin/env python3
 """
-LSports ↔ TheSports 2026年比赛匹配脚本 v3（最终优化版）
+LSports ↔ TheSports 2026年比赛匹配脚本 v4（虚拟体育识别优化版）
 优化策略：
-- 一次性预加载所有2026年TS比赛（避免76次单独查询）
+- 一次性预加载所有2026年TS比赛（避免多次单独查询）
 - 预加载球队名称字典（避免JOIN）
 - 在内存中按competition_id分组，O(1)查找
 - 时间窗口索引加速比赛匹配
+- 新增虚拟体育识别：自动识别E-Football/Ebasketball/NBA 2K等虚拟联赛
+  - 虚拟联赛跳过比赛匹配，统计sheet单独区分，联赛sheet橙色标注
 """
 
 import pymysql
@@ -122,6 +123,86 @@ INTERNATIONAL_KEYWORDS = {
     'america', 'oceania', 'concacaf', 'conmebol', 'afc', 'caf',
     'uefa', 'fifa', 'ofc', 'waff', 'saff', 'eaff',
 }
+
+# ─────────────────────────────────────────────────────────────────────────────
+# 虚拟体育识别
+# ─────────────────────────────────────────────────────────────────────────────
+
+def is_virtual_sport(name: str) -> tuple:
+    """
+    判断联赛名称是否为虚拟/电竞体育项目。
+    返回 (is_virtual: bool, reason: str)
+
+    识别规则（基于实际数据库命名分析）：
+    1. E- 开头：E-Football | Battle (E) | 8 Minutes
+    2. E | 开头：E | Football ...
+    3. Ebasketball / Efootball / Esoccer 合写（不含连字符）
+    4. (E) 后缀标记：明确标注为电竞版本
+    5. eSports / e-sports 关键词
+    6. Cyber 关键词：NBA 2K25. Cyber League
+    7. NBA 2K 系列：NBA 2K25, NBA 2K26
+    8. Blitz 关键词：NBA Blitz H2H GG league
+    9. H2H GG 组合：H2H GG League
+    10. 时间格式标注：NxN Minutes/Mins（如 8 Minutes, 2x5 Minutes, 4X5 Mins）
+        注意：需排除真实的3人制微型足球（3X3 Microfutsal + 2X10 Min 这种特殊格式）
+    """
+    if not name:
+        return False, ''
+    n = name.strip()
+    nl = n.lower()
+
+    # 规则1: E- 开头
+    if re.match(r'^[Ee]-', n):
+        return True, 'E-前缀'
+
+    # 规则2: E | 开头
+    if re.match(r'^[Ee]\s*\|', n):
+        return True, 'E|前缀'
+
+    # 规则3: Ebasketball/Efootball/Esoccer 合写（首字母大写E后紧跟运动名）
+    if re.match(r'^[Ee](basketball|football|soccer|sport)', nl):
+        return True, 'E合写前缀'
+
+    # 规则4: (E) 后缀
+    if '(E)' in n or '(e)' in n:
+        return True, '(E)标记'
+
+    # 规则5: eSports/e-sports
+    if 'esports' in nl or 'e-sports' in nl:
+        return True, 'eSports关键词'
+
+    # 规则6: Cyber
+    if 'cyber' in nl:
+        return True, 'Cyber关键词'
+
+    # 规则7: NBA 2K 系列
+    if re.search(r'nba\s*2k', nl):
+        return True, 'NBA 2K系列'
+
+    # 规则8: Blitz
+    if 'blitz' in nl:
+        return True, 'Blitz关键词'
+
+    # 规则9: H2H GG 组合
+    if 'h2h' in nl and 'gg' in nl:
+        return True, 'H2H GG关键词'
+
+    # 规则10: 时间格式（NxN Minutes/Mins）
+    # 匹配如：8 Minutes, 12 Minutes, 2x5 Minutes, 4X5 Mins, 2X3 Minutes
+    # 排除：3X3 Microfutsal（真实3人制足球）
+    if re.search(r'\d+\s*[xX]\s*\d+\s*(minutes?|mins?)', nl):
+        # 排除真实的3人制微型足球
+        if 'microfutsal' in nl or 'futsal' in nl:
+            return False, ''
+        return True, '时间格式标注'
+    if re.search(r'\|\s*\d+\s*(minutes?|mins?)', nl):
+        return True, '时间格式标注'
+    # 单纯 N Minutes（如 "8 Minutes", "12 Minutes"）且联赛名中有其他虚拟特征
+    if re.search(r'\b(8|12|10|15|20)\s+minutes?\b', nl):
+        return True, '时间格式标注'
+
+    return False, ''
+
 
 # ─────────────────────────────────────────────────────────────────────────────
 # 名称归一化与相似度
@@ -516,10 +597,12 @@ def run_sport_match(sport):
     for c in ts_comps:
         get_eff_country(c)
 
-    # 联赛匹配
-    ts("执行联赛匹配...")
+    # 联赛匹配（含虚拟体育识别）
+    ts("执行联赛匹配（含虚拟体育识别）...")
     league_results = []
     matched_leagues = 0
+    virtual_count = 0
+    real_matched = 0
 
     for tour in ls_tours:
         ls_id = str(tour['tournament_id'])
@@ -527,35 +610,85 @@ def run_sport_match(sport):
         ls_category = tour['location'] or ''
         ls_event_count = tour['event_count']
 
-        m = match_league(ls_name, ls_category, ts_comps, sport, ls_id)
-        if m['matched']:
-            matched_leagues += 1
+        # 虚拟体育识别
+        virt, virt_reason = is_virtual_sport(ls_name)
 
-        league_results.append({
-            'ls_tournament_id': ls_id,
-            'ls_name': ls_name,
-            'ls_category': ls_category,
-            'ls_event_count_2026': ls_event_count,
-            'ts_competition_id': m['ts_id'],
-            'ts_name': m['ts_name'],
-            'ts_country': m['ts_country'],
-            'ts_eff_country': m['ts_eff_country'],
-            'league_score': m['score'],
-            'league_rule': m['rule'],
-            'league_matched': m['matched'],
-        })
+        if virt:
+            # 虚拟体育：跳过TS匹配，直接标注
+            virtual_count += 1
+            league_results.append({
+                'ls_tournament_id': ls_id,
+                'ls_name': ls_name,
+                'ls_category': ls_category,
+                'ls_event_count_2026': ls_event_count,
+                'ts_competition_id': '',
+                'ts_name': '',
+                'ts_country': '',
+                'ts_eff_country': '',
+                'league_score': 0.0,
+                'league_rule': 'VIRTUAL',
+                'league_matched': False,
+                'is_virtual': True,
+                'virtual_reason': virt_reason,
+                'ts_event_count_2026': 0,
+                'event_matched_count': 0,
+                'event_match_rate': 'N/A (虚拟)',
+            })
+        else:
+            # 真实体育：正常匹配
+            m = match_league(ls_name, ls_category, ts_comps, sport, ls_id)
+            if m['matched']:
+                matched_leagues += 1
+                real_matched += 1
 
-    ts(f"  联赛匹配: {matched_leagues}/{len(ls_tours)}")
+            league_results.append({
+                'ls_tournament_id': ls_id,
+                'ls_name': ls_name,
+                'ls_category': ls_category,
+                'ls_event_count_2026': ls_event_count,
+                'ts_competition_id': m['ts_id'],
+                'ts_name': m['ts_name'],
+                'ts_country': m['ts_country'],
+                'ts_eff_country': m['ts_eff_country'],
+                'league_score': m['score'],
+                'league_rule': m['rule'],
+                'league_matched': m['matched'],
+                'is_virtual': False,
+                'virtual_reason': '',
+                'ts_event_count_2026': 0,
+                'event_matched_count': 0,
+                'event_match_rate': 'N/A',
+            })
 
-    # 比赛匹配
-    ts("执行比赛匹配...")
+    real_leagues = len(ls_tours) - virtual_count
+    ts(f"  联赛总数: {len(ls_tours)} (真实: {real_leagues}, 虚拟: {virtual_count})")
+    ts(f"  真实联赛匹配: {real_matched}/{real_leagues}")
+
+    # 比赛匹配（仅真实体育）
+    ts("执行比赛匹配（仅真实体育联赛）...")
     league_event_results = {}
     total_ls = 0
     total_matched = 0
+    virtual_event_results = {}
 
     for lr in league_results:
         ls_id = lr['ls_tournament_id']
         ls_events = ls_events_by_tour.get(ls_id, [])
+
+        if lr['is_virtual']:
+            # 虚拟体育：仅记录比赛列表，不做匹配
+            lr['ts_event_count_2026'] = 0
+            lr['event_matched_count'] = 0
+            lr['event_match_rate'] = 'N/A (虚拟)'
+            if ls_events:
+                virtual_event_results[ls_id] = {
+                    'league_info': lr,
+                    'event_matches': [_no_match(e) for e in ls_events],
+                    'ls_event_count': len(ls_events),
+                    'ts_event_count': 0,
+                    'matched_count': 0,
+                }
+            continue
 
         if not lr['league_matched']:
             lr['ts_event_count_2026'] = 0
@@ -592,17 +725,25 @@ def run_sport_match(sport):
             'matched_count': matched_count,
         }
 
-    ts(f"\n{sport} 完成: 联赛 {matched_leagues}/{len(ls_tours)}, 比赛 {total_matched}/{total_ls}")
+    virtual_events_total = sum(lr['ls_event_count_2026'] for lr in league_results if lr['is_virtual'])
+    ts(f"\n{sport} 完成:")
+    ts(f"  真实联赛匹配: {real_matched}/{real_leagues}")
+    ts(f"  真实比赛匹配: {total_matched}/{total_ls}")
+    ts(f"  虚拟联赛: {virtual_count} 个，跳过匹配")
 
     return {
         'sport': sport,
         'league_results': league_results,
         'league_event_results': league_event_results,
+        'virtual_event_results': virtual_event_results,
         'stats': {
             'total_leagues': len(ls_tours),
-            'matched_leagues': matched_leagues,
+            'real_leagues': real_leagues,
+            'virtual_leagues': virtual_count,
+            'matched_leagues': real_matched,
             'total_ls_events': total_ls,
             'total_matched_events': total_matched,
+            'virtual_events': virtual_events_total,
         }
     }
 
@@ -610,17 +751,19 @@ def run_sport_match(sport):
 # Excel 导出
 # ─────────────────────────────────────────────────────────────────────────────
 
-C_BLUE = '1F4E79'
-C_LIGHT = '2E75B6'
-C_KNOWN = 'C6EFCE'
-C_HI = 'DDEEFF'
-C_MED = 'FFEB9C'
-C_LOW = 'FFD7B5'
-C_NO = 'FFC7CE'
-C_L1 = 'C6EFCE'
-C_L2 = 'DDEEFF'
-C_L3 = 'FFEB9C'
-C_L4 = 'FFD7B5'
+C_BLUE    = '1F4E79'
+C_LIGHT   = '2E75B6'
+C_KNOWN   = 'C6EFCE'
+C_HI      = 'DDEEFF'
+C_MED     = 'FFEB9C'
+C_LOW     = 'FFD7B5'
+C_NO      = 'FFC7CE'
+C_VIRTUAL = 'F4B942'   # 橙色：虚拟体育
+C_VIRT_HDR= 'D46B08'   # 深橙色：虚拟体育标题
+C_L1      = 'C6EFCE'
+C_L2      = 'DDEEFF'
+C_L3      = 'FFEB9C'
+C_L4      = 'FFD7B5'
 
 def fill(c):
     return PatternFill(start_color=c, end_color=c, fill_type='solid')
@@ -647,31 +790,51 @@ def export_excel(fb_data, bb_data, path):
     ws0.title = '联赛匹配统计'
 
     # 大标题
-    ws0.merge_cells('A1:O1')
-    ws0['A1'].value = f'LSports → TheSports 联赛匹配统计（2026年）  生成时间：{datetime.now().strftime("%Y-%m-%d %H:%M:%S")}'
+    ws0.merge_cells('A1:Q1')
+    ws0['A1'].value = (f'LSports → TheSports 联赛匹配统计（2026年）  '
+                       f'生成时间：{datetime.now().strftime("%Y-%m-%d %H:%M:%S")}')
     ws0['A1'].font = Font(bold=True, size=13, color='FFFFFF')
     ws0['A1'].fill = fill(C_BLUE)
     ws0['A1'].alignment = Alignment(horizontal='center', vertical='center')
     ws0.row_dimensions[1].height = 28
 
-    # 汇总统计
+    # ── 汇总统计（区分真实/虚拟）──
     ws0.append([])
-    ws0.append(['运动类型', '总联赛数', '匹配联赛数', '联赛匹配率',
-                'LS总比赛数(2026)', '已匹配比赛数', '比赛匹配率'])
+    ws0.append(['运动类型', '总联赛数', '真实联赛数', '虚拟联赛数',
+                '真实联赛匹配数', '真实联赛匹配率',
+                'LS真实比赛数', '已匹配比赛数', '真实比赛匹配率',
+                'LS虚拟比赛数（跳过匹配）'])
     for cell in ws0[3]:
         cell.fill = fill(C_LIGHT)
         cell.font = hdr_font()
-        cell.alignment = Alignment(horizontal='center')
+        cell.alignment = Alignment(horizontal='center', wrap_text=True)
+    ws0.row_dimensions[3].height = 36
 
     for data in [fb_data, bb_data]:
         s = data['stats']
         sn = '足球 (Football)' if data['sport'] == 'football' else '篮球 (Basketball)'
-        lr = f"{s['matched_leagues']/s['total_leagues']*100:.1f}%" if s['total_leagues'] else '0%'
-        er = f"{s['total_matched_events']/s['total_ls_events']*100:.1f}%" if s['total_ls_events'] else 'N/A'
-        ws0.append([sn, s['total_leagues'], s['matched_leagues'], lr,
-                    s['total_ls_events'], s['total_matched_events'], er])
-        for cell in ws0[ws0.max_row]:
+        lr = (f"{s['matched_leagues']/s['real_leagues']*100:.1f}%"
+              if s['real_leagues'] else '0%')
+        er = (f"{s['total_matched_events']/s['total_ls_events']*100:.1f}%"
+              if s['total_ls_events'] else 'N/A')
+        ws0.append([
+            sn,
+            s['total_leagues'],
+            s['real_leagues'],
+            s['virtual_leagues'],
+            s['matched_leagues'],
+            lr,
+            s['total_ls_events'],
+            s['total_matched_events'],
+            er,
+            s['virtual_events'],
+        ])
+        row = ws0[ws0.max_row]
+        for cell in row:
             cell.alignment = Alignment(horizontal='center')
+        # 虚拟联赛数列用橙色标注
+        row[3].fill = fill(C_VIRTUAL)
+        row[9].fill = fill(C_VIRTUAL)
 
     ws0.append([])
 
@@ -679,25 +842,26 @@ def export_excel(fb_data, bb_data, path):
     ws0.append(['颜色图例：'])
     ws0['A' + str(ws0.max_row)].font = Font(bold=True)
     for color, desc in [
-        (C_KNOWN, 'KNOWN - 已知映射'),
-        (C_HI, 'NAME_HI - 高置信度名称匹配（≥0.85）'),
-        (C_MED, 'NAME_MED - 中置信度名称匹配（≥0.70）'),
-        (C_LOW, 'NAME_LOW - 低置信度名称匹配（≥0.55）'),
-        (C_NO, 'NO_MATCH - 未匹配'),
+        (C_KNOWN,   'KNOWN - 已知映射（经验证的高价值联赛）'),
+        (C_HI,      'NAME_HI - 高置信度名称匹配（≥0.85）'),
+        (C_MED,     'NAME_MED - 中置信度名称匹配（≥0.70）'),
+        (C_LOW,     'NAME_LOW - 低置信度名称匹配（≥0.55）'),
+        (C_NO,      'NO_MATCH - 未匹配'),
+        (C_VIRTUAL, 'VIRTUAL - 虚拟/电竞体育（跳过匹配，不参与统计）'),
     ]:
         ws0.append(['', desc])
         ws0.cell(ws0.max_row, 2).fill = fill(color)
 
     ws0.append([])
 
-    # 联赛详细列表
+    # ── 联赛详细列表 ──
     dhr = ws0.max_row + 1
     ws0.append([
-        '运动类型',
+        '运动类型', '是否虚拟',
         'LS联赛ID', 'LS联赛名称', 'LS地区/国家', 'LS 2026比赛数',
         'TS联赛ID', 'TS联赛名称', 'TS国家(DB)', 'TS国家(提取)', 'TS 2026比赛数',
         '联赛相似分', '联赛匹配规则', '联赛已匹配',
-        '比赛已匹配数', '比赛匹配率',
+        '比赛已匹配数', '比赛匹配率', '虚拟识别原因',
     ])
     for cell in ws0[dhr]:
         cell.fill = fill(C_LIGHT)
@@ -706,8 +870,12 @@ def export_excel(fb_data, bb_data, path):
     ws0.row_dimensions[dhr].height = 30
 
     rule_fill = {
-        'KNOWN': fill(C_KNOWN), 'NAME_HI': fill(C_HI),
-        'NAME_MED': fill(C_MED), 'NAME_LOW': fill(C_LOW), 'NO_MATCH': fill(C_NO),
+        'KNOWN':   fill(C_KNOWN),
+        'NAME_HI': fill(C_HI),
+        'NAME_MED':fill(C_MED),
+        'NAME_LOW':fill(C_LOW),
+        'NO_MATCH':fill(C_NO),
+        'VIRTUAL': fill(C_VIRTUAL),
     }
 
     for data in [fb_data, bb_data]:
@@ -715,41 +883,46 @@ def export_excel(fb_data, bb_data, path):
         for lr in data['league_results']:
             ws0.append([
                 sn,
+                '⚡虚拟' if lr['is_virtual'] else '真实',
                 lr['ls_tournament_id'], lr['ls_name'], lr['ls_category'], lr['ls_event_count_2026'],
                 lr['ts_competition_id'], lr['ts_name'], lr['ts_country'], lr['ts_eff_country'],
                 lr.get('ts_event_count_2026', 0),
                 lr['league_score'], lr['league_rule'], 'YES' if lr['league_matched'] else 'NO',
                 lr.get('event_matched_count', 0), lr.get('event_match_rate', 'N/A'),
+                lr.get('virtual_reason', ''),
             ])
             f = rule_fill.get(lr['league_rule'], fill(C_NO))
             for cell in ws0[ws0.max_row]:
                 cell.fill = f
                 cell.alignment = Alignment(horizontal='center')
-            ws0.cell(ws0.max_row, 3).alignment = Alignment(horizontal='left')
-            ws0.cell(ws0.max_row, 7).alignment = Alignment(horizontal='left')
+            ws0.cell(ws0.max_row, 4).alignment = Alignment(horizontal='left')
+            ws0.cell(ws0.max_row, 8).alignment = Alignment(horizontal='left')
 
     auto_width(ws0)
 
-    # 每联赛一个Sheet
-    ev_fill = {'L1': fill(C_L1), 'L2': fill(C_L2), 'L3': fill(C_L3),
-               'L4': fill(C_L4), 'NO_MATCH': fill(C_NO)}
+    # ── 每联赛一个Sheet（真实体育） ──
+    ev_fill = {
+        'L1': fill(C_L1), 'L2': fill(C_L2),
+        'L3': fill(C_L3), 'L4': fill(C_L4),
+        'NO_MATCH': fill(C_NO),
+    }
 
     for data in [fb_data, bb_data]:
         sport = data['sport']
         pfx = 'FB' if sport == 'football' else 'BB'
         sport_cn = '足球' if sport == 'football' else '篮球'
 
+        # 真实体育联赛Sheet
         for ls_id, ld in data['league_event_results'].items():
             lr = ld['league_info']
             ems = ld['event_matches']
 
-            # Sheet名（去除非法字符，限31字符）
             sname = re.sub(r'[\\/*?:\[\]|]', '_', lr['ls_name'])[:18] if lr['ls_name'] else ls_id
             sheet_name = f"{pfx}_{ls_id}_{sname}"[:31]
 
             ws = wb.create_sheet(title=sheet_name)
 
-            # 标题
+            # 标题（蓝色）
             ws.merge_cells('A1:O1')
             ws['A1'].value = (f"【{sport_cn}】{lr['ls_name']}  →  {lr['ts_name']}  "
                               f"| 规则:{lr['league_rule']}  "
@@ -760,55 +933,100 @@ def export_excel(fb_data, bb_data, path):
             ws['A1'].alignment = Alignment(horizontal='left', vertical='center')
             ws.row_dimensions[1].height = 24
 
-            # 联赛信息
-            ws.append(['LS联赛ID:', lr['ls_tournament_id'], 'LS联赛名:', lr['ls_name'],
-                       'LS地区:', lr['ls_category'], '',
-                       'TS联赛ID:', lr['ts_competition_id'], 'TS联赛名:', lr['ts_name'],
-                       'TS国家:', lr['ts_country'], '相似分:', lr['league_score']])
-            for cell in ws[2]:
-                cell.fill = fill('D9E1F2')
-                cell.font = Font(bold=True)
+            _write_league_detail_rows(ws, lr, ems, ev_fill)
+            auto_width(ws)
 
-            ws.append(['LS 2026比赛数:', lr['ls_event_count_2026'], '', '', '', '', '',
-                       'TS 2026比赛数:', lr.get('ts_event_count_2026', 0), '', '', '', '',
-                       '已匹配:', lr.get('event_matched_count', 0)])
-            ws.append([])
+        # 虚拟体育联赛Sheet（橙色标注）
+        for ls_id, ld in data['virtual_event_results'].items():
+            lr = ld['league_info']
+            ems = ld['event_matches']
 
-            # 表头（左LS 右TS）
-            ws.append([
-                'LS赛事ID', 'LS赛程时间', 'LS主队ID', 'LS主队名称', 'LS客队ID', 'LS客队名称',
-                '队名相似分', '匹配级别', '已匹配',
-                'TS赛事ID', 'TS赛程时间', 'TS主队ID', 'TS主队名称', 'TS客队ID', 'TS客队名称',
-            ])
-            hrow = ws.max_row
-            for cell in ws[hrow]:
-                cell.fill = fill(C_LIGHT)
-                cell.font = hdr_font()
-                cell.alignment = Alignment(horizontal='center', wrap_text=True)
-            ws.row_dimensions[hrow].height = 28
+            sname = re.sub(r'[\\/*?:\[\]|]', '_', lr['ls_name'])[:14] if lr['ls_name'] else ls_id
+            sheet_name = f"⚡{pfx}_{ls_id}_{sname}"[:31]
 
-            # 比赛数据
-            for em in ems:
-                ws.append([
-                    em['ls_event_id'], em['ls_scheduled'],
-                    em['ls_home_id'], em['ls_home_name'],
-                    em['ls_away_id'], em['ls_away_name'],
-                    em['team_score'], em['match_level'], 'YES' if em['matched'] else 'NO',
-                    em['ts_match_id'], em['ts_match_time_str'],
-                    em['ts_home_id'], em['ts_home_name'],
-                    em['ts_away_id'], em['ts_away_name'],
-                ])
-                ef = ev_fill.get(em['match_level'], fill(C_NO))
-                for cell in ws[ws.max_row]:
-                    cell.fill = ef
-                    cell.alignment = Alignment(horizontal='center')
-                for ci in [4, 6, 13, 15]:
-                    ws.cell(ws.max_row, ci).alignment = Alignment(horizontal='left')
+            ws = wb.create_sheet(title=sheet_name)
 
+            # 标题（橙色，标注虚拟体育）
+            ws.merge_cells('A1:O1')
+            ws['A1'].value = (f"【虚拟体育·{sport_cn}】{lr['ls_name']}  "
+                              f"| 识别原因: {lr.get('virtual_reason', '')}  "
+                              f"| 比赛数: {lr['ls_event_count_2026']}  "
+                              f"| 无TS匹配（虚拟体育跳过）")
+            ws['A1'].font = Font(bold=True, size=11, color='FFFFFF')
+            ws['A1'].fill = fill(C_VIRT_HDR)
+            ws['A1'].alignment = Alignment(horizontal='left', vertical='center')
+            ws.row_dimensions[1].height = 24
+
+            _write_league_detail_rows(ws, lr, ems, ev_fill, is_virtual=True)
             auto_width(ws)
 
     wb.save(path)
     ts(f"Excel已保存: {path}")
+
+
+def _write_league_detail_rows(ws, lr, ems, ev_fill, is_virtual=False):
+    """写入联赛Sheet的联赛信息行和比赛数据行"""
+    info_fill = fill('FFE0B2') if is_virtual else fill('D9E1F2')
+
+    # 联赛信息行
+    ws.append(['LS联赛ID:', lr['ls_tournament_id'], 'LS联赛名:', lr['ls_name'],
+               'LS地区:', lr['ls_category'], '',
+               'TS联赛ID:', lr['ts_competition_id'], 'TS联赛名:', lr['ts_name'],
+               'TS国家:', lr['ts_country'], '相似分:', lr['league_score']])
+    for cell in ws[ws.max_row]:
+        cell.fill = info_fill
+        cell.font = Font(bold=True)
+
+    if is_virtual:
+        ws.append(['⚡ 虚拟体育识别原因:', lr.get('virtual_reason', ''), '', '',
+                   '说明: 此联赛为虚拟/电竞体育，已跳过TS匹配', '', '', '', '', '', '', '', '', '', ''])
+        for cell in ws[ws.max_row]:
+            cell.fill = fill(C_VIRTUAL)
+            cell.font = Font(bold=True, color='7B3F00')
+    else:
+        ws.append(['LS 2026比赛数:', lr['ls_event_count_2026'], '', '', '', '', '',
+                   'TS 2026比赛数:', lr.get('ts_event_count_2026', 0), '', '', '', '',
+                   '已匹配:', lr.get('event_matched_count', 0)])
+
+    ws.append([])
+
+    # 表头（左LS 右TS）
+    ws.append([
+        'LS赛事ID', 'LS赛程时间', 'LS主队ID', 'LS主队名称', 'LS客队ID', 'LS客队名称',
+        '队名相似分', '匹配级别', '已匹配',
+        'TS赛事ID', 'TS赛程时间', 'TS主队ID', 'TS主队名称', 'TS客队ID', 'TS客队名称',
+    ])
+    hrow = ws.max_row
+    hdr_bg = fill(C_VIRT_HDR) if is_virtual else fill(C_LIGHT)
+    for cell in ws[hrow]:
+        cell.fill = hdr_bg
+        cell.font = hdr_font()
+        cell.alignment = Alignment(horizontal='center', wrap_text=True)
+    ws.row_dimensions[hrow].height = 28
+
+    # 比赛数据
+    for em in ems:
+        ws.append([
+            em['ls_event_id'], em['ls_scheduled'],
+            em['ls_home_id'], em['ls_home_name'],
+            em['ls_away_id'], em['ls_away_name'],
+            em['team_score'], em['match_level'], 'YES' if em['matched'] else 'NO',
+            em['ts_match_id'], em['ts_match_time_str'],
+            em['ts_home_id'], em['ts_home_name'],
+            em['ts_away_id'], em['ts_away_name'],
+        ])
+        if is_virtual:
+            # 虚拟体育行：浅橙色
+            for cell in ws[ws.max_row]:
+                cell.fill = fill('FFF3E0')
+                cell.alignment = Alignment(horizontal='center')
+        else:
+            ef = ev_fill.get(em['match_level'], fill(C_NO))
+            for cell in ws[ws.max_row]:
+                cell.fill = ef
+                cell.alignment = Alignment(horizontal='center')
+        for ci in [4, 6, 13, 15]:
+            ws.cell(ws.max_row, ci).alignment = Alignment(horizontal='left')
 
 
 # ─────────────────────────────────────────────────────────────────────────────
@@ -817,7 +1035,7 @@ def export_excel(fb_data, bb_data, path):
 
 if __name__ == '__main__':
     output = '/home/ubuntu/lsports_ts_match_2026.xlsx'
-    ts("开始2026年LSports→TheSports匹配任务 (v3)")
+    ts("开始2026年LSports→TheSports匹配任务 (v4 - 虚拟体育识别优化版)")
 
     fb = run_sport_match('football')
     bb = run_sport_match('basketball')
@@ -826,3 +1044,11 @@ if __name__ == '__main__':
     export_excel(fb, bb, output)
 
     ts(f"\n任务完成！文件: {output}")
+    ts(f"\n=== 最终统计 ===")
+    for data in [fb, bb]:
+        s = data['stats']
+        sn = '足球' if data['sport'] == 'football' else '篮球'
+        ts(f"  {sn}: 总联赛={s['total_leagues']}, 真实={s['real_leagues']}, 虚拟={s['virtual_leagues']}")
+        ts(f"    真实联赛匹配: {s['matched_leagues']}/{s['real_leagues']}")
+        ts(f"    真实比赛匹配: {s['total_matched_events']}/{s['total_ls_events']}")
+        ts(f"    虚拟比赛(跳过): {s['virtual_events']}")
