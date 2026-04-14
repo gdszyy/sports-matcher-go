@@ -30,3 +30,12 @@ vendor/
 .idea/
 .vscode/
 *.swp
+
+# Python 运行时输出
+python/output/
+*.xlsx
+*.csv
+/tmp/
+__pycache__/
+*.pyc
+.pytest_cache/
