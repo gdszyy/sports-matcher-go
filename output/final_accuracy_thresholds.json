@@ -1,0 +1,46 @@
+{
+  "rule": {
+    "scope": "近两年非虚拟足球联赛样本",
+    "accuracy_definition": "人工复核后判定为业务可接受或正确匹配的联赛数 ÷ 被纳入统计的联赛数",
+    "exclude_rule": "event_count < min_event_count 的联赛不纳入准确率统计",
+    "final_min_event_count": 5,
+    "why_final_threshold": "取 5 场作为最小观测量，避免 1 到 4 场样本被偶然对阵或临时缺数放大，同时保留足够的联赛样本用于评估"
+  },
+  "threshold_sensitivity": [
+    {
+      "min_event_count": 2,
+      "sample_size": 60,
+      "correct": 20,
+      "incorrect": 40,
+      "accuracy": 0.3333
+    },
+    {
+      "min_event_count": 3,
+      "sample_size": 41,
+      "correct": 13,
+      "incorrect": 28,
+      "accuracy": 0.3171
+    },
+    {
+      "min_event_count": 4,
+      "sample_size": 28,
+      "correct": 9,
+      "incorrect": 19,
+      "accuracy": 0.3214
+    },
+    {
+      "min_event_count": 5,
+      "sample_size": 18,
+      "correct": 8,
+      "incorrect": 10,
+      "accuracy": 0.4444
+    }
+  ],
+  "final_result": {
+    "min_event_count": 5,
+    "sample_size": 18,
+    "correct": 8,
+    "incorrect": 10,
+    "accuracy": 0.4444
+  }
+}

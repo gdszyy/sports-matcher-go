@@ -19,4 +19,7 @@ globs: ["internal_matcher/**/*"]
 
 ## 4. 详细设计文档索引
 
-（请在此处列出 internal_matcher 模块相关的详细设计文档链接）
+| 文档 | 说明 |
+| --- | --- |
+| [`docs/ls_ts_matching_assessment.md`](../../docs/ls_ts_matching_assessment.md) | LS 与 TS 联赛匹配的历史评估与背景说明 |
+| [`docs/league_match_evaluation_rule.md`](../../docs/league_match_evaluation_rule.md) | 当前阶段正式使用的联赛评价口径、最小比赛数阈值与准确率结论 |

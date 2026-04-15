@@ -31,6 +31,7 @@
 | Python 数据库规范 | [`.cursor/rules/python_db.md`](.cursor/rules/python_db.md) |
 | Python 匹配脚本规范 | [`.cursor/rules/python.md`](.cursor/rules/python.md) |
 | 匹配评估文档 | [`docs/ls_ts_matching_assessment.md`](docs/ls_ts_matching_assessment.md) |
+| 联赛评价规则 | [`docs/league_match_evaluation_rule.md`](docs/league_match_evaluation_rule.md) |
 
 ---
 
