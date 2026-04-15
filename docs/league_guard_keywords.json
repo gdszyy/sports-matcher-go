@@ -1,0 +1,111 @@
+{
+  "version": "2026-04-15",
+  "purpose": "用于联赛匹配中的强约束校验；地区、性别、年龄、区域、赛制形态等关键词一旦显式出现，LS 与 TS 必须保持一致或满足可接受同义映射，否则直接否决候选。",
+  "country_alias_groups": [
+    ["england", "english"],
+    ["scotland", "scottish"],
+    ["greece", "greek"],
+    ["italy", "italian"],
+    ["brazil", "brazilian"],
+    ["argentina", "argentinian", "argentine"],
+    ["finland", "finnish"],
+    ["hungary", "hungarian"],
+    ["serbia", "serbian"],
+    ["poland", "polish"],
+    ["slovenia", "slovenian"],
+    ["czech republic", "czech"],
+    ["norway", "norwegian"],
+    ["sweden", "swedish"],
+    ["denmark", "danish"],
+    ["netherlands", "dutch"],
+    ["germany", "german"],
+    ["france", "french"],
+    ["spain", "spanish"],
+    ["portugal", "portuguese"],
+    ["turkey", "turkish"],
+    ["mexico", "mexican"],
+    ["japan", "japanese"],
+    ["korea", "korean", "south korea"],
+    ["china", "chinese"],
+    ["russia", "russian"],
+    ["austria", "austrian"],
+    ["switzerland", "swiss"],
+    ["belgium", "belgian"],
+    ["croatia", "croatian"],
+    ["romania", "romanian"],
+    ["ukraine", "ukrainian"],
+    ["ireland", "irish"],
+    ["wales", "welsh"],
+    ["northern ireland", "northern irish"],
+    ["international", "world", "global"]
+  ],
+  "gender_keywords": {
+    "women": ["women", "woman", "w", "ladies", "feminine", "female", "girls"],
+    "men": ["men", "man", "m", "male", "boys"]
+  },
+  "age_keywords": {
+    "u23": ["u23", "under 23", "under-23", "under23"],
+    "u21": ["u21", "under 21", "under-21", "under21"],
+    "u20": ["u20", "under 20", "under-20", "under20"],
+    "u19": ["u19", "under 19", "under-19", "under19"],
+    "u18": ["u18", "under 18", "under-18", "under18"],
+    "u17": ["u17", "under 17", "under-17", "under17"],
+    "u16": ["u16", "under 16", "under-16", "under16"],
+    "u15": ["u15", "under 15", "under-15", "under15"],
+    "youth": ["youth", "junior", "juniors", "reserve", "reserves", "academy"]
+  },
+  "region_keywords": {
+    "north": ["north", "northern"],
+    "south": ["south", "southern"],
+    "east": ["east", "eastern"],
+    "west": ["west", "western"],
+    "central": ["central", "center", "centre"],
+    "northeast": ["north east", "north-east", "northeast"],
+    "northwest": ["north west", "north-west", "northwest"],
+    "southeast": ["south east", "south-east", "southeast"],
+    "southwest": ["south west", "south-west", "southwest"]
+  },
+  "tier_keywords": {
+    "top": ["premier", "super", "first division", "division 1", "liga 1", "1 liga", "serie a", "a league"],
+    "second": ["championship", "division 2", "second division", "2 liga", "serie b", "ii", "liga ii"],
+    "third": ["division 3", "third division", "3 liga", "serie c", "iii", "liga iii"],
+    "fourth": ["division 4", "fourth division", "4 liga", "iv", "liga iv"]
+  },
+  "competition_type_keywords": {
+    "cup": ["cup", "copa", "coppa", "cupe", "pokal", "trophy"],
+    "league": ["league", "liga", "ligue", "serie", "division", "championship"],
+    "playoff": ["playoff", "play-offs", "play offs", "final stage", "championship round", "relegation round"],
+    "short_format": ["5x5", "6x6", "7x7", "futsal", "indoor", "amateur", "lfl"]
+  },
+  "hard_constraints": [
+    {
+      "name": "country_or_region_must_match",
+      "description": "若 LS 名称或 category 中可解析出国家或地区，而 TS 候选名称中出现另一国家或地区，则直接否决。对于 International/World/Global 仅允许映射到同类国际赛事。"
+    },
+    {
+      "name": "gender_must_match",
+      "description": "Women/Female/Girls 与 Men/Male/Boys 不得互相吸附；一侧显式出现女性关键词而另一侧缺失或显式为男性时，直接否决。"
+    },
+    {
+      "name": "age_must_match",
+      "description": "U23、U21、U19 等年龄层必须逐级一致；Youth/Reserve 只能映射到同类青年或预备队赛事。"
+    },
+    {
+      "name": "region_split_must_match",
+      "description": "North/South/East/West/Central 等区域分区必须一致；例如 National League South 不能映射到 National League 或 National League North。"
+    },
+    {
+      "name": "competition_type_must_match",
+      "description": "Cup 与 League 原则上不得互相映射；Short-format/5x5/Futsal/Indoor/Amateur 等特殊赛制必须同类匹配。"
+    },
+    {
+      "name": "tier_conflict_should_block_low_confidence",
+      "description": "当候选仅为 NAME_LOW 或 NAME_MED，且出现明显层级冲突时直接否决；只有在人工维护白名单明确声明可接受映射时才允许放行。"
+    }
+  ],
+  "allowlist_notes": [
+    "允许官方长短名差异、品牌冠名差异、语言转写差异、历史别名差异。",
+    "允许 country_alias_groups 内的国家词同义映射，例如 Greece 与 Greek。",
+    "不得因为存在 allowlist 而覆盖 gender、age、region、competition_type 的强冲突。"
+  ]
+}
