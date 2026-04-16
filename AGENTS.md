@@ -33,6 +33,8 @@
 | 匹配评估文档 | [`docs/ls_ts_matching_assessment.md`](docs/ls_ts_matching_assessment.md) |
 | 联赛评价规则 | [`docs/league_match_evaluation_rule.md`](docs/league_match_evaluation_rule.md) |
 | 强校验关键词词典 | [`docs/league_guard_keywords.json`](docs/league_guard_keywords.json) |
+| 通用算法设计规划 | [`docs/universal_matching_algorithm_design.md`](docs/universal_matching_algorithm_design.md) |
+| 优化 TODO 与防坑指南 | [`.cursor/rules/process_insights/PI-001_universal_matching_algorithm_design.md`](.cursor/rules/process_insights/PI-001_universal_matching_algorithm_design.md) |
 
 ---
 
@@ -73,6 +75,7 @@
 | Go API 层 | [`.cursor/rules/internal_api.md`](.cursor/rules/internal_api.md) | HTTP 接口定义 |
 | Python 数据库 | [`.cursor/rules/python_db.md`](.cursor/rules/python_db.md) | SSH 隧道封装、连接配置、SQL 参考 |
 | Python 匹配脚本 | [`.cursor/rules/python.md`](.cursor/rules/python.md) | 批量匹配脚本、Excel 导出 |
+| 流程洞察索引 | [`.cursor/rules/process_insights/index.md`](.cursor/rules/process_insights/index.md) | 所有流程洞察文档的注册表 |
 
 ---
 
