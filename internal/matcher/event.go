@@ -1,19 +1,38 @@
-// Package matcher — 比赛匹配引擎（五级降级 + 联赛级队伍别名学习）
+// Package matcher — 比赛匹配引擎（多策略匹配 + 联赛级队伍别名学习）
 //
-// 匹配级别说明：
-//   L1 — 精确时间（时差≤5min）+ 名称验证（≥0.40）
-//   L2 — 宽松时间（时差≤6h）  + 强名称验证（≥0.65）
-//   L3 — 同日对阵（时差≤24h） + 严格名称验证（≥0.75）
-//   L4 — 超宽时间（时差≤72h） + 别名强匹配（≥0.85），require_alias=true
-//        专门处理 SR/TS 时间戳来源不同（UTC vs 本地时区、赛程延期）导致时差超过 24h 的漏匹配。
-//        要求至少一支队伍已在联赛级 TeamAliasIndex 中注册，防止跨联赛误匹配。
-//   L4b — 球队 ID 精确对兜底（无时间限制），仅当 teamIDMap 非空时激活。
+// 匹配策略说明（P2 重构后）：
 //
-// v3 新增：
-//   - TeamAliasIndex：联赛级队伍别名学习。L1/L2/L3/L4 匹配成功后自动将
-//     (sr_team_id → ts_team_id) 写入索引；后续比赛若两队均在索引中，
-//     直接返回高置信度分数（aliasApplyScore），不再依赖字面名称相似度。
-//   - L4 级别：超宽时间窗口（72h）+ 别名强匹配，解决时区/延期导致的漏匹配。
+//   标准匹配（σ=3600s）：
+//     时间分 S_time = exp(-Δt² / 2σ²)，综合分 = 0.30*S_time + 0.70*S_name
+//     名称阈值 ≥ 0.40，综合分阈值 ≥ 0.50
+//     时差超过 3σ（10800s）时 S_time < 0.011，实际等效于原 L1 窗口
+//
+//   宽松匹配（σ=10800s）：
+//     时间分 S_time = exp(-Δt² / 2σ²)，综合分 = 0.15*S_time + 0.85*S_name
+//     名称阈值 ≥ 0.65，综合分阈值 ≥ 0.60
+//     时差超过 3σ（32400s ≈ 9h）时 S_time < 0.011
+//
+//   超宽容差匹配（σ=43200s）：
+//     时间分 S_time = exp(-Δt² / 2σ²)，综合分 = 0.0*S_time + 1.0*S_name
+//     名称阈值 ≥ 0.75，综合分阈值 ≥ 0.70
+//     同日（UTC）约束，解决时区/延期导致的跨日漏匹配
+//
+//   别名强匹配（σ=43200s，require_alias=true）：
+//     时间分 S_time = exp(-Δt² / 2σ²)，综合分 = 0.0*S_time + 1.0*S_name
+//     名称阈值 ≥ 0.85，综合分阈值 ≥ 0.80
+//     时差上限 72h（259200s），要求至少一支队伍在 TeamAliasIndex 中命中
+//
+//   L5 唯一性匹配（无时间约束）：
+//     名称阈值 ≥ 0.90，时差上限 30 天，TS 候选有且仅有一场
+//
+//   L4b 球队 ID 精确对兜底（无时间限制）：
+//     需要外部传入 teamIDMap，仅在前四级均未命中时激活
+//
+// v4 变更：
+//   - 将 levelConfigs 中的硬性时间分级替换为高斯衰减连续模糊时间窗口
+//   - 新增 gaussianTimeFactor(timeDiff, sigma) 函数
+//   - eventMatchConfig 新增 sigma 字段（高斯标准差，秒），maxTimeDiffSec 仅作截止上限
+//   - 保留 TeamAliasIndex 联赛级别名学习机制（v3 引入）
 package matcher
 
 import (
@@ -132,25 +151,90 @@ func (idx *TeamAliasIndex) Len() int {
 	return len(idx.alias)
 }
 
-// ─────────────────────────────────────────────────────────────────────────────
-// 匹配级别配置
-// ─────────────────────────────────────────────────────────────────────────────
-
-// eventMatchConfig 各级匹配配置
-type eventMatchConfig struct {
-	maxTimeDiffSec int64   // 时间窗口（秒），-1 表示同日
-	nameThreshold  float64 // 名称相似度最低门槛（使用别名增强后的值）
-	timeWeight     float64 // 时间分在综合分中的权重
-	nameWeight     float64 // 名称分在综合分中的权重
-	minScore       float64 // 最低综合分
-	requireAlias   bool    // 是否要求至少一支队伍在别名索引中命中（L4 专用）
-	rule           MatchRule
+// InjectAlias 直接注入一条已验证的别名对（绕过投票机制，直接写入 alias 映射）。
+// 实现 db.AliasIndexLoader 接口，供 AliasStore.LoadIntoIndex 调用，
+// 将持久化知识图谱中的历史别名在每次任务开始前注入内存索引。
+func (idx *TeamAliasIndex) InjectAlias(srcTeamID, tsTeamID string) {
+	if srcTeamID == "" || tsTeamID == "" {
+		return
+	}
+	idx.alias[srcTeamID] = tsTeamID
+	idx.aliasRev[tsTeamID] = srcTeamID
 }
 
+// ─────────────────────────────────────────────────────────────────────────────
+// 高斯衰减时间评分
+// ─────────────────────────────────────────────────────────────────────────────
+
+// gaussianTimeFactor 计算基于高斯衰减的时间评分。
+//
+// 公式：S_time(Δt) = exp(-Δt² / (2σ²))
+//
+// 特性：
+//   - Δt=0 时 S_time=1.0（完美）
+//   - Δt=σ 时 S_time≈0.607
+//   - Δt=2σ 时 S_time≈0.135
+//   - Δt=3σ 时 S_time≈0.011（实际接近 0，等效于原硬性截止）
+//
+// 与旧版硬性分级的对比：
+//   - 旧版：时差超过阈值直接截断（断崖效应）
+//   - 新版：时差越大评分越低，但不硬性截断，由 maxTimeDiffSec 作为最终上限
+func gaussianTimeFactor(timeDiffSec int64, sigma float64) float64 {
+	if sigma <= 0 {
+		return 0.0
+	}
+	dt := float64(timeDiffSec)
+	return math.Exp(-(dt * dt) / (2.0 * sigma * sigma))
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// 匹配策略配置（P2 重构：硬性分级 → 高斯衰减连续窗口）
+// ─────────────────────────────────────────────────────────────────────────────
+
+// eventMatchConfig 匹配策略配置
+type eventMatchConfig struct {
+	// sigma 高斯衰减标准差（秒）。sigma=0 表示不使用时间评分（timeWeight 应为 0）。
+	sigma float64
+	// maxTimeDiffSec 时间差上限（秒）。超过此值直接跳过，-1 表示使用同日（UTC）约束。
+	maxTimeDiffSec int64
+	// nameThreshold 名称相似度最低门槛（使用别名增强后的值）
+	nameThreshold float64
+	// timeWeight 时间分在综合分中的权重
+	timeWeight float64
+	// nameWeight 名称分在综合分中的权重
+	nameWeight float64
+	// minScore 最低综合分
+	minScore float64
+	// requireAlias 是否要求至少一支队伍在别名索引中命中（别名强匹配专用）
+	requireAlias bool
+	// rule 匹配规则标识
+	rule MatchRule
+}
+
+// levelConfigs P2 重构后的匹配策略列表（按宽松程度从严到宽排列）。
+//
+// 策略 1 — 标准匹配（原 L1/L2 合并）：
+//   σ=3600s，时差上限 21600s（6h），名称阈值 0.40，综合分阈值 0.50
+//   高斯衰减使得时差越大时间分越低，自然区分"精确时间"和"宽松时间"场景，
+//   无需人工划分 L1/L2 边界。
+//
+// 策略 2 — 宽松匹配（原 L2 高名称要求部分）：
+//   σ=10800s（3h），时差上限 32400s（9h），名称阈值 0.65，综合分阈值 0.60
+//
+// 策略 3 — 超宽容差匹配（原 L3 同日）：
+//   σ=43200s（12h），同日（UTC）约束，名称阈值 0.75，综合分阈值 0.70
+//   专门处理时区差异（如 UTC+8 vs UTC）导致的跨日漏匹配。
+//
+// 策略 4 — 别名强匹配（原 L4）：
+//   σ=43200s（12h），时差上限 259200s（72h），名称阈值 0.85，综合分阈值 0.80
+//   require_alias=true，防止跨联赛误匹配。
 var levelConfigs = []eventMatchConfig{
 	{
-		// L1: 精确时间（≤5min）+ 名称验证
-		maxTimeDiffSec: 300,
+		// 策略 1：标准匹配（σ=3600s，时差上限 6h）
+		// 等效于原 L1（精确时间）+ L2（宽松时间）的连续版本。
+		// 时差 0s → S_time=1.0；时差 3600s → S_time≈0.607；时差 7200s → S_time≈0.135
+		sigma:          3600,
+		maxTimeDiffSec: 21600,
 		nameThreshold:  0.40,
 		timeWeight:     0.30,
 		nameWeight:     0.70,
@@ -159,8 +243,11 @@ var levelConfigs = []eventMatchConfig{
 		rule:           RuleEventL1,
 	},
 	{
-		// L2: 宽松时间（≤6h）+ 强名称验证
-		maxTimeDiffSec: 21600,
+		// 策略 2：宽松匹配（σ=10800s，时差上限 9h）
+		// 专为名称高度一致但时间偏移较大（如直播延迟、时区偏移）的场景设计。
+		// 时差 0s → S_time=1.0；时差 10800s → S_time≈0.607；时差 21600s → S_time≈0.135
+		sigma:          10800,
+		maxTimeDiffSec: 32400,
 		nameThreshold:  0.65,
 		timeWeight:     0.15,
 		nameWeight:     0.85,
@@ -169,8 +256,11 @@ var levelConfigs = []eventMatchConfig{
 		rule:           RuleEventL2,
 	},
 	{
-		// L3: 同日对阵（≤24h）+ 严格名称验证
-		maxTimeDiffSec: -1, // 同日
+		// 策略 3：超宽容差匹配（σ=43200s，同日 UTC 约束）
+		// 专为跨日时区差异（如 UTC vs UTC+8）设计，时间权重为 0，完全依赖名称。
+		// 同日约束（UTC）防止跨日误匹配。
+		sigma:          43200,
+		maxTimeDiffSec: -1, // 同日（UTC）约束
 		nameThreshold:  0.75,
 		timeWeight:     0.0,
 		nameWeight:     1.0,
@@ -179,9 +269,10 @@ var levelConfigs = []eventMatchConfig{
 		rule:           RuleEventL3,
 	},
 	{
-		// L4: 超宽时间（≤72h）+ 别名强匹配
-		// 专门处理 SR/TS 时间戳来源不同（UTC vs 本地时区、赛程延期）导致时差超过 24h 的漏匹配。
-		// require_alias=true：要求至少一支队伍在 TeamAliasIndex 中命中，防止误匹配。
+		// 策略 4：别名强匹配（σ=43200s，时差上限 72h，require_alias=true）
+		// 专为赛程延期（>24h）场景设计，要求别名索引命中防止误匹配。
+		// 时差 0s → S_time=1.0；时差 43200s → S_time≈0.607；时差 86400s → S_time≈0.135
+		sigma:          43200,
 		maxTimeDiffSec: 259200, // 72 小时
 		nameThreshold:  0.85,
 		timeWeight:     0.0,
@@ -196,10 +287,10 @@ var levelConfigs = []eventMatchConfig{
 // MatchEvents — 主入口
 // ─────────────────────────────────────────────────────────────────────────────
 
-// MatchEvents 对 SR 比赛列表执行五级匹配（L1/L2/L3/L4 + L4b 球队ID兜底）。
+// MatchEvents 对 SR 比赛列表执行多策略匹配（策略 1/2/3/4 + L5 唯一性 + L4b 球队ID兜底）。
 //
 // teamIDMap: SR team_id → TS team_id，用于激活 L4b（为空则跳过 L4b）。
-// L4（超宽时间+别名）由内部 TeamAliasIndex 驱动，无需外部传入。
+// 策略 4（别名强匹配）由内部 TeamAliasIndex 驱动，无需外部传入。
 func MatchEvents(
 	srEvents []db.SREvent,
 	tsEvents []db.TSEvent,
@@ -224,7 +315,7 @@ func MatchEvents(
 			MatchRule:   RuleEventNoMatch,
 		}
 
-		// L1 / L2 / L3 / L4 逐级尝试（L4 依赖 aliasIdx）
+		// 策略 1/2/3/4 逐级尝试（策略 4 依赖 aliasIdx）
 		matched := false
 		for _, cfg := range levelConfigs {
 			if m, ok := tryMatchLevel(sr, tsEvents, srTeamNames, tsTeamNames, cfg, usedTSIDs, aliasIdx); ok {
@@ -247,7 +338,7 @@ func MatchEvents(
 			}
 		}
 
-		// L5: 无时间约束的唯一性匹配（L1~L4 均未命中时激活）
+		// L5: 无时间约束的唯一性匹配（策略 1~4 均未命中时激活）
 		// 规则：名称相似度 ≥ 0.90 且主客场顺序一致，且 TS 侧满足条件的候选有且仅有一场。
 		// 时差上限：30 天（防止跨赛季误匹配）。
 		if !matched {
@@ -273,10 +364,10 @@ func MatchEvents(
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-// tryMatchLevel — L1/L2/L3/L4 通用匹配逻辑
+// tryMatchLevel — 通用匹配策略执行（支持高斯衰减时间评分 + 别名增强）
 // ─────────────────────────────────────────────────────────────────────────────
 
-// tryMatchLevel 尝试某一级别的匹配（支持别名增强）
+// tryMatchLevel 尝试某一匹配策略（支持高斯衰减时间评分 + 别名增强）
 func tryMatchLevel(
 	sr db.SREvent,
 	tsEvents []db.TSEvent,
@@ -304,18 +395,19 @@ func tryMatchLevel(
 
 		// 时间窗口检查
 		if cfg.maxTimeDiffSec >= 0 {
+			// 硬性上限截止（高斯衰减的最终兜底，防止极端偏移误匹配）
 			if timeDiff > cfg.maxTimeDiffSec {
 				continue
 			}
 		} else {
-			// L3: 同日检查（UTC）
+			// 同日（UTC）约束（策略 3 专用）
 			tsDay := unixToUTCDay(ts.MatchTime)
 			if srDay != tsDay {
 				continue
 			}
 		}
 
-		// L4 额外约束：至少一支队伍在别名索引中命中
+		// 别名强匹配额外约束：至少一支队伍在别名索引中命中（策略 4 专用）
 		if cfg.requireAlias {
 			homeAliasHit := aliasIdx.HasAlias(sr.HomeID) &&
 				(aliasIdx.GetTSID(sr.HomeID) == ts.HomeID || aliasIdx.GetTSID(sr.HomeID) == ts.AwayID)
@@ -340,10 +432,11 @@ func tryMatchLevel(
 			continue
 		}
 
-		// 综合分
+		// 高斯衰减时间评分（P2 新增）
+		// 当 timeWeight=0 时（策略 3/4），时间分不参与综合分计算，但高斯值仍可用于排序
 		timeFactor := 0.0
-		if cfg.maxTimeDiffSec > 0 {
-			timeFactor = 1.0 - float64(timeDiff)/float64(cfg.maxTimeDiffSec)
+		if cfg.timeWeight > 0 && cfg.sigma > 0 {
+			timeFactor = gaussianTimeFactor(timeDiff, cfg.sigma)
 		}
 		score := cfg.timeWeight*timeFactor + cfg.nameWeight*nameSim
 
@@ -383,8 +476,8 @@ func tryMatchL5(
 	aliasIdx *TeamAliasIndex,
 ) (EventMatch, bool) {
 	type candidate struct {
-		score   float64
-		ts      db.TSEvent
+		score    float64
+		ts       db.TSEvent
 		timeDiff int64
 	}
 	var candidates []candidate
@@ -434,7 +527,7 @@ func tryMatchL5(
 // ─────────────────────────────────────────────────────────────────────────────
 
 // tryMatchL4b L4b: 通过球队 ID 对精确查找（跨时间窗口兜底，无时间限制）。
-// 仅在前四级（L1/L2/L3/L4）均未命中时激活，需要外部传入 teamIDMap。
+// 仅在前四级（策略 1/2/3/4）均未命中时激活，需要外部传入 teamIDMap。
 func tryMatchL4b(
 	sr db.SREvent,
 	tsEvents []db.TSEvent,
@@ -466,10 +559,8 @@ func tryMatchL4b(
 		}
 
 		// 基础置信度 0.75，时间越近加分越高（最高 +0.10）
-		timeBonus := 0.0
-		if timeDiff <= 10800 { // ≤3h
-			timeBonus = 0.10 * (1.0 - float64(timeDiff)/10800.0)
-		}
+		// 使用高斯衰减替代原线性加成，σ=3600s（1h）
+		timeBonus := 0.10 * gaussianTimeFactor(timeDiff, 3600)
 		score := 0.75 + timeBonus
 
 		if score > bestScore {

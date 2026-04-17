@@ -1,7 +1,7 @@
 ---
 id: "PI-001"
-version: "v1.0"
-last_updated: "2026-04-16"
+version: "v1.3"
+last_updated: "2026-04-17"
 author: "Manus AI"
 related_modules: ["internal/matcher", "internal/db", "docs"]
 status: "active"
@@ -89,9 +89,9 @@ status: "active"
 
 ### P2 阶段：时间容差优化与全局别名（预计 2 周）
 
-- [ ] **TODO-011**: 修改 `event.go` 中的 `levelConfigs`，将硬性时间分级替换为高斯衰减连续模糊时间窗口
-- [ ] **TODO-012**: 新增 `internal/db/alias_store.go`，将 `TeamAliasIndex` 升级为数据库持久化的全局知识图谱
-- [ ] **TODO-013**: 重构 `engine.go` 和 `ls_engine.go`，将 SR↔TS 和 LS↔TS 两条链路统一为一套通用引擎
+- [x] **TODO-011**: 修改 `event.go` 中的 `levelConfigs`，将硬性时间分级替换为高斯衰减连续模糊时间窗口 —— **已完成 2026-04-17**（`gaussianTimeFactor` 函数，四种策略 σ 分别为 3600s/10800s/43200s/43200s）
+- [x] **TODO-012**: 新增 `internal/db/alias_store.go`，将 `TeamAliasIndex` 升级为数据库持久化的全局知识图谱 —— **已完成 2026-04-17**（`AliasStore` 支持 Upsert/Lookup/UpsertBatch/PruneStale，`TeamAliasIndex` 新增 `InjectAlias` 实现 `db.AliasIndexLoader` 接口）
+- [x] **TODO-013**: 重构 `engine.go` 和 `ls_engine.go`，将 SR↔TS 和 LS↔TS 两条链路统一为一套通用引擎 —— **已完成 2026-04-17**（新增 `universal_engine.go`：`UniversalEngine`/`SourceAdapter`/`SRSourceAdapter`/`LSSourceAdapter`）
 - [ ] **TODO-014**: 为 `KnownLSLeagueMap` / `KNOWN_LS_TS_MAP` 引入比赛反向确认率自动验证
 
 ### P3 阶段：高级特性与持续优化（预计 4 周）
@@ -137,3 +137,4 @@ status: "active"
 | v1.0 | 2026-04-16 | 初始记录：完整算法设计规划与 18 项优化 TODO | Manus AI |
 | v1.1 | 2026-04-17 | P0 阶段完成：TODO-001~005 全部完成。新增 `league_features.go`（六维特征提取 + 强约束否决 + 层级数字提取）；`name.go` 新增 Jaro-Winkler；`ls_engine.go` 和 `league.go` 引入 `CheckLeagueVeto`；`league_guard_keywords.json` 扩充 70+ 国家别名组和赛制关键词 | Manus AI |
 | v1.2 | 2026-04-17 | P1 阶段完成：TODO-006~010 全部完成。`models.go` 新增 `LSPlayer`/`LSTeam`；新增 `ls_player_adapter.go`（数据库优先+Snapshot API 兆底，支持批量查询）；`team_player.go` 新增 `LSPlayerMatch`/`MatchPlayersForLSTeam`/`DeriveTeamMappingsFromLS`/`ApplyBottomUpLS`；`ls_engine.go` 激活球员匹配阶段和自底向上校验；新增 `reverse_confirm.go`（RCR 计算/分级/回灰联赛置信度）；`result.go` 扩展 LS 结构体球员字段 | Manus AI |
+| v1.3 | 2026-04-17 | P2 阶段完成：TODO-011~013 全部完成。`event.go` 将硬性时间分级替换为高斯衰减连续模糊时间窗口（`gaussianTimeFactor`），新增 `InjectAlias` 实现 `db.AliasIndexLoader` 接口；新增 `internal/db/alias_store.go`（`AliasStore` 持久化球队别名知识图谱，支持 Upsert/UpsertBatch/Lookup/PruneStale/LoadIntoIndex）；新增 `internal/matcher/universal_engine.go`（`UniversalEngine` 通用引擎 + `SourceAdapter` 适配器接口 + `SRSourceAdapter`/`LSSourceAdapter` 实现）；全项编译通过 | Manus AI |
