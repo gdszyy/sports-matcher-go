@@ -261,16 +261,28 @@ func lsLocationVeto(lsCategory, tsCountry string) bool {
 }
 
 // lsLeagueNameScore 计算 LS 联赛与 TS 联赛的名称相似度
-// 改进：引入国家/地区强约束，跨国误匹配直接返回 0
+// 改进（TODO-002 P0）：引入六维强约束一票否决，使用 nameSimilarityMax（Jaccard+JW）替代纯 Jaccard
 func lsLeagueNameScore(ls *db.LSTournament, ts *db.TSCompetition) float64 {
 	// 强约束：地区明显不匹配时直接否决
 	if lsLocationVeto(ls.CategoryName, ts.CountryName) {
 		return 0.0
 	}
 
-	lsNorm := normalizeName(ls.Name)
-	tsNorm := normalizeName(ts.Name)
-	base := jaccardSimilarity(lsNorm, tsNorm)
+	// 六维强约束一票否决（性别、年龄段、区域分区、赛制类型、层级数字）
+	lsFeatures := ExtractLeagueFeatures(ls.Name)
+	tsFeatures := ExtractLeagueFeatures(ts.Name)
+	// 名称相似度用于确定置信度等级（hi/med/low）
+	base := nameSimilarityMax(ls.Name, ts.Name)
+	confLevel := "low"
+	if base >= 0.85 {
+		confLevel = "hi"
+	} else if base >= 0.70 {
+		confLevel = "med"
+	}
+	veto := CheckLeagueVeto(lsFeatures, tsFeatures, confLevel)
+	if veto.Vetoed {
+		return 0.0
+	}
 
 	// 国家/地区名称匹配加分（同国加权提升置信度）
 	if ls.CategoryName != "" && ts.CountryName != "" {

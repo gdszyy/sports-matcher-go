@@ -176,3 +176,118 @@ func teamNameSimilarity(a, b string) float64 {
 func cleanTeamName(name string) string {
 	return NormalizeTeamName(name, false)
 }
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Jaro-Winkler 相似度（TODO-003，P0 阶段）
+// 对短名称和前缀匹配比 Jaccard 更敏感，与 Jaccard 取最大值作为最终相似度
+// ─────────────────────────────────────────────────────────────────────────────
+
+// jaroSimilarity 计算两个字符串的 Jaro 相似度
+// 公式：Jaro(s1,s2) = (m/|s1| + m/|s2| + (m-t)/m) / 3
+// 其中 m 为匹配字符数，t 为转置数（匹配字符顺序不同的对数/2）
+func jaroSimilarity(s1, s2 string) float64 {
+	if s1 == s2 {
+		return 1.0
+	}
+	r1 := []rune(s1)
+	r2 := []rune(s2)
+	l1, l2 := len(r1), len(r2)
+	if l1 == 0 || l2 == 0 {
+		return 0.0
+	}
+
+	// 匹配窗口大小：max(l1,l2)/2 - 1
+	maxL := l1
+	if l2 > maxL {
+		maxL = l2
+	}
+	window := maxL/2 - 1
+	if window < 0 {
+		window = 0
+	}
+
+	matched1 := make([]bool, l1)
+	matched2 := make([]bool, l2)
+
+	matches := 0
+	for i := 0; i < l1; i++ {
+		start := i - window
+		if start < 0 {
+			start = 0
+		}
+		end := i + window + 1
+		if end > l2 {
+			end = l2
+		}
+		for j := start; j < end; j++ {
+			if !matched2[j] && r1[i] == r2[j] {
+				matched1[i] = true
+				matched2[j] = true
+				matches++
+				break
+			}
+		}
+	}
+
+	if matches == 0 {
+		return 0.0
+	}
+
+	// 计算转置数
+	transpositions := 0
+	k := 0
+	for i := 0; i < l1; i++ {
+		if !matched1[i] {
+			continue
+		}
+		for !matched2[k] {
+			k++
+		}
+		if r1[i] != r2[k] {
+			transpositions++
+		}
+		k++
+	}
+
+	m := float64(matches)
+	jaro := (m/float64(l1) + m/float64(l2) + (m-float64(transpositions)/2)/m) / 3.0
+	return jaro
+}
+
+// jaroWinklerSimilarity 计算两个字符串的 Jaro-Winkler 相似度
+// 在 Jaro 基础上对公共前缀给予额外加分（p=0.1，最多 4 个字符前缀）
+// 公式：JW(s1,s2) = Jaro + l * p * (1 - Jaro)
+func jaroWinklerSimilarity(s1, s2 string) float64 {
+	jaro := jaroSimilarity(s1, s2)
+
+	// 计算公共前缀长度（最多 4 个字符）
+	r1 := []rune(s1)
+	r2 := []rune(s2)
+	prefixLen := 0
+	maxPrefix := 4
+	for i := 0; i < len(r1) && i < len(r2) && prefixLen < maxPrefix; i++ {
+		if r1[i] == r2[i] {
+			prefixLen++
+		} else {
+			break
+		}
+	}
+
+	const p = 0.1
+	return jaro + float64(prefixLen)*p*(1.0-jaro)
+}
+
+// nameSimilarityMax 计算两个名称的最大相似度：取 Jaccard 和 Jaro-Winkler 的最大值
+// 适用于联赛名称、球队名称等短文本场景
+func nameSimilarityMax(a, b string) float64 {
+	normA := normalizeName(a)
+	normB := normalizeName(b)
+
+	jaccard := jaccardSimilarity(normA, normB)
+	jw := jaroWinklerSimilarity(normA, normB)
+
+	if jw > jaccard {
+		return jw
+	}
+	return jaccard
+}

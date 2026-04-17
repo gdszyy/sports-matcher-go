@@ -131,11 +131,23 @@ func MatchLeague(srTour *db.SRTournament, tsComps []db.TSCompetition) *LeagueMat
 }
 
 // leagueNameScore 计算联赛名称相似度（含国家加分）
+// 改进（TODO-002 P0）：引入六维强约束一票否决，使用 nameSimilarityMax（Jaccard+JW）替代纯 Jaccard
 func leagueNameScore(sr *db.SRTournament, ts *db.TSCompetition) float64 {
-	srNorm := normalizeName(sr.Name)
-	tsNorm := normalizeName(ts.Name)
+	// 六维强约束一票否决（性别、年龄段、区域分区、赛制类型、层级数字）
+	srFeatures := ExtractLeagueFeatures(sr.Name)
+	tsFeatures := ExtractLeagueFeatures(ts.Name)
 
-	base := jaccardSimilarity(srNorm, tsNorm)
+	base := nameSimilarityMax(sr.Name, ts.Name)
+	confLevel := "low"
+	if base >= 0.85 {
+		confLevel = "hi"
+	} else if base >= 0.70 {
+		confLevel = "med"
+	}
+	veto := CheckLeagueVeto(srFeatures, tsFeatures, confLevel)
+	if veto.Vetoed {
+		return 0.0
+	}
 
 	// 国家/地区名称匹配加分
 	if sr.CategoryName != "" && ts.CountryName != "" {

@@ -73,11 +73,11 @@ status: "active"
 
 ### P0 阶段：强约束拦截与联赛匹配优化（预计 2 周）
 
-- [ ] **TODO-001**: 新增 `internal/matcher/league_features.go`，实现联赛名称的结构化特征提取（地区、性别、年龄段、区域分区、赛制类型、层级数字）
-- [ ] **TODO-002**: 修改 `ls_engine.go` 和 `league.go` 中的联赛匹配函数，引入六维强约束一票否决机制
-- [ ] **TODO-003**: 在 `name.go` 中新增 Jaro-Winkler 相似度函数，与 Jaccard 取最大值作为名称相似度
-- [ ] **TODO-004**: 实现联赛名称中的层级数字提取与精确校验（如 `Liga 3` 中的 `3`、`4 Liga` 中的 `4`）
-- [ ] **TODO-005**: 更新 `docs/league_guard_keywords.json`，补充完整的强约束关键词词典
+- [x] **TODO-001**: 新增 `internal/matcher/league_features.go`，实现联赛名称的结构化特征提取（地区、性别、年龄段、区域分区、赛制类型、层级数字）—— **已完成 2026-04-17**
+- [x] **TODO-002**: 修改 `ls_engine.go` 和 `league.go` 中的联赛匹配函数，引入六维强约束一票否决机制 —— **已完成 2026-04-17**
+- [x] **TODO-003**: 在 `name.go` 中新增 Jaro-Winkler 相似度函数，与 Jaccard 取最大值作为名称相似度 —— **已完成 2026-04-17**
+- [x] **TODO-004**: 实现联赛名称中的层级数字提取与精确校验（如 `Liga 3` 中的 `3`、`4 Liga` 中的 `4`）—— **已完成 2026-04-17**（在 `league_features.go` 中实现）
+- [x] **TODO-005**: 更新 `docs/league_guard_keywords.json`，补充完整的强约束关键词词典 —— **已完成 2026-04-17**
 
 ### P1 阶段：LS 球员层接入与自底向上传导（预计 3 周）
 
@@ -135,3 +135,4 @@ status: "active"
 | 版本 | 日期 | 变更内容 | 作者 |
 |------|------|---------|------|
 | v1.0 | 2026-04-16 | 初始记录：完整算法设计规划与 18 项优化 TODO | Manus AI |
+| v1.1 | 2026-04-17 | P0 阶段完成：TODO-001~005 全部完成。新增 `league_features.go`（六维特征提取 + 强约束否决 + 层级数字提取）；`name.go` 新增 Jaro-Winkler；`ls_engine.go` 和 `league.go` 引入 `CheckLeagueVeto`；`league_guard_keywords.json` 扩充 70+ 国家别名组和赛制关键词 | Manus AI |
