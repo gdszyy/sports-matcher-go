@@ -93,6 +93,7 @@ status: "active"
 - [x] **TODO-012**: 新增 `internal/db/alias_store.go`，将 `TeamAliasIndex` 升级为数据库持久化的全局知识图谱 —— **已完成 2026-04-17**（`AliasStore` 支持 Upsert/Lookup/UpsertBatch/PruneStale，`TeamAliasIndex` 新增 `InjectAlias` 实现 `db.AliasIndexLoader` 接口）
 - [x] **TODO-013**: 重构 `engine.go` 和 `ls_engine.go`，将 SR↔TS 和 LS↔TS 两条链路统一为一套通用引擎 —— **已完成 2026-04-17**（新增 `universal_engine.go`：`UniversalEngine`/`SourceAdapter`/`SRSourceAdapter`/`LSSourceAdapter`）
 - [x] **TODO-014**: 为 `KnownLSLeagueMap` / `KNOWN_LS_TS_MAP` 引入比赛反向确认率自动验证 —— **已完成 2026-04-17**（新增 `known_map_validator.go`：`KnownLeagueMapValidator` 支持 ValidateLS/ValidateSR/MarkManualOverride/ListSuspectMappings，持久化日志表 `known_map_validation_log`；集成到 `LSEngine` 和 `UniversalEngine`）
+- [x] **TODO-019**: 实现标准化数据路由与清洗层（Router + Normalizer + Canonical Models） —— **已完成 2026-04-17**（新增 `canonical_models.go`、`normalizer.go`、`data_router.go`；消除 SR/LS 数据源前缀差异，集中管理清洗逻辑，为算法层提供统一实体形状）
 
 ### P3 阶段：高级特性与持续优化（预计 4 周）
 
@@ -140,3 +141,4 @@ status: "active"
 | v1.3 | 2026-04-17 | P2 阶段完成：TODO-011~013 全部完成。`event.go` 将硬性时间分级替换为高斯衰减连续模糊时间窗口（`gaussianTimeFactor`），新增 `InjectAlias` 实现 `db.AliasIndexLoader` 接口；新增 `internal/db/alias_store.go`（`AliasStore` 持久化球队别名知识图谱，支持 Upsert/UpsertBatch/Lookup/PruneStale/LoadIntoIndex）；新增 `internal/matcher/universal_engine.go`（`UniversalEngine` 通用引擎 + `SourceAdapter` 适配器接口 + `SRSourceAdapter`/`LSSourceAdapter` 实现）；全项编译通过 | Manus AI |
 | v1.4 | 2026-04-17 | P2 全阶段收尾：TODO-014 完成。新增 `internal/matcher/known_map_validator.go`（`KnownLeagueMapValidator`：已知映射表反向确认率自动验证，支持 ValidateLS/ValidateSR/MarkManualOverride/ClearOverride/ListSuspectMappings/GetRecentRCR，持久化日志表 `known_map_validation_log`）；`LSEngine` 新增 `MapValidator` 字段和 `NewLSEngineWithValidator`；`UniversalEngine` 集成验证器（Step 7b）；P2 全部 4 项 TODO 全部完成 | Manus AI |
 | v1.5 | 2026-04-17 | P3 阶段（TODO-015~017）完成。新增 `dense_blocking.go`（`DenseBlocker`：trigram TF-IDF Entity2Vec 编码器 + NSW 近邻图索引，支持 Build/Query/QueryDefault，`BuildTSEventBlocker`/`QueryTSCandidates` 集成辅助）；新增 `fs_model.go`（`FSModel`：5 字段 FS 比较向量 + `FitEM` 无监督 EM 算法 + `ScoreNormalized`/`Classify`；`FSModelStore` 联赛级模型缓存 + 增量学习）；新增 `event_dtw.go`（`ExtractAnchors`/`EstimateOffset`（中位数+MAD）/`DTWAlign`（Sakoe-Chiba 带宽约束）/`EventDTWMatcher.TryCorrect`（兑底修正层））；全项编译通过 | Manus AI |
+| v1.6 | 2026-04-17 | P2 架构增强完成：TODO-019 完成。新增标准化数据路由与清洗层（Router + Normalizer + Canonical Models），彻底解耦数据源与匹配算法，实现真正的 Canonical 实体流转。 | Manus AI |
