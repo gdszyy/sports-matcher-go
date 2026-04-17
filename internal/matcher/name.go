@@ -170,15 +170,18 @@ func teamNameSimilarity(a, b string) float64 {
 	normalized := normalizedTeamSimilarity(a, b)
 
 	// 归一化后 Jaro-Winkler（对短名称和前缀匹配更敏感）
+	// 注意：JW 是字符级匹配，对球队名称（单词级）存在假阳性风险。
+	// 仅当 JW >= 0.75 时才采用，避免 "Arsenal" vs "Juventus" 等无关名称被拉高。
 	na := NormalizeTeamName(a, false)
 	nb := NormalizeTeamName(b, false)
 	jw := jaroWinklerSimilarity(na, nb)
+	const jwMinThreshold = 0.75 // JW 最低采用阈值
 
 	best := direct
 	if normalized > best {
 		best = normalized
 	}
-	if jw > best {
+	if jw >= jwMinThreshold && jw > best {
 		best = jw
 	}
 	return best

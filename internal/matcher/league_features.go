@@ -537,14 +537,14 @@ func CheckLeagueVeto(a, b LeagueFeatures, confidenceLevel string) LeagueVetoResu
 		}
 	}
 
-	// ── 5. 层级数字强约束（仅在 med/low 置信度时否决）────────────────────────
-	if confidenceLevel != "hi" {
-		if a.TierNumber > 0 && b.TierNumber > 0 && a.TierNumber != b.TierNumber {
-			return LeagueVetoResult{
-				Vetoed: true,
-				Reason: VetoTierNumber,
-				Detail: "tier " + strconv.Itoa(a.TierNumber) + " vs tier " + strconv.Itoa(b.TierNumber),
-			}
+	// ── 5. 层级数字强约束（在所有置信度级别下均生效）─────────────────────
+	// 层级数字冲突属于强约束，不应因名称相似度高而豪免。
+	// 典型场景："Liga 2 Peru" vs "Liga 1 Peru" 名称相似度高（~0.97）但层级不同，应否决。
+	if a.TierNumber > 0 && b.TierNumber > 0 && a.TierNumber != b.TierNumber {
+		return LeagueVetoResult{
+			Vetoed: true,
+			Reason: VetoTierNumber,
+			Detail: "tier " + strconv.Itoa(a.TierNumber) + " vs tier " + strconv.Itoa(b.TierNumber),
 		}
 	}
 
