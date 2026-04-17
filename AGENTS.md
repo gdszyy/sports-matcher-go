@@ -35,6 +35,7 @@
 | 强校验关键词词典 | [`docs/league_guard_keywords.json`](docs/league_guard_keywords.json) |
 | 通用算法设计规划 | [`docs/universal_matching_algorithm_design.md`](docs/universal_matching_algorithm_design.md) |
 | 优化 TODO 与防坑指南 | [`.cursor/rules/process_insights/PI-001_universal_matching_algorithm_design.md`](.cursor/rules/process_insights/PI-001_universal_matching_algorithm_design.md) |
+| **标准化数据路由设计** | [`docs/standardized_data_router_design.md`](docs/standardized_data_router_design.md) |
 
 ---
 
