@@ -93,6 +93,20 @@ type LSTournament struct {
 	Sport        string // 推导后的运动类型名称：football / basketball / tennis 等
 }
 
+// LSTeam LSports 球队（从 Snapshot Participants 中提取）
+type LSTeam struct {
+	ID   string // competitor_id
+	Name string
+}
+
+// LSPlayer LSports 球员（从 Snapshot Fixture.Participants[].Players 中提取）
+// 注意：LSports Snapshot 提供的球员数据字段较少，仅含 ID 和名称，无生日/国籍
+type LSPlayer struct {
+	ID     string // LSports Player ID（整数字符串）
+	Name   string // 英文名称
+	TeamID string // 所属球队 competitor_id
+}
+
 // LSEvent LSports 赛事
 type LSEvent struct {
 	ID           string // event_id

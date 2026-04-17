@@ -16,10 +16,11 @@ globs: ["internal_matcher/**/*"]
 | `league.go` | SR 侧联赛匹配逻辑（`MatchLeague`、`leagueNameScore`）+ 已知映射表 `KnownLeagueMap` |
 | `league_features.go` | **P0 新增**：联赛名称结构化特征提取（`ExtractLeagueFeatures`）+ 六维强约束一票否决（`CheckLeagueVeto`）+ 层级数字提取（`extractTierNumber`） |
 | `event.go` | 多级比赛匹配（L1-L5 + L4b）、`TeamAliasIndex` 动态别名学习 |
-| `team_player.go` | 球队/球员匹配、`ApplyBottomUp` 自底向上校验 |
+| `team_player.go` | SR 球队/球员匹配、`ApplyBottomUp`；**P1 新增** `LSPlayerMatch`、`MatchPlayersForLSTeam`、`DeriveTeamMappingsFromLS`、`ApplyBottomUpLS` |
+| `reverse_confirm.go` | **P1 新增**：比赛反向确认率（`ComputeReverseConfirmRate`）、分级（`ClassifyRCR`）、回灰联赛置信度（`ApplyRCRToLeague`） |
 | `name.go` | 名称归一化（`normalizeName`）、Jaccard 相似度、**P0 新增** Jaro-Winkler 相似度（`jaroWinklerSimilarity`）、`nameSimilarityMax` |
-| `team_name_normalizer.go` | 球队名称深度归一化（8 步流水线，去俱乐部缩写/赞助商/变音符等） |
-| `result.go` | 匹配结果数据结构定义（`LeagueMatch`、`EventMatch`、`LSLeagueMatch`、`LSEventMatch` 等） |
+| `team_name_normalizer.go` | 球队名称深度归一化（8 步流水线，去信乐部缩写/赞助商/变音符等） |
+| `result.go` | 匹配结果数据结构定义；**P1 扩展** `LSEventMatch`/`LSTeamMapping`/`LSMatchStats`/`LSMatchResult` 球员字段 |
 
 ---
 
@@ -132,4 +133,5 @@ type LeagueVetoResult struct {
 | 版本 | 日期 | 变更内容 |
 |------|------|---------|
 | v1.0 | 2026-04-16 | 初始规范文档（占位） |
-| v2.0 | 2026-04-17 | P0 阶段完成：新增 `league_features.go`（六维特征提取 + 强约束否决 + 层级数字提取）；`name.go` 新增 Jaro-Winkler；`ls_engine.go` 和 `league.go` 引入 `CheckLeagueVeto`；`docs/league_guard_keywords.json` 扩充关键词词典 |
+| v2.0 | 2026-04-17 | P0 阶段完成：新增 `league_features.go`（六维特征提取 + 强约束否决 + 层级数字提取）；`name.go` 新增 Jaro-Winkler；`ls_engine.go` 和 `league.go` 引入 `CheckLeagueVeto`；`docs/league_guard_keywords.json` 扩充完整的模块规范（职责、数据模型、业务规则、变更日志） |
+| v2.1 | 2026-04-17 | P1 阶段完成：`models.go` 新增 `LSPlayer`/`LSTeam`；新增 `ls_player_adapter.go`（数据库优先+Snapshot API 兆底，支持批量）；`team_player.go` 新增 LS 球员匹配和自底向上校验；`ls_engine.go` 激活球员匹配阶段；新增 `reverse_confirm.go`；`result.go` 扩展 LS 结构体 |

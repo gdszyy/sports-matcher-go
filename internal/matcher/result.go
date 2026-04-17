@@ -178,6 +178,9 @@ type LSEventMatch struct {
 	MatchRule   MatchRule `json:"match_rule"`
 	Confidence  float64   `json:"confidence"`
 	TimeDiffSec int64     `json:"time_diff_sec,omitempty"`
+
+	// 自底向上校正后的置信度加成（P1 新增）
+	BottomUpBonus float64 `json:"bottom_up_bonus,omitempty"`
 }
 
 // LSTeamMapping LS ↔ TS 球队映射
@@ -189,6 +192,10 @@ type LSTeamMapping struct {
 	MatchRule  MatchRule `json:"match_rule"`
 	Confidence float64   `json:"confidence"`
 	VoteCount  int       `json:"vote_count"`
+
+	// 自底向上校正（P1 新增）
+	PlayerOverlapRate float64 `json:"player_overlap_rate,omitempty"`
+	BottomUpBonus     float64 `json:"bottom_up_bonus,omitempty"`
 }
 
 // LSMatchStats LS ↔ TS 匹配统计
@@ -217,13 +224,23 @@ type LSMatchStats struct {
 	TeamMatched   int     `json:"team_matched"`
 	TeamMatchRate float64 `json:"team_match_rate"`
 
+	// 球员匹配统计（P1 新增）
+	PlayerTotal     int     `json:"player_total,omitempty"`
+	PlayerMatched   int     `json:"player_matched,omitempty"`
+	PlayerMatchRate float64 `json:"player_match_rate,omitempty"`
+	PlayerAvgConf   float64 `json:"player_avg_confidence,omitempty"`
+
+	// 比赛反向确认率（P1 新增，由 reverse_confirm.go 计算）
+	ReverseConfirmRate float64 `json:"reverse_confirm_rate,omitempty"`
+
 	ElapsedMs int64 `json:"elapsed_ms"`
 }
 
 // LSMatchResult LS ↔ TS 单联赛完整匹配结果
 type LSMatchResult struct {
-	League *LSLeagueMatch  `json:"league"`
-	Events []LSEventMatch  `json:"events"`
-	Teams  []LSTeamMapping `json:"teams"`
-	Stats  LSMatchStats    `json:"stats"`
+	League  *LSLeagueMatch  `json:"league"`
+	Events  []LSEventMatch  `json:"events"`
+	Teams   []LSTeamMapping `json:"teams"`
+	Players []LSPlayerMatch `json:"players,omitempty"` // P1 新增
+	Stats   LSMatchStats    `json:"stats"`
 }

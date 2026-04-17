@@ -14,11 +14,23 @@ import (
 type LSEngine struct {
 	LS         *db.LSAdapter
 	TS         *db.TSAdapter
+	LSPlayer   *db.LSPlayerAdapter // P1 新增：LS 球员数据适配器
+	RunPlayers bool                // P1 新增：是否执行球员匹配 + 自底向上校验
 }
 
 // NewLSEngine 创建 LS ↔ TS 匹配引擎
 func NewLSEngine(ls *db.LSAdapter, ts *db.TSAdapter) *LSEngine {
 	return &LSEngine{LS: ls, TS: ts}
+}
+
+// NewLSEngineWithPlayers 创建支持球员匹配的 LS ↔ TS 匹配引擎
+func NewLSEngineWithPlayers(ls *db.LSAdapter, ts *db.TSAdapter, lsPlayer *db.LSPlayerAdapter) *LSEngine {
+	return &LSEngine{
+		LS:         ls,
+		TS:         ts,
+		LSPlayer:   lsPlayer,
+		RunPlayers: lsPlayer != nil,
+	}
 }
 
 // RunLeague 对单个 LSports 联赛执行完整 LS ↔ TS 匹配流程
@@ -132,6 +144,67 @@ func (e *LSEngine) RunLeague(lsTournamentID, sport, tier, tsCompetitionID string
 
 	result.Events = eventMatches
 	result.Teams = teamMappings
+
+	// ── Step 7: 球员匹配 + 自底向上反向验证（P1 新增）──────────────────────
+	if e.RunPlayers && e.LSPlayer != nil && len(teamMappings) > 0 {
+		log.Printf("[LS] [5/5] 球员匹配...")
+
+		// 收集所有 LS 球队 ID
+		lsTeamIDs := make([]string, 0, len(teamMappings))
+		for _, tm := range teamMappings {
+			if tm.LSTeamID != "" {
+				lsTeamIDs = append(lsTeamIDs, tm.LSTeamID)
+			}
+		}
+
+		// 批量获取 LS 球员数据（减少 Snapshot API 调用次数）
+		lsPlayerMap, err := e.LSPlayer.GetPlayersByTeamBatch(lsTeamIDs)
+		if err != nil {
+			log.Printf("[LS]   警告: 获取 LS 球员数据失败: %v", err)
+			lsPlayerMap = nil
+		}
+
+		var allPlayerMatches []LSPlayerMatch
+
+		for _, tm := range teamMappings {
+			if tm.TSTeamID == "" {
+				continue
+			}
+
+			lsPlayers := lsPlayerMap[tm.LSTeamID]
+			if len(lsPlayers) == 0 {
+				continue
+			}
+
+			tsPlayers, err := e.TS.GetPlayersByTeam(tm.TSTeamID, sport)
+			if err != nil || len(tsPlayers) == 0 {
+				continue
+			}
+
+			pms := MatchPlayersForLSTeam(lsPlayers, tsPlayers, tm.LSTeamID, tm.TSTeamID)
+			allPlayerMatches = append(allPlayerMatches, pms...)
+		}
+
+		matchedPl := 0
+		for _, p := range allPlayerMatches {
+			if p.Matched {
+				matchedPl++
+			}
+		}
+		log.Printf("[LS]   → 球员匹配: %d/%d", matchedPl, len(allPlayerMatches))
+		result.Players = allPlayerMatches
+
+		// 自底向上校正
+		if len(allPlayerMatches) > 0 {
+			log.Printf("[LS] [自底向上] 反向验证校正置信度...")
+			result.Teams, result.Events = ApplyBottomUpLS(
+				result.Teams, result.Players, result.Events,
+			)
+		}
+	} else {
+		log.Printf("[LS] [5/5] 跳过球员匹配")
+	}
+
 	result.Stats = computeLSStats(result, sport, tier, time.Since(t0))
 	return result, nil
 }
@@ -503,6 +576,27 @@ func computeLSStats(r *LSMatchResult, sport, tier string, elapsed time.Duration)
 	}
 	if s.TeamTotal > 0 {
 		s.TeamMatchRate = math.Round(float64(s.TeamMatched)/float64(s.TeamTotal)*1000) / 1000
+	}
+
+	// 球员匹配统计（P1 新增）
+	s.PlayerTotal = len(r.Players)
+	plConfSum := 0.0
+	for _, p := range r.Players {
+		if p.Matched {
+			s.PlayerMatched++
+			plConfSum += p.Confidence
+		}
+	}
+	if s.PlayerTotal > 0 {
+		s.PlayerMatchRate = math.Round(float64(s.PlayerMatched)/float64(s.PlayerTotal)*1000) / 1000
+	}
+	if s.PlayerMatched > 0 {
+		s.PlayerAvgConf = math.Round(plConfSum/float64(s.PlayerMatched)*1000) / 1000
+	}
+
+	// 比赛反向确认率（P1 新增）
+	if s.EventTotal > 0 {
+		s.ReverseConfirmRate = ComputeReverseConfirmRate(r.Events)
 	}
 
 	s.ElapsedMs = elapsed.Milliseconds()

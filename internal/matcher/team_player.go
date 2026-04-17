@@ -244,3 +244,244 @@ func normalizeDOB(dob string) string {
 	}
 	return dob
 }
+
+// ─────────────────────────────────────────────────────────────────────────────
+// LS 链路球员匹配（TODO-008 P1 阶段）
+// LSPlayer 无生日/国籍，只能依赖名称相似度，阀値略高
+// ─────────────────────────────────────────────────────────────────────────────
+
+// LSPlayerMatch LS 链路球员匹配结果
+// 与 SR 链路的 PlayerMatch 结构对齐，但来源字段为 LS 类型
+type LSPlayerMatch struct {
+	LSPlayerID string    `json:"ls_player_id"`
+	LSName     string    `json:"ls_name"`
+	LSTeamID   string    `json:"ls_team_id"`
+
+	TSPlayerID string    `json:"ts_player_id,omitempty"`
+	TSName     string    `json:"ts_name,omitempty"`
+	TSDOB      string    `json:"ts_dob,omitempty"`
+	TSTeamID   string    `json:"ts_team_id,omitempty"`
+
+	Matched    bool      `json:"matched"`
+	MatchRule  MatchRule `json:"match_rule"`
+	Confidence float64   `json:"confidence"`
+}
+
+// MatchPlayersForLSTeam 对单个 LS 球队的球员进行匹配
+// 由于 LSPlayer 无生日/国籍，只能依赖名称相似度
+// 为补偿无 DOB 的信息损失，高相似度阈值设为 0.75（高于 SR 链路的 0.70）
+func MatchPlayersForLSTeam(
+	lsPlayers []db.LSPlayer,
+	tsPlayers []db.TSPlayer,
+	lsTeamID, tsTeamID string,
+) []LSPlayerMatch {
+	results := make([]LSPlayerMatch, 0, len(lsPlayers))
+	usedTSIDs := make(map[string]bool)
+
+	for _, lsP := range lsPlayers {
+		pm := LSPlayerMatch{
+			LSPlayerID: lsP.ID,
+			LSName:     lsP.Name,
+			LSTeamID:   lsTeamID,
+			Matched:    false,
+			MatchRule:  RulePlayerNoMatch,
+		}
+
+		bestScore := -1.0
+		var bestTS *db.TSPlayer
+
+		for i := range tsPlayers {
+			tsP := &tsPlayers[i]
+			if usedTSIDs[tsP.ID] {
+				continue
+			}
+
+			// LS 无生日，只能依赖名称相似度
+			// 使用 nameSimilarityMax（Jaccard+JW）以提升短名称匹配精度
+			nameSim := nameSimilarityMax(lsP.Name, tsP.Name)
+			if nameSim < 0.65 { // LS 预过滤阈值（略高于 SR 的 0.60）
+				continue
+			}
+
+			if nameSim > bestScore {
+				bestScore = nameSim
+				bestTS = tsP
+			}
+		}
+
+		// LS 链路无 DOB，需要更高的名称相似度才确认匹配
+		if bestTS != nil && bestScore >= 0.75 {
+			pm.TSPlayerID = bestTS.ID
+			pm.TSName = bestTS.Name
+			pm.TSDOB = bestTS.Birthday
+			pm.TSTeamID = tsTeamID
+			pm.Matched = true
+			pm.Confidence = math.Round(bestScore*1000) / 1000
+			usedTSIDs[bestTS.ID] = true
+
+			if bestScore >= 0.90 {
+				pm.MatchRule = RulePlayerNameHi
+			} else {
+				pm.MatchRule = RulePlayerNameMed
+			}
+		}
+
+		results = append(results, pm)
+	}
+
+	return results
+}
+
+// DeriveTeamMappingsFromLS 从 LS 比赛匹配结果中投票推导球队映射
+// 与 SR 链路的 DeriveTeamMappings 逻辑相同，但使用 LSTeamMapping 结构
+func DeriveTeamMappingsFromLS(
+	events []LSEventMatch,
+	lsTeamNames map[string]string,
+	tsTeamNames map[string]string,
+) []LSTeamMapping {
+	// 投票：LS team_id → (TS team_id → 票数)
+	homeVotes := make(map[string]map[string]int)
+	awayVotes := make(map[string]map[string]int)
+
+	for _, ev := range events {
+		if !ev.Matched || ev.TSHomeID == "" {
+			continue
+		}
+		if homeVotes[ev.LSHomeID] == nil {
+			homeVotes[ev.LSHomeID] = make(map[string]int)
+		}
+		homeVotes[ev.LSHomeID][ev.TSHomeID]++
+
+		if awayVotes[ev.LSAwayID] == nil {
+			awayVotes[ev.LSAwayID] = make(map[string]int)
+		}
+		awayVotes[ev.LSAwayID][ev.TSAwayID]++
+	}
+
+	// 合并主客队投票
+	allVotes := make(map[string]map[string]int)
+	for lsID, votes := range homeVotes {
+		if allVotes[lsID] == nil {
+			allVotes[lsID] = make(map[string]int)
+		}
+		for tsID, cnt := range votes {
+			allVotes[lsID][tsID] += cnt
+		}
+	}
+	for lsID, votes := range awayVotes {
+		if allVotes[lsID] == nil {
+			allVotes[lsID] = make(map[string]int)
+		}
+		for tsID, cnt := range votes {
+			allVotes[lsID][tsID] += cnt
+		}
+	}
+
+	// 取每个 LS 球队得票最多的 TS 球队
+	var mappings []LSTeamMapping
+	for lsID, votes := range allVotes {
+		bestTSID := ""
+		bestVotes := 0
+		totalVotes := 0
+		for tsID, cnt := range votes {
+			totalVotes += cnt
+			if cnt > bestVotes {
+				bestVotes = cnt
+				bestTSID = tsID
+			}
+		}
+		if bestTSID == "" {
+			continue
+		}
+
+		confidence := float64(bestVotes) / float64(totalVotes)
+		nameSim := teamNameSimilarity(lsTeamNames[lsID], tsTeamNames[bestTSID])
+		finalConf := math.Round((confidence*0.6+nameSim*0.4)*1000) / 1000
+
+		mappings = append(mappings, LSTeamMapping{
+			LSTeamID:   lsID,
+			LSTeamName: lsTeamNames[lsID],
+			TSTeamID:   bestTSID,
+			TSTeamName: tsTeamNames[bestTSID],
+			MatchRule:  RuleTeamDerived,
+			Confidence: finalConf,
+			VoteCount:  bestVotes,
+		})
+	}
+
+	return mappings
+}
+
+// ApplyBottomUpLS 自底向上反向验证：用 LS 球员重叠率校正球队和比赛置信度
+// 与 SR 链路的 ApplyBottomUp 逻辑相同，但使用 LS 专用结构
+func ApplyBottomUpLS(
+	teams []LSTeamMapping,
+	players []LSPlayerMatch,
+	events []LSEventMatch,
+) ([]LSTeamMapping, []LSEventMatch) {
+	// 计算每个球队的球员重叠率
+	teamPlayerCounts := make(map[string]int)
+	teamMatchedCounts := make(map[string]int)
+
+	for _, p := range players {
+		teamPlayerCounts[p.LSTeamID]++
+		if p.Matched {
+			teamMatchedCounts[p.LSTeamID]++
+		}
+	}
+
+	teamOverlap := make(map[string]float64)
+	for _, tm := range teams {
+		total := teamPlayerCounts[tm.LSTeamID]
+		matched := teamMatchedCounts[tm.LSTeamID]
+		if total > 0 {
+			teamOverlap[tm.LSTeamID] = float64(matched) / float64(total)
+		}
+	}
+
+	// 校正球队置信度
+	for i := range teams {
+		overlap := teamOverlap[teams[i].LSTeamID]
+		teams[i].PlayerOverlapRate = math.Round(overlap*1000) / 1000
+
+		bonus := 0.0
+		switch {
+		case overlap >= 0.60:
+			bonus = 0.15
+		case overlap >= 0.40:
+			bonus = 0.08
+		case overlap >= 0.20:
+			bonus = 0.03
+		}
+		teams[i].BottomUpBonus = bonus
+		newConf := teams[i].Confidence + bonus
+		if newConf > 1.0 {
+			newConf = 1.0
+		}
+		teams[i].Confidence = math.Round(newConf*1000) / 1000
+	}
+
+	// 构建球队置信度加成映射
+	teamBonus := make(map[string]float64)
+	for _, tm := range teams {
+		teamBonus[tm.LSTeamID] = tm.BottomUpBonus
+	}
+
+	// 校正比赛置信度
+	for i := range events {
+		if !events[i].Matched {
+			continue
+		}
+		homeBonus := teamBonus[events[i].LSHomeID]
+		awayBonus := teamBonus[events[i].LSAwayID]
+		totalBonus := (homeBonus + awayBonus) / 2.0
+		events[i].BottomUpBonus = math.Round(totalBonus*1000) / 1000
+		newConf := events[i].Confidence + totalBonus
+		if newConf > 1.0 {
+			newConf = 1.0
+		}
+		events[i].Confidence = math.Round(newConf*1000) / 1000
+	}
+
+	return teams, events
+}

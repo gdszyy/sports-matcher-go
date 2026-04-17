@@ -81,11 +81,11 @@ status: "active"
 
 ### P1 阶段：LS 球员层接入与自底向上传导（预计 3 周）
 
-- [ ] **TODO-006**: 在 `internal/db/models.go` 中新增 `LSPlayer` 结构体
-- [ ] **TODO-007**: 新增 `internal/db/ls_player_adapter.go`，通过 lsport-connector Snapshot API 获取 LS 球员数据
-- [ ] **TODO-008**: 修改 `team_player.go`，适配 LS 数据结构的球员匹配逻辑
-- [ ] **TODO-009**: 在 `ls_engine.go` 中激活 `ApplyBottomUp` 自底向上校验
-- [ ] **TODO-010**: 新增 `internal/matcher/reverse_confirm.go`，实现联赛级的比赛反向确认率计算
+- [x] **TODO-006**: 在 `internal/db/models.go` 中新增 `LSPlayer` 和 `LSTeam` 结构体 —— **已完成 2026-04-17**
+- [x] **TODO-007**: 新增 `internal/db/ls_player_adapter.go`，实现数据库优先 + Snapshot API 兆底的双路球员获取，支持批量查询 —— **已完成 2026-04-17**
+- [x] **TODO-008**: 修改 `team_player.go`，新增 `LSPlayerMatch` 结构、`MatchPlayersForLSTeam`（高阈值名称匹配）、`DeriveTeamMappingsFromLS`、`ApplyBottomUpLS` —— **已完成 2026-04-17**
+- [x] **TODO-009**: 在 `ls_engine.go` 中激活球员匹配阶段和 `ApplyBottomUpLS` 自底向上校验；新增 `NewLSEngineWithPlayers`；扩展 `LSMatchStats`/`LSMatchResult` 球员字段 —— **已完成 2026-04-17**
+- [x] **TODO-010**: 新增 `internal/matcher/reverse_confirm.go`，实现 `ComputeReverseConfirmRate`、`ClassifyRCR`、`ApplyRCRToLeague` —— **已完成 2026-04-17**
 
 ### P2 阶段：时间容差优化与全局别名（预计 2 周）
 
@@ -136,3 +136,4 @@ status: "active"
 |------|------|---------|------|
 | v1.0 | 2026-04-16 | 初始记录：完整算法设计规划与 18 项优化 TODO | Manus AI |
 | v1.1 | 2026-04-17 | P0 阶段完成：TODO-001~005 全部完成。新增 `league_features.go`（六维特征提取 + 强约束否决 + 层级数字提取）；`name.go` 新增 Jaro-Winkler；`ls_engine.go` 和 `league.go` 引入 `CheckLeagueVeto`；`league_guard_keywords.json` 扩充 70+ 国家别名组和赛制关键词 | Manus AI |
+| v1.2 | 2026-04-17 | P1 阶段完成：TODO-006~010 全部完成。`models.go` 新增 `LSPlayer`/`LSTeam`；新增 `ls_player_adapter.go`（数据库优先+Snapshot API 兆底，支持批量查询）；`team_player.go` 新增 `LSPlayerMatch`/`MatchPlayersForLSTeam`/`DeriveTeamMappingsFromLS`/`ApplyBottomUpLS`；`ls_engine.go` 激活球员匹配阶段和自底向上校验；新增 `reverse_confirm.go`（RCR 计算/分级/回灰联赛置信度）；`result.go` 扩展 LS 结构体球员字段 | Manus AI |
