@@ -386,6 +386,55 @@ func matchLSLeague(lsTour *db.LSTournament, tsComps []db.TSCompetition) *LSLeagu
 	return result
 }
 
+// geoAliasGroups 地理别名组（优化建议 §3.5）
+// 每组中的名称均指同一国家/地区，用于模糊地理匹配
+var geoAliasGroups = [][]string{
+	{"usa", "united states", "us", "america"},
+	{"uk", "united kingdom", "great britain", "england", "britain"},
+	{"south korea", "korea", "republic of korea"},
+	{"north korea", "dpr korea", "democratic peoples republic of korea"},
+	{"czech republic", "czechia", "czech"},
+	{"ivory coast", "cote divoire", "cote d ivoire"},
+	{"north macedonia", "macedonia"},
+	{"trinidad and tobago", "trinidad tobago"},
+	{"bosnia and herzegovina", "bosnia", "bosnia herzegovina"},
+	{"saint kitts and nevis", "saint kitts nevis"},
+	{"antigua and barbuda", "antigua barbuda"},
+	{"sao tome and principe", "sao tome principe"},
+	{"congo dr", "democratic republic of congo", "dr congo", "zaire"},
+	{"republic of ireland", "ireland"},
+	{"cape verde", "cabo verde"},
+	{"uae", "united arab emirates"},
+}
+
+// geoAliasIndex 地理别名快速查询索引（归一化名称 → 组索引）
+var geoAliasIndex = func() map[string]int {
+	idx := make(map[string]int)
+	for i, group := range geoAliasGroups {
+		for _, name := range group {
+			idx[name] = i
+		}
+	}
+	return idx
+}()
+
+// geoSimilarity 计算两个地理名称的相似度（优化建议 §3.5）
+// 先尝试地理别名匹配，再回退到 Jaccard 相似度
+func geoSimilarity(a, b string) float64 {
+	// 完全相同
+	if a == b {
+		return 1.0
+	}
+	// 地理别名匹配：若两者属于同一别名组，返回 1.0
+	if gi, ok := geoAliasIndex[a]; ok {
+		if gj, ok2 := geoAliasIndex[b]; ok2 && gi == gj {
+			return 1.0
+		}
+	}
+	// 回退到 Jaccard 相似度
+	return jaccardSimilarity(a, b)
+}
+
 // lsInternationalCategory 判断地区名称是否属于洲际/国际赛事（不应强制约束国家匹配）
 func lsInternationalCategory(name string) bool {
 	norm := normalizeName(name)
@@ -422,6 +471,7 @@ func lsLocationVeto(lsCategory, tsCountry string) bool {
 // lsLeagueNameScore 计算 LS 联赛与 TS 联赛的名称相似度
 // 改进（TODO-002 P0）：引入六维强约束一票否决，使用 nameSimilarityMax（Jaccard+JW）替代纯 Jaccard
 // 改进（PI-002）：引入别名感知相似度，解决官方名称与常用名称差异较大的问题
+// 改进（优化建议 §3.5/3.6）：引入负向特征惩罚和地理别名词典
 //
 //	典型案例：LS "EFL League One" ↔ TS "League One" 通过别名索引直接命中
 func lsLeagueNameScore(ls *db.LSTournament, ts *db.TSCompetition) float64 {
@@ -450,11 +500,21 @@ func lsLeagueNameScore(ls *db.LSTournament, ts *db.TSCompetition) float64 {
 		return 0.0
 	}
 
+	// 负向特征惩罚（优化建议 §3.6）
+	// 对未触发 Veto 但特征存在明显差异的情况施加惩罚
+	penalty := CalcFeaturePenalty(lsFeatures, tsFeatures)
+	if penalty <= 0 {
+		return 0.0
+	}
+	base *= penalty
+
 	// 国家/地区名称匹配加分（同国加权提升置信度）
+	// 优化（优化建议 §3.5）：引入地理别名词典，支持 USA vs United States 等模糊匹配
 	if ls.CategoryName != "" && ts.CountryName != "" {
 		catNorm := normalizeName(ls.CategoryName)
 		cntNorm := normalizeName(ts.CountryName)
-		locSim := jaccardSimilarity(catNorm, cntNorm)
+		// 先尝试地理别名匹配
+		locSim := geoSimilarity(catNorm, cntNorm)
 		if locSim >= 0.6 {
 			// 同国联赛：名称相似度加权提升
 			base = base*0.75 + 0.25*locSim

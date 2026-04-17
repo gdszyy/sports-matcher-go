@@ -99,17 +99,27 @@ var regionOrder = []string{
 }
 
 // competitionTypeKeywords key=规范化赛制标签
+// 扩充（优化建议 §3.4）：
+//   - reserve: 预备队/二队识别（Reserve, B Team, II, Reserves）
+//   - regional_league: 州联赛/地区性联赛识别（Campeonato, Paulista, Carioca 等）
 var competitionTypeKeywords = map[string][]string{
-	"short_format": {"5x5", "6x6", "7x7", "futsal", "indoor", "amateur", "lfl", "mini", "street", "beach", "sala", "futsala"},
-	"cup":          {"cup", "copa", "coppa", "cupe", "pokal", "trophy", "coupe", "taca", "kupa", "puchar", "cupen", "cupp", "pokalen", "beker"},
-	"super_cup":    {"super cup", "supercup", "super copa", "supercoppa", "super coupe", "charity shield"},
-	"playoff":      {"playoff", "play-offs", "play offs", "final stage", "championship round", "relegation round"},
-	"friendly":     {"friendly", "friendlies", "test match", "exhibition", "international friendly"},
-	"league":       {"league", "liga", "ligue", "serie", "division", "championship", "ekstraklasa", "superliga", "premiership"},
+	"short_format":   {"5x5", "6x6", "7x7", "futsal", "indoor", "amateur", "lfl", "mini", "street", "beach", "sala", "futsala"},
+	"cup":            {"cup", "copa", "coppa", "cupe", "pokal", "trophy", "coupe", "taca", "kupa", "puchar", "cupen", "cupp", "pokalen", "beker"},
+	"super_cup":      {"super cup", "supercup", "super copa", "supercoppa", "super coupe", "charity shield"},
+	"playoff":        {"playoff", "play-offs", "play offs", "final stage", "championship round", "relegation round"},
+	"friendly":       {"friendly", "friendlies", "test match", "exhibition", "international friendly"},
+	// reserve: 预备队/二队识别（优化建议 §3.4）
+	// 注意："reserve"/"b team" 已在 ageGroupKeywords["youth"] 中处理，此处展开为赛制类型层面的强约束
+	"reserve":        {"reserve", "reserves", "b team", "b-team", "ii team", "segunda equipa", "equipe b"},
+	// regional_league: 州联赛/地区性联赛（优化建议 §3.4）
+	// 针对巴西等国家的州级赛事，防止与全国性 Serie A/B 误匹配
+	"regional_league": {"paulista", "carioca", "gaucho", "mineiro", "baiano", "pernambucano", "paraense", "cearense", "paranaense", "alagoano", "sergipano", "capixaba", "potiguar"},
+	"league":          {"league", "liga", "ligue", "serie", "division", "championship", "ekstraklasa", "superliga", "premiership"},
 }
 
 // competitionTypeOrder short_format 和 super_cup 优先于 cup/league（避免误匹配）
-var competitionTypeOrder = []string{"short_format", "super_cup", "cup", "playoff", "friendly", "league"}
+// reserve 和 regional_league 在 league 之前检测，防止被泛化的 "league" 关键词先行匹配
+var competitionTypeOrder = []string{"short_format", "super_cup", "cup", "playoff", "friendly", "reserve", "regional_league", "league"}
 
 // ─────────────────────────────────────────────────────────────────────────────
 // 层级数字提取（TODO-004 的核心逻辑，在本文件中实现）
@@ -148,12 +158,24 @@ var tierPatterns = []*regexp.Regexp{
 }
 
 // wordTierMap 文字层级词 → 数字层级（与 tier_keywords 对应）
+// 扩充（优化建议 §3.3）：
+//   - 英语序数词：1st/2nd/3rd/4th/5th division
+//   - 葡萄牙语/西班牙语：primera/segunda/tercera/terceira division
+//   - 德语：erste/zweite/dritte liga
 var wordTierMap = map[string]int{
+	// 英语文字层级
 	"first division": 1, "division 1": 1, "liga 1": 1, "1 liga": 1, "1. liga": 1,
 	"second division": 2, "division 2": 2, "liga 2": 2, "2 liga": 2, "2. liga": 2,
 	"third division": 3, "division 3": 3, "liga 3": 3, "3 liga": 3, "3. liga": 3,
 	"fourth division": 4, "division 4": 4, "liga 4": 4, "4 liga": 4, "4. liga": 4,
 	"fifth division": 5, "division 5": 5, "liga 5": 5, "5 liga": 5, "5. liga": 5,
+	// 英语序数词（优化建议 §3.3）
+	"1st division": 1, "2nd division": 2, "3rd division": 3, "4th division": 4, "5th division": 5,
+	// 葡萄牙语/西班牙语层级词（优化建议 §3.3）
+	"primera division": 1, "segunda division": 2, "tercera division": 3, "cuarta division": 4,
+	"primera liga": 1, "segunda liga": 2, "terceira liga": 3, "tercera liga": 3,
+	// 德语层级词（优化建议 §3.3）
+	"erste liga": 1, "zweite liga": 2, "dritte liga": 3, "vierte liga": 4,
 }
 
 // extractTierNumber 从归一化联赛名称中提取层级数字
@@ -484,6 +506,36 @@ func CheckLeagueVeto(a, b LeagueFeatures, confidenceLevel string) LeagueVetoResu
 			Detail: a.CompetitionType + " vs " + b.CompetitionType,
 		}
 	}
+	// reserve 与主赛事（league/cup）不得互相映射（优化建议 §3.4）
+	if a.CompetitionType == "reserve" && isMainCompetition(b.CompetitionType) {
+		return LeagueVetoResult{
+			Vetoed: true,
+			Reason: VetoCompetitionType,
+			Detail: "reserve vs " + b.CompetitionType,
+		}
+	}
+	if b.CompetitionType == "reserve" && isMainCompetition(a.CompetitionType) {
+		return LeagueVetoResult{
+			Vetoed: true,
+			Reason: VetoCompetitionType,
+			Detail: a.CompetitionType + " vs reserve",
+		}
+	}
+	// regional_league 与全国性 league 不得互相映射（优化建议 §3.4）
+	if a.CompetitionType == "regional_league" && isLeagueType(b.CompetitionType) {
+		return LeagueVetoResult{
+			Vetoed: true,
+			Reason: VetoCompetitionType,
+			Detail: "regional_league vs " + b.CompetitionType,
+		}
+	}
+	if b.CompetitionType == "regional_league" && isLeagueType(a.CompetitionType) {
+		return LeagueVetoResult{
+			Vetoed: true,
+			Reason: VetoCompetitionType,
+			Detail: a.CompetitionType + " vs regional_league",
+		}
+	}
 
 	// ── 5. 层级数字强约束（仅在 med/low 置信度时否决）────────────────────────
 	if confidenceLevel != "hi" {
@@ -499,6 +551,50 @@ func CheckLeagueVeto(a, b LeagueFeatures, confidenceLevel string) LeagueVetoResu
 	return LeagueVetoResult{Vetoed: false, Reason: VetoNone}
 }
 
+// ─────────────────────────────────────────────────────────────────────────────
+// 负向特征惩罚（优化建议 §3.6）
+// ─────────────────────────────────────────────────────────────────────────────
+
+// CalcFeaturePenalty 计算负向特征惩罚系数（返回 0.0~1.0，1.0 表示无惩罚）。
+//
+// 与 CheckLeagueVeto 的区别：
+//   - CheckLeagueVeto 是二元否决（否决/放行）
+//   - CalcFeaturePenalty 是连续惩罚，对“未触发 Veto 但特征存在明显差异”的情况施加惩罚
+//
+// 典型惩罚场景：
+//   - 一侧包含 U19，另一侧包含 U21 → 应在相似度上大幅扣分（而非就否决）
+//   - 一侧包含 Women，另一侧包含 Men → 相似度直接降至 0
+func CalcFeaturePenalty(a, b LeagueFeatures) float64 {
+	penalty := 1.0
+
+	// 性别差异惩罚：一侧 Women 另一侧 Men → 得分直接降至 0
+	if (a.Gender == GenderWomen && b.Gender == GenderMen) ||
+		(a.Gender == GenderMen && b.Gender == GenderWomen) {
+		return 0.0
+	}
+
+	// 年龄段差异惩罚：两侧均有年龄段但不一致，大幅扣分
+	// 如 U19 vs U21：不应就否决，但应大幅降低匹配得分
+	if a.AgeGroup != "" && b.AgeGroup != "" && a.AgeGroup != b.AgeGroup {
+		// 同为年龄组但数字不同（如 u19 vs u21）→ 惩罚 0.3
+		penalty *= 0.3
+	}
+
+	// 赛制类型差异惩罚：一侧为 reserve，另一侧未知（未触发 Veto）
+	if (a.CompetitionType == "reserve" && b.CompetitionType == "") ||
+		(b.CompetitionType == "reserve" && a.CompetitionType == "") {
+		penalty *= 0.5
+	}
+
+	// regional_league 与未知类型的轻度惩罚
+	if (a.CompetitionType == "regional_league" && b.CompetitionType == "") ||
+		(b.CompetitionType == "regional_league" && a.CompetitionType == "") {
+		penalty *= 0.7
+	}
+
+	return penalty
+}
+
 // isCupType 判断赛制类型是否属于杯赛
 func isCupType(ct string) bool {
 	return ct == "cup" || ct == "super_cup"
@@ -507,6 +603,12 @@ func isCupType(ct string) bool {
 // isLeagueType 判断赛制类型是否属于联赛
 func isLeagueType(ct string) bool {
 	return ct == "league"
+}
+
+// isMainCompetition 判断赛制类型是否属于主赛事（联赛或杯赛，非预备队）
+// 用于 reserve vs 主赛事的强约束否决（优化建议 §3.4）
+func isMainCompetition(ct string) bool {
+	return ct == "league" || ct == "cup" || ct == "super_cup" || ct == "regional_league"
 }
 
 // genderStr 性别枚举 → 字符串（用于日志输出）

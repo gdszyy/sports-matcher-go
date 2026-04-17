@@ -151,25 +151,37 @@ func playerNameSimilarity(srName, tsName string) float64 {
 	return maxSim
 }
 
-// teamNameSimilarity 计算球队名称相似度，取原始 Jaccard 和辅助归一化后 Jaccard 的最大値。
+// teamNameSimilarity 计算球队名称相似度。
+// 取以下三种分数的最大值：
+//  1. 原始 Jaccard（token 级）
+//  2. 归一化后 Jaccard（去俱乐部类型缩写、变音符、特殊符号等）
+//  3. 归一化后 Jaro-Winkler（对短名称和前缀匹配更敏感，解决 "Chaidari AO" vs "AO Chaidari FC" 等差异）
 //
 // 【辅助归一化优先级说明】
-// normalizedTeamSimilarity 作为辅助分数，与原始 Jaccard 取最大値。
-// 它不单独决定匹配结果，主匹配引擎的优先级顺序为：
+// 本函数的输出仅用于辅助相似度计算，主匹配引擎的优先级顺序为：
 //  1. 预设映射表（KnownLeagueMap / KnownTeamMap）
 //  2. TeamAliasIndex 动态别名学习
-//  3. 本函数归一化后的 Jaccard 相似度（辅助/尼底）
+//  3. 本函数归一化后的相似度（辅助/兜底）
 func teamNameSimilarity(a, b string) float64 {
 	// 直接 Jaccard
 	direct := jaccardSimilarity(a, b)
 
-	// 【辅助规则 - 低优先级】归一化后 Jaccard（去俘乐部类型缩写、变音符、特殊符号等）
+	// 【辅助规则 - 低优先级】归一化后 Jaccard（去俱乐部类型缩写、变音符、特殊符号等）
 	normalized := normalizedTeamSimilarity(a, b)
 
-	if normalized > direct {
-		return normalized
+	// 归一化后 Jaro-Winkler（对短名称和前缀匹配更敏感）
+	na := NormalizeTeamName(a, false)
+	nb := NormalizeTeamName(b, false)
+	jw := jaroWinklerSimilarity(na, nb)
+
+	best := direct
+	if normalized > best {
+		best = normalized
 	}
-	return direct
+	if jw > best {
+		best = jw
+	}
+	return best
 }
 
 // cleanTeamName 去掉球队名称中的常见后缀/前缀（已被 NormalizeTeamName 替代，保留为兼容）

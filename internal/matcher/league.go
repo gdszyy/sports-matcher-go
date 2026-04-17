@@ -143,6 +143,7 @@ func MatchLeague(srTour *db.SRTournament, tsComps []db.TSCompetition) *LeagueMat
 // leagueNameScore 计算联赛名称相似度（含国家加分）
 // 改进（TODO-002 P0）：引入六维强约束一票否决，使用 nameSimilarityMax（Jaccard+JW）替代纯 Jaccard
 // 改进（PI-002）：引入别名感知相似度，解决官方名称与常用名称差异较大的问题
+// 改进（优化建议 §3.5/3.6）：引入负向特征惩罚和地理别名词典
 //
 //	典型案例：SR "EFL League One" ↔ TS "League One" 通过别名索引直接命中
 func leagueNameScore(sr *db.SRTournament, ts *db.TSCompetition) float64 {
@@ -166,12 +167,20 @@ func leagueNameScore(sr *db.SRTournament, ts *db.TSCompetition) float64 {
 		return 0.0
 	}
 
-	// 国家/地区名称匹配加分
+	// 负向特征惩罚（优化建议 §3.6）
+	penalty := CalcFeaturePenalty(srFeatures, tsFeatures)
+	if penalty <= 0 {
+		return 0.0
+	}
+	base *= penalty
+
+	// 国家/地区名称匹配加分（优化建议 §3.5）
 	if sr.CategoryName != "" && ts.CountryName != "" {
 		catNorm := normalizeName(sr.CategoryName)
 		cntNorm := normalizeName(ts.CountryName)
-		if jaccardSimilarity(catNorm, cntNorm) > 0.6 {
-			base = base*0.8 + 0.2
+		locSim := geoSimilarity(catNorm, cntNorm)
+		if locSim > 0.6 {
+			base = base*0.8 + 0.2*locSim
 		}
 	}
 
