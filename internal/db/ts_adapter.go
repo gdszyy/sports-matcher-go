@@ -28,25 +28,47 @@ func (a *TSAdapter) GetCompetitionsByBasketball() ([]TSCompetition, error) {
 }
 
 func (a *TSAdapter) getCompetitions(sport string) ([]TSCompetition, error) {
-	var table, countryField string
+	var table, countryField, countryCodeField string
 	switch sport {
 	case "football":
 		table = "ts_fb_competition"
 		countryField = "COALESCE(host_country,'')"
+		countryCodeField = "COALESCE(country_code,'')" // 尝试查询 country_code
 	case "basketball":
 		table = "ts_bb_competition"
-		countryField = "''" // ts_bb_competition 没有 host_country 字段
+		countryField = "''"        // ts_bb_competition 没有 host_country 字段
+		countryCodeField = "''"    // ts_bb_competition 没有 country_code 字段
 	default:
 		return nil, fmt.Errorf("不支持的运动类型: %s", sport)
 	}
 
+	// 先尝试包含 country_code 的查询
 	query := fmt.Sprintf(`
-		SELECT competition_id, COALESCE(name,''), %s
+		SELECT competition_id, COALESCE(name,''), %s, %s
 		FROM %s
-		LIMIT 2000`, countryField, table)
+		LIMIT 2000`, countryField, countryCodeField, table)
 	rows, err := a.db.Query(query)
 	if err != nil {
-		return nil, fmt.Errorf("getCompetitions(%s): %w", sport, err)
+		// 若 country_code 字段不存在，回落到不含 country_code 的查询
+		fallbackQuery := fmt.Sprintf(`
+			SELECT competition_id, COALESCE(name,''), %s
+			FROM %s
+			LIMIT 2000`, countryField, table)
+		rows2, err2 := a.db.Query(fallbackQuery)
+		if err2 != nil {
+			return nil, fmt.Errorf("getCompetitions(%s): %w", sport, err2)
+		}
+		defer rows2.Close()
+		var comps []TSCompetition
+		for rows2.Next() {
+			var c TSCompetition
+			c.Sport = sport
+			if err := rows2.Scan(&c.ID, &c.Name, &c.CountryName); err != nil {
+				continue
+			}
+			comps = append(comps, c)
+		}
+		return comps, rows2.Err()
 	}
 	defer rows.Close()
 
@@ -54,7 +76,7 @@ func (a *TSAdapter) getCompetitions(sport string) ([]TSCompetition, error) {
 	for rows.Next() {
 		var c TSCompetition
 		c.Sport = sport
-		if err := rows.Scan(&c.ID, &c.Name, &c.CountryName); err != nil {
+		if err := rows.Scan(&c.ID, &c.Name, &c.CountryName, &c.CountryCode); err != nil {
 			continue
 		}
 		comps = append(comps, c)
@@ -64,29 +86,45 @@ func (a *TSAdapter) getCompetitions(sport string) ([]TSCompetition, error) {
 
 // GetCompetition 查询单个联赛
 func (a *TSAdapter) GetCompetition(competitionID, sport string) (*TSCompetition, error) {
-	var table, countryField string
+	var table, countryField, countryCodeField string
 	switch sport {
 	case "football":
 		table = "ts_fb_competition"
 		countryField = "COALESCE(host_country,'')"
+		countryCodeField = "COALESCE(country_code,'')"
 	case "basketball":
 		table = "ts_bb_competition"
 		countryField = "''"
+		countryCodeField = "''"
 	default:
 		return nil, fmt.Errorf("不支持的运动类型: %s", sport)
 	}
 
+	// 先尝试包含 country_code 的查询
 	query := fmt.Sprintf(`
-		SELECT competition_id, COALESCE(name,''), %s
-		FROM %s WHERE competition_id = ? LIMIT 1`, countryField, table)
+		SELECT competition_id, COALESCE(name,''), %s, %s
+		FROM %s WHERE competition_id = ? LIMIT 1`, countryField, countryCodeField, table)
 	row := a.db.QueryRow(query, competitionID)
 	var c TSCompetition
 	c.Sport = sport
-	if err := row.Scan(&c.ID, &c.Name, &c.CountryName); err != nil {
+	if err := row.Scan(&c.ID, &c.Name, &c.CountryName, &c.CountryCode); err != nil {
 		if err == sql.ErrNoRows {
 			return nil, nil
 		}
-		return nil, fmt.Errorf("GetCompetition: %w", err)
+		// 若 country_code 字段不存在，回落到不含 country_code 的查询
+		fallbackQuery := fmt.Sprintf(`
+			SELECT competition_id, COALESCE(name,''), %s
+			FROM %s WHERE competition_id = ? LIMIT 1`, countryField, table)
+		row2 := a.db.QueryRow(fallbackQuery, competitionID)
+		var c2 TSCompetition
+		c2.Sport = sport
+		if err2 := row2.Scan(&c2.ID, &c2.Name, &c2.CountryName); err2 != nil {
+			if err2 == sql.ErrNoRows {
+				return nil, nil
+			}
+			return nil, fmt.Errorf("GetCompetition: %w", err2)
+		}
+		return &c2, nil
 	}
 	return &c, nil
 }

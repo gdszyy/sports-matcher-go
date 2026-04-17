@@ -21,21 +21,41 @@ func NewSRAdapter(db *sql.DB) *SRAdapter {
 
 // GetTournament 查询联赛信息
 // 实际字段: tournament_id, name, category_id, sport_id
+// 尝试查询 category 的 country_code 字段（若数据库不支持则回落为空字符串）
 func (a *SRAdapter) GetTournament(tournamentID string) (*SRTournament, error) {
+	// 先尝试包含 country_code 的查询
 	query := `
 		SELECT t.tournament_id, t.name, t.sport_id, t.category_id,
-		       COALESCE(c.name, '') as category_name
+		       COALESCE(c.name, '') as category_name,
+		       COALESCE(c.country_code, '') as category_country_code
 		FROM sr_tournament_en t
 		LEFT JOIN sr_category_en c ON t.category_id = c.category_id
 		WHERE t.tournament_id = ?
 		LIMIT 1`
 	row := a.db.QueryRow(query, tournamentID)
 	var t SRTournament
-	if err := row.Scan(&t.ID, &t.Name, &t.SportID, &t.CategoryID, &t.CategoryName); err != nil {
+	if err := row.Scan(&t.ID, &t.Name, &t.SportID, &t.CategoryID, &t.CategoryName, &t.CategoryCountryCode); err != nil {
 		if err == sql.ErrNoRows {
 			return nil, nil
 		}
-		return nil, fmt.Errorf("GetTournament: %w", err)
+		// 若 country_code 字段不存在，回落到不含 country_code 的查询
+		fallbackQuery := `
+			SELECT t.tournament_id, t.name, t.sport_id, t.category_id,
+			       COALESCE(c.name, '') as category_name
+			FROM sr_tournament_en t
+			LEFT JOIN sr_category_en c ON t.category_id = c.category_id
+			WHERE t.tournament_id = ?
+			LIMIT 1`
+		row2 := a.db.QueryRow(fallbackQuery, tournamentID)
+		var t2 SRTournament
+		if err2 := row2.Scan(&t2.ID, &t2.Name, &t2.SportID, &t2.CategoryID, &t2.CategoryName); err2 != nil {
+			if err2 == sql.ErrNoRows {
+				return nil, nil
+			}
+			return nil, fmt.Errorf("GetTournament: %w", err2)
+		}
+		t2.Sport = sportFromID(t2.SportID)
+		return &t2, nil
 	}
 	// 从 sport_id 推导运动类型
 	t.Sport = sportFromID(t.SportID)

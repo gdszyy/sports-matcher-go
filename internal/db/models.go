@@ -3,12 +3,13 @@ package db
 
 // SRTournament SR 联赛
 type SRTournament struct {
-	ID           string
-	Name         string
-	SportID      string // 原始 sport_id，如 sr:sport:1
-	CategoryID   string
-	CategoryName string
-	Sport        string // 推导后的运动类型名称
+	ID              string
+	Name            string
+	SportID         string // 原始 sport_id，如 sr:sport:1
+	CategoryID      string
+	CategoryName    string
+	CategoryCountryCode string // 分类国家/地区代码（如 "ENG"、"ESP"），可为空
+	Sport           string // 推导后的运动类型名称
 }
 
 // SREvent SR 比赛
@@ -48,6 +49,7 @@ type TSCompetition struct {
 	ID          string
 	Name        string
 	CountryName string
+	CountryCode string // 国家/地区代码（如 "ENG"、"ESP"），可为空
 	Sport       string // football / basketball
 }
 

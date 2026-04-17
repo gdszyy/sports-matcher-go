@@ -3,6 +3,7 @@ package matcher
 
 import (
 	"fmt"
+	"strings"
 
 	"github.com/gdszyy/sports-matcher/internal/db"
 )
@@ -58,6 +59,100 @@ var KnownLeagueMap = map[string]string{
 // knownLeagueKey 生成已知映射的 key
 func knownLeagueKey(sport, tournamentID string) string {
 	return fmt.Sprintf("%s:%s", sport, tournamentID)
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// 公共地区/国家匹配工具函数（SR 侧与 LS 侧共用）
+// ─────────────────────────────────────────────────────────────────────────────
+
+// internationalCategoryKeywords 洲际/国际赛事关键词列表
+var internationalCategoryKeywords = []string{
+	"world", "international", "europe", "europa", "asia", "africa",
+	"america", "oceania", "concacaf", "conmebol", "afc", "caf",
+	"uefa", "fifa", "south america", "north america", "central america",
+}
+
+// IsInternationalCategory 判断地区名称是否属于洲际/国际赛事（不应强制约束国家匹配）
+// 该函数为公共函数，供 SR 侧和 LS 侧共用（替代 ls_engine.go 中的 lsInternationalCategory）
+func IsInternationalCategory(name string) bool {
+	norm := normalizeName(name)
+	for _, kw := range internationalCategoryKeywords {
+		if norm == kw || jaccardSimilarity(norm, kw) >= 0.8 {
+			return true
+		}
+	}
+	return false
+}
+
+// LocationVeto 判断两个地区名称是否明显不匹配（强约束否决）
+// 返回 true 表示应否决该匹配（跨国误匹配）
+// 该函数为公共函数，供 SR 侧和 LS 侧共用（替代 ls_engine.go 中的 lsLocationVeto）
+func LocationVeto(srcCategory, tsCountry string) bool {
+	// 如果任一侧为空，不否决（信息不足时保守处理）
+	if srcCategory == "" || tsCountry == "" {
+		return false
+	}
+	// 洲际/国际赛事不约束国家
+	if IsInternationalCategory(srcCategory) || IsInternationalCategory(tsCountry) {
+		return false
+	}
+	catNorm := normalizeName(srcCategory)
+	cntNorm := normalizeName(tsCountry)
+	// 相似度低于 0.4 时否决（避免如 Libya vs Laos 的跨国误匹配）
+	return jaccardSimilarity(catNorm, cntNorm) < 0.4
+}
+
+// countryCodeVeto 通过结构化 CountryCode 字段判断是否应否决匹配
+// 仅在两侧 CountryCode 均非空且不相等时否决（精确否决，优先级高于名称模糊匹配）
+// 国际赛事代码（如 "INT"、"UEFA"、"FIFA"）豁免否决
+func countryCodeVeto(srcCode, tsCode string) bool {
+	if srcCode == "" || tsCode == "" {
+		return false
+	}
+	srcUpper := strings.ToUpper(strings.TrimSpace(srcCode))
+	tsUpper := strings.ToUpper(strings.TrimSpace(tsCode))
+	if srcUpper == "" || tsUpper == "" {
+		return false
+	}
+	// 国际/洲际代码豁免
+	internationalCodes := map[string]bool{
+		"INT": true, "UEFA": true, "FIFA": true, "AFC": true, "CAF": true,
+		"CONCACAF": true, "CONMEBOL": true, "OFC": true, "FIBA": true,
+	}
+	if internationalCodes[srcUpper] || internationalCodes[tsUpper] {
+		return false
+	}
+	return srcUpper != tsUpper
+}
+
+// locationScore 计算两侧地区/国家的综合相似度分数
+// 整合 CategoryName（文本）和 CountryCode（结构化代码）两个维度
+// 返回 (locSim float64, hardMatch bool)：
+//   - locSim: 地区相似度分数 [0.0, 1.0]
+//   - hardMatch: 是否通过结构化代码精确匹配（用于提升加分权重）
+func locationScore(srcCategory, srcCode, tsCountry, tsCode string) (locSim float64, hardMatch bool) {
+	// 1. 结构化 CountryCode 精确匹配（最高优先级）
+	if srcCode != "" && tsCode != "" {
+		srcUpper := strings.ToUpper(strings.TrimSpace(srcCode))
+		tsUpper := strings.ToUpper(strings.TrimSpace(tsCode))
+		if srcUpper != "" && tsUpper != "" {
+			if srcUpper == tsUpper {
+				return 1.0, true // 代码精确匹配
+			}
+			// 代码不同但都非空 → 返回低分（不直接否决，由 countryCodeVeto 处理）
+			return 0.1, false
+		}
+	}
+
+	// 2. 文本名称相似度（CategoryName vs CountryName）
+	if srcCategory != "" && tsCountry != "" {
+		catNorm := normalizeName(srcCategory)
+		cntNorm := normalizeName(tsCountry)
+		sim := jaccardSimilarity(catNorm, cntNorm)
+		return sim, false
+	}
+
+	return 0.0, false
 }
 
 // MatchLeague 联赛匹配：优先查已知映射，其次名称相似度
@@ -130,10 +225,27 @@ func MatchLeague(srTour *db.SRTournament, tsComps []db.TSCompetition) *LeagueMat
 	return result
 }
 
-// leagueNameScore 计算联赛名称相似度（含国家加分）
+// leagueNameScore 计算联赛名称相似度（含多维国家/地区匹配）
+//
 // 改进（TODO-002 P0）：引入六维强约束一票否决，使用 nameSimilarityMax（Jaccard+JW）替代纯 Jaccard
+// 改进（多维特征融合）：
+//  1. 整合 CountryCode 结构化字段进行精确否决和精确加分
+//  2. 将 LocationVeto 强否决应用于 SR 侧（与 LS 侧 lsLocationVeto 对齐）
+//  3. 提升地区匹配加分权重：精确代码匹配时 0.30，文本匹配时 0.25（原为 0.20）
 func leagueNameScore(sr *db.SRTournament, ts *db.TSCompetition) float64 {
-	// 六维强约束一票否决（性别、年龄段、区域分区、赛制类型、层级数字）
+	// ── 第一层：结构化 CountryCode 强否决（最高优先级，精确否决）────────────────
+	// 当两侧 CountryCode 均非空且不相等时，直接否决（跨国精确判断）
+	if countryCodeVeto(sr.CategoryCountryCode, ts.CountryCode) {
+		return 0.0
+	}
+
+	// ── 第二层：地区名称强否决（与 LS 侧 lsLocationVeto 对齐）──────────────────
+	// CategoryName（SR）vs CountryName（TS）Jaccard < 0.4 时否决
+	if LocationVeto(sr.CategoryName, ts.CountryName) {
+		return 0.0
+	}
+
+	// ── 第三层：六维强约束一票否决（性别、年龄段、区域分区、赛制类型、层级数字）──
 	srFeatures := ExtractLeagueFeatures(sr.Name)
 	tsFeatures := ExtractLeagueFeatures(ts.Name)
 
@@ -149,13 +261,15 @@ func leagueNameScore(sr *db.SRTournament, ts *db.TSCompetition) float64 {
 		return 0.0
 	}
 
-	// 国家/地区名称匹配加分
-	if sr.CategoryName != "" && ts.CountryName != "" {
-		catNorm := normalizeName(sr.CategoryName)
-		cntNorm := normalizeName(ts.CountryName)
-		if jaccardSimilarity(catNorm, cntNorm) > 0.6 {
-			base = base*0.8 + 0.2
-		}
+	// ── 第四层：多维地区/国家匹配加分 ──────────────────────────────────────────
+	// 整合 CountryCode（结构化）和 CategoryName/CountryName（文本）两个维度
+	locSim, hardMatch := locationScore(sr.CategoryName, sr.CategoryCountryCode, ts.CountryName, ts.CountryCode)
+	if hardMatch {
+		// 结构化代码精确匹配：更高权重加分（0.30）
+		base = base*0.70 + 0.30*locSim
+	} else if locSim >= 0.6 {
+		// 文本名称相似度匹配：标准权重加分（0.25，原为 0.20）
+		base = base*0.75 + 0.25*locSim
 	}
 
 	return base

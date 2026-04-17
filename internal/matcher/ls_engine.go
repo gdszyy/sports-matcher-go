@@ -338,40 +338,21 @@ func matchLSLeague(lsTour *db.LSTournament, tsComps []db.TSCompetition) *LSLeagu
 }
 
 // lsInternationalCategory 判断地区名称是否属于洲际/国际赛事（不应强制约束国家匹配）
+// Deprecated: 请使用公共函数 IsInternationalCategory
 func lsInternationalCategory(name string) bool {
-	norm := normalizeName(name)
-	international := []string{
-		"world", "international", "europe", "europa", "asia", "africa",
-		"america", "oceania", "concacaf", "conmebol", "afc", "caf",
-		"uefa", "fifa", "south america", "north america", "central america",
-	}
-	for _, kw := range international {
-		if norm == kw || jaccardSimilarity(norm, kw) >= 0.8 {
-			return true
-		}
-	}
-	return false
+	return IsInternationalCategory(name)
 }
 
 // lsLocationVeto 判断两个地区名称是否明显不匹配（强约束否决）
 // 返回 true 表示应否决该匹配（跨国误匹配）
+// Deprecated: 请使用公共函数 LocationVeto
 func lsLocationVeto(lsCategory, tsCountry string) bool {
-	// 如果任一侧为空，不否决（信息不足时保守处理）
-	if lsCategory == "" || tsCountry == "" {
-		return false
-	}
-	// 洲际/国际赛事不约束国家
-	if lsInternationalCategory(lsCategory) || lsInternationalCategory(tsCountry) {
-		return false
-	}
-	catNorm := normalizeName(lsCategory)
-	cntNorm := normalizeName(tsCountry)
-	// 相似度低于 0.4 时否决（避免如 Libya vs Laos 的跨国误匹配）
-	return jaccardSimilarity(catNorm, cntNorm) < 0.4
+	return LocationVeto(lsCategory, tsCountry)
 }
 
 // lsLeagueNameScore 计算 LS 联赛与 TS 联赛的名称相似度
 // 改进（TODO-002 P0）：引入六维强约束一票否决，使用 nameSimilarityMax（Jaccard+JW）替代纯 Jaccard
+// 改进（多维特征融合）：整合 CountryCode 结构化字段，与 SR 侧 leagueNameScore 对齐
 func lsLeagueNameScore(ls *db.LSTournament, ts *db.TSCompetition) float64 {
 	// 强约束：地区明显不匹配时直接否决
 	if lsLocationVeto(ls.CategoryName, ts.CountryName) {
@@ -394,15 +375,15 @@ func lsLeagueNameScore(ls *db.LSTournament, ts *db.TSCompetition) float64 {
 		return 0.0
 	}
 
-	// 国家/地区名称匹配加分（同国加权提升置信度）
-	if ls.CategoryName != "" && ts.CountryName != "" {
-		catNorm := normalizeName(ls.CategoryName)
-		cntNorm := normalizeName(ts.CountryName)
-		locSim := jaccardSimilarity(catNorm, cntNorm)
-		if locSim >= 0.6 {
-			// 同国联赛：名称相似度加权提升
-			base = base*0.75 + 0.25*locSim
-		}
+	// 国家/地区匹配加分（整合 CountryCode 结构化字段，与 SR 侧对齐）
+	// LS 侧暂无 CategoryCountryCode 字段，传空字符串表示不参与结构化匹配
+	locSim, hardMatch := locationScore(ls.CategoryName, "", ts.CountryName, ts.CountryCode)
+	if hardMatch {
+		// 结构化代码精确匹配：更高权重加分（0.30）
+		base = base*0.70 + 0.30*locSim
+	} else if locSim >= 0.6 {
+		// 文本名称相似度匹配：标准权重加分（0.25）
+		base = base*0.75 + 0.25*locSim
 	}
 	return base
 }
