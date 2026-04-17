@@ -32,8 +32,12 @@ func NewServer(cfg *config.Config) (*Server, error) {
 	tsAdapter := db.NewTSAdapter(tunnel.TSDb)
 	lsAdapter := db.NewLSAdapter(tunnel.LSDb)
 
+	// 创建 LS 球员适配器（共享 LS 数据库连接）
+	// 用于支持 med 置信度强制触发球员匹配反向验证
+	lsPlayerAdapter := db.LSPlayerAdapterFromLSAdapter(lsAdapter, db.DefaultLSPlayerConfig)
+
 	eng := matcher.NewEngine(srAdapter, tsAdapter, cfg.RunPlayers)
-	lsEng := matcher.NewLSEngine(lsAdapter, tsAdapter)
+	lsEng := matcher.NewLSEngineWithPlayers(lsAdapter, tsAdapter, lsPlayerAdapter)
 
 	gin.SetMode(gin.ReleaseMode)
 	router := gin.New()

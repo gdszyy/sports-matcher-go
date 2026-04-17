@@ -233,6 +233,10 @@ type LSMatchStats struct {
 	// 比赛反向确认率（P1 新增，由 reverse_confirm.go 计算）
 	ReverseConfirmRate float64 `json:"reverse_confirm_rate,omitempty"`
 
+	// MedConfPlayerValidation 标记本次球员匹配是否由 med 置信度强制触发（P3 新增）
+	// true 表示联赛匹配规则为 LEAGUE_NAME_MED，球员匹配用于反向验证
+	MedConfPlayerValidation bool `json:"med_conf_player_validation,omitempty"`
+
 	ElapsedMs int64 `json:"elapsed_ms"`
 }
 
@@ -243,4 +247,8 @@ type LSMatchResult struct {
 	Teams   []LSTeamMapping `json:"teams"`
 	Players []LSPlayerMatch `json:"players,omitempty"` // P1 新增
 	Stats   LSMatchStats    `json:"stats"`
+
+	// MedConfPlayerValidation 标记本次球员匹配是否由 med 置信度（0.70-0.85）强制触发
+	// true 表示联赛匹配规则为 LEAGUE_NAME_MED，球员匹配用于反向验证而非常规输出
+	MedConfPlayerValidation bool `json:"med_conf_player_validation,omitempty"`
 }
