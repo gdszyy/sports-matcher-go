@@ -182,21 +182,9 @@ func (e *LSEngine) RunLeague(lsTournamentID, sport, tier, tsCompetitionID string
 		}
 	}
 
-	// ── Step 8: 球员匹配 + 自底向上反向验证（P1 新增）──────────────────
-	// 触发条件：
-	//   1. 常规路径：e.RunPlayers == true（由调用方显式开启）
-	//   2. med 置信度强制路径：联赛匹配规则为 LEAGUE_NAME_MED（0.70-0.85）时强制触发球员匹配进行反向验证
-	isMedConf := leagueMatch.MatchRule == RuleLeagueNameMed
-	shouldRunPlayers := (e.RunPlayers || isMedConf) && e.LSPlayer != nil && len(teamMappings) > 0
-
-	if shouldRunPlayers {
-		if isMedConf && !e.RunPlayers {
-			log.Printf("[LS] [5/5] 球员匹配（med 置信度强制触发，联赛置信度=%.3f，规则=%s）...",
-				leagueMatch.Confidence, leagueMatch.MatchRule)
-			result.MedConfPlayerValidation = true
-		} else {
-			log.Printf("[LS] [5/5] 球员匹配...")
-		}
+	// ── Step 8: 球员匹配 + 自底向上反向验证（P1 新增）──────────────────────
+	if e.RunPlayers && e.LSPlayer != nil && len(teamMappings) > 0 {
+		log.Printf("[LS] [5/5] 球员匹配...")
 
 		// 收集所有 LS 球队 ID
 		lsTeamIDs := make([]string, 0, len(teamMappings))
@@ -249,43 +237,6 @@ func (e *LSEngine) RunLeague(lsTournamentID, sport, tier, tsCompetitionID string
 			result.Teams, result.Events = ApplyBottomUpLS(
 				result.Teams, result.Players, result.Events,
 			)
-
-			// med 置信度场景：将球员匹配结果回灌到联赛置信度
-			// 计算全联赛球员匹配率并应用 RCR 加成逻辑
-			if isMedConf {
-				// 计算球员匹配率（用于反向验证联赛置信度）
-				totalPl := len(allPlayerMatches)
-				if totalPl > 0 {
-					plMatchRate := float64(matchedPl) / float64(totalPl)
-					// 球员匹配率较高（≥ 0.60）表明联赛匹配可信，给予置信度加成
-					// 球员匹配率较低（< 0.30）表明联赛匹配存疑，降低置信度
-					var leagueAdjust float64
-					switch {
-					case plMatchRate >= 0.60:
-						leagueAdjust = +0.05 // 球员匹配率高，小幅提升联赛置信度
-					case plMatchRate >= 0.40:
-						leagueAdjust = 0.0 // 中等匹配率，维持原置信度
-					case plMatchRate >= 0.30:
-						leagueAdjust = -0.03 // 匹配率偏低，轻微降低置信度
-					default:
-						leagueAdjust = -0.08 // 匹配率很低，联赛匹配存疑，明显降低置信度
-					}
-					newLeagueConf := result.League.Confidence + leagueAdjust
-					if newLeagueConf < 0.0 {
-						newLeagueConf = 0.0
-					}
-					if newLeagueConf > 1.0 {
-						newLeagueConf = 1.0
-					}
-					log.Printf("[LS] [反向验证] 球员匹配率=%.3f，联赛置信度调整: %.3f → %.3f (delta=%.3f)",
-						plMatchRate,
-						result.League.Confidence,
-						newLeagueConf,
-						leagueAdjust,
-					)
-					result.League.Confidence = math.Round(newLeagueConf*1000) / 1000
-				}
-			}
 		}
 	} else {
 		log.Printf("[LS] [5/5] 跳过球员匹配")
@@ -691,9 +642,6 @@ func computeLSStats(r *LSMatchResult, sport, tier string, elapsed time.Duration)
 	if s.EventTotal > 0 {
 		s.ReverseConfirmRate = ComputeReverseConfirmRate(r.Events)
 	}
-
-	// med 置信度强制触发标记（P3 新增）
-	s.MedConfPlayerValidation = r.MedConfPlayerValidation
 
 	s.ElapsedMs = elapsed.Milliseconds()
 	return s
