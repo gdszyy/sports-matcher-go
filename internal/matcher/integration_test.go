@@ -379,13 +379,12 @@ func TestIntegration_EventMatch_Strategy3(t *testing.T) {
 	}
 }
 
-// TestIntegration_EventMatch_NoMatchReversed B6: 主客场反转处理行为验证
+// TestIntegration_EventMatch_NoMatchReversed B6: 主客场反转不应匹配
 func TestIntegration_EventMatch_NoMatchReversed(t *testing.T) {
 	// SR: Arsenal vs Chelsea，TS: Chelsea vs Arsenal（主客场反转）
 	//
-	// 设计说明：现有引擎中 tryMatchLevel 使用 max(正向, 反向) 计算名称相似度，
-	// 这是已知的设计权衡：部分数据源的主客场标注不一致，允许反转匹配能提升覆盖率。
-	// 本测试验证当前行为：反转场景下匹配成功（覆盖率优先），并记录结果供分析。
+	// 策略说明：引擎已禁止主客场反转匹配。
+	// tryMatchLevel 仅计算正向得分（主对主、客对客），反转场景下正向得分为 0，不应命中。
 	srEvents := []db.SREvent{
 		makeSREvent("sr_e6", "sr_h6", "Arsenal", "sr_a6", "Chelsea", baseTime),
 	}
@@ -400,15 +399,12 @@ func TestIntegration_EventMatch_NoMatchReversed(t *testing.T) {
 		t.Fatalf("B6: 应返回1条结果，got %d", len(results))
 	}
 	r := results[0]
-	// 验证当前行为：引擎允许反转匹配（覆盖率优先）
-	// 如果匹配成功，记录结果供分析；如果未匹配，也不是错误
+	// 主客场反转不应匹配
 	if r.Matched {
-		t.Logf("[B6] 主客场反转匹配成功（引擎允许） rule=%v conf=%.3f timeDiff=%ds",
-			r.MatchRule, r.Confidence, r.TimeDiffSec)
+		t.Errorf("[B6] 主客场反转不应匹配，但得到 matched=true rule=%v conf=%.3f", r.MatchRule, r.Confidence)
 	} else {
-		t.Logf("[B6] 主客场反转未匹配 rule=%v", r.MatchRule)
+		t.Logf("[B6] 主客场反转正确拒绝 ✓ rule=%v", r.MatchRule)
 	}
-	// 不应崩溃（两种结果均属合理）
 }
 
 // TestIntegration_EventMatch_NoReuse B7: 已使用 TS ID 不重复匹配

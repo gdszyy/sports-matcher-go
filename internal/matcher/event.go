@@ -418,15 +418,12 @@ func tryMatchLevel(
 			}
 		}
 
-		// 使用别名增强的名称相似度
+		// 使用别名增强的名称相似度（仅正向：主对主、客对客）
+		// 禁止主客场反转匹配：若正向得分不满足阈值，直接跳过，不尝试反向。
+		// 反向匹配会导致主客场标注错误的比赛被错误命中，降低数据质量。
 		homeSimFwd := aliasIdx.NameSimWithAlias(sr.HomeID, sr.HomeName, ts.HomeID, tsTeamNames[ts.HomeID])
-		homeSimRev := aliasIdx.NameSimWithAlias(sr.HomeID, sr.HomeName, ts.AwayID, tsTeamNames[ts.AwayID])
 		awaySimFwd := aliasIdx.NameSimWithAlias(sr.AwayID, sr.AwayName, ts.AwayID, tsTeamNames[ts.AwayID])
-		awaySimRev := aliasIdx.NameSimWithAlias(sr.AwayID, sr.AwayName, ts.HomeID, tsTeamNames[ts.HomeID])
-
-		homeNameSim := math.Max(homeSimFwd, homeSimRev)
-		awayNameSim := math.Max(awaySimFwd, awaySimRev)
-		nameSim := (homeNameSim + awayNameSim) / 2.0
+		nameSim := (homeSimFwd + awaySimFwd) / 2.0
 
 		if nameSim < cfg.nameThreshold {
 			continue
@@ -497,17 +494,14 @@ func tryMatchL5(
 			continue
 		}
 
-		// 使用别名增强的名称相似度（正向：主对主、客对客）
+		// 使用别名增强的名称相似度（仅正向：主对主、客对客）
+		// 禁止主客场反转：不计算反向得分，仅当正向得分满足阈值时才加入候选。
 		homeFwd := aliasIdx.NameSimWithAlias(sr.HomeID, sr.HomeName, ts.HomeID, tsTeamNames[ts.HomeID])
 		awayFwd := aliasIdx.NameSimWithAlias(sr.AwayID, sr.AwayName, ts.AwayID, tsTeamNames[ts.AwayID])
-		homRev := aliasIdx.NameSimWithAlias(sr.HomeID, sr.HomeName, ts.AwayID, tsTeamNames[ts.AwayID])
-		awayRev := aliasIdx.NameSimWithAlias(sr.AwayID, sr.AwayName, ts.HomeID, tsTeamNames[ts.HomeID])
-
 		fwdScore := (homeFwd + awayFwd) / 2.0
-		revScore := (homRev + awayRev) / 2.0
 
-		// 名称阈值：正向得分必须满足，且正向 > 反向（主客场顺序一致）
-		if fwdScore >= l5NameThreshold && fwdScore >= revScore {
+		// 名称阈值：仅正向得分满足阈值时才加入候选（禁止反向匹配）
+		if fwdScore >= l5NameThreshold {
 			candidates = append(candidates, candidate{fwdScore, *ts, timeDiff})
 		}
 	}
