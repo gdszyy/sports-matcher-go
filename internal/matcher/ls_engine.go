@@ -12,10 +12,11 @@ import (
 
 // LSEngine LSports ↔ TheSports 匹配引擎
 type LSEngine struct {
-	LS         *db.LSAdapter
-	TS         *db.TSAdapter
-	LSPlayer   *db.LSPlayerAdapter // P1 新增：LS 球员数据适配器
-	RunPlayers bool                // P1 新增：是否执行球员匹配 + 自底向上校验
+	LS              *db.LSAdapter
+	TS              *db.TSAdapter
+	LSPlayer        *db.LSPlayerAdapter      // P1 新增：LS 球员数据适配器
+	RunPlayers      bool                     // P1 新增：是否执行球员匹配 + 自底向上校验
+	MapValidator    *KnownLeagueMapValidator // P2 新增：已知映射反向确认率验证器（可选，nil 则跳过验证）
 }
 
 // NewLSEngine 创建 LS ↔ TS 匹配引擎
@@ -30,6 +31,22 @@ func NewLSEngineWithPlayers(ls *db.LSAdapter, ts *db.TSAdapter, lsPlayer *db.LSP
 		TS:         ts,
 		LSPlayer:   lsPlayer,
 		RunPlayers: lsPlayer != nil,
+	}
+}
+
+// NewLSEngineWithValidator 创建支持已知映射验证的 LS ↔ TS 匹配引擎（P2 新增）
+func NewLSEngineWithValidator(
+	ls *db.LSAdapter,
+	ts *db.TSAdapter,
+	lsPlayer *db.LSPlayerAdapter,
+	validator *KnownLeagueMapValidator,
+) *LSEngine {
+	return &LSEngine{
+		LS:           ls,
+		TS:           ts,
+		LSPlayer:     lsPlayer,
+		RunPlayers:   lsPlayer != nil,
+		MapValidator: validator,
 	}
 }
 
@@ -145,7 +162,27 @@ func (e *LSEngine) RunLeague(lsTournamentID, sport, tier, tsCompetitionID string
 	result.Events = eventMatches
 	result.Teams = teamMappings
 
-	// ── Step 7: 球员匹配 + 自底向上反向验证（P1 新增）──────────────────────
+	// ── Step 7b: 已知映射反向确认率验证（P2 新增，TODO-014）────────────────
+	// 仅在联赛匹配规则为 LEAGUE_KNOWN 时触发验证
+	if e.MapValidator != nil && leagueMatch.MatchRule == RuleLeagueKnown {
+		status, adjustedConf, rcr := e.MapValidator.ValidateLS(
+			lsTournamentID, tsCompID, sport, eventMatches,
+		)
+		switch status {
+		case ValidationStatusSuspect:
+			log.Printf("[LS] ⚠️  已知映射验证: SUSPECT (RCR=%.3f)，联赛置信度从 1.0 降至 %.3f",
+				rcr, adjustedConf)
+			result.League.Confidence = adjustedConf
+		case ValidationStatusOK:
+			log.Printf("[LS] ✅ 已知映射验证: OK (RCR=%.3f)", rcr)
+		case ValidationStatusInsufficient:
+			log.Printf("[LS] ℹ️  已知映射验证: 比赛数量不足，跳过 (events=%d)", len(eventMatches))
+		case ValidationStatusOverride:
+			log.Printf("[LS] ℹ️  已知映射验证: 人工豁免，跳过")
+		}
+	}
+
+	// ── Step 8: 球员匹配 + 自底向上反向验证（P1 新增）──────────────────────
 	if e.RunPlayers && e.LSPlayer != nil && len(teamMappings) > 0 {
 		log.Printf("[LS] [5/5] 球员匹配...")
 

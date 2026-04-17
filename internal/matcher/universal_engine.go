@@ -189,8 +189,9 @@ type SourceAdapter interface {
 
 // UniversalEngine 通用匹配引擎，通过 SourceAdapter 接口支持 SR/LS 两条链路。
 type UniversalEngine struct {
-	TS         *db.TSAdapter
-	RunPlayers bool
+	TS           *db.TSAdapter
+	RunPlayers   bool
+	MapValidator *KnownLeagueMapValidator // P2 新增：已知映射反向确认率验证器（可选）
 	// AliasStore 持久化别名知识图谱（可选，nil 则退化为纯内存模式）
 	AliasStore interface {
 		LoadIntoIndex(loader db.AliasIndexLoader, sourceSide string) int
@@ -330,6 +331,55 @@ func (e *UniversalEngine) RunLeague(
 	eventResults := adapter.ConvertEvents(eventMatches)
 	result.Events = eventResults
 	result.Teams = teamMappings
+
+	// ── Step 7b: 已知映射反向确认率验证（P2 新增，TODO-014）────────────────
+	if e.MapValidator != nil && leagueMatch.MatchRule == RuleLeagueKnown {
+		// 将通用 EventMatchResult 转回 LS 格式以复用 ValidateLS
+		lsEventsForValidation := make([]LSEventMatch, len(eventMatches))
+		for i, em := range eventMatches {
+			lsEventsForValidation[i] = LSEventMatch{
+				LSEventID:   em.SREventID,
+				TSMatchID:   em.TSMatchID,
+				Matched:     em.Matched,
+				MatchRule:   em.MatchRule,
+				Confidence:  em.Confidence,
+				TimeDiffSec: em.TimeDiffSec,
+			}
+		}
+		var validationStatus ValidationStatus
+		var adjustedConf, rcr float64
+		switch adapter.SourceSide() {
+		case "ls":
+			validationStatus, adjustedConf, rcr = e.MapValidator.ValidateLS(
+				tournamentID, tsCompID, sport, lsEventsForValidation,
+			)
+		case "sr":
+			srEventsForValidation := make([]EventMatch, len(eventMatches))
+			for i, em := range eventMatches {
+				srEventsForValidation[i] = EventMatch{
+					SREventID: em.SREventID,
+					TSMatchID: em.TSMatchID,
+					Matched:   em.Matched,
+					MatchRule: em.MatchRule,
+				}
+			}
+			validationStatus, adjustedConf, rcr = e.MapValidator.ValidateSR(
+				tournamentID, tsCompID, sport, srEventsForValidation,
+			)
+		}
+		switch validationStatus {
+		case ValidationStatusSuspect:
+			log.Printf("%s ⚠️  已知映射验证: SUSPECT (RCR=%.3f)，联赛置信度降至 %.3f",
+				prefix, rcr, adjustedConf)
+			result.League.Confidence = adjustedConf
+		case ValidationStatusOK:
+			log.Printf("%s ✅ 已知映射验证: OK (RCR=%.3f)", prefix, rcr)
+		case ValidationStatusInsufficient:
+			log.Printf("%s ℹ️  已知映射验证: 比赛数量不足，跳过 (events=%d)", prefix, len(eventMatches))
+		case ValidationStatusOverride:
+			log.Printf("%s ℹ️  已知映射验证: 人工豁免，跳过", prefix)
+		}
+	}
 
 	// ── Step 8: 球员匹配 + 自底向上校验（可选）──────────────────────────
 	log.Printf("%s [5/5] 球员匹配...", prefix)

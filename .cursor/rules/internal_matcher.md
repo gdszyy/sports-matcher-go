@@ -18,7 +18,8 @@ globs: ["internal_matcher/**/*"]
 | `event.go` | 多策略比赛匹配（**P2 重构**：高斯衰减连续时间窗口 + L5 + L4b）、`TeamAliasIndex` 动态别名学习、`InjectAlias`（实现 `db.AliasIndexLoader`） |
 | `team_player.go` | SR 球队/球员匹配、`ApplyBottomUp`；**P1 新增** `LSPlayerMatch`、`MatchPlayersForLSTeam`、`DeriveTeamMappingsFromLS`、`ApplyBottomUpLS` |
 | `reverse_confirm.go` | **P1 新增**：比赛反向确认率（`ComputeReverseConfirmRate`）、分级（`ClassifyRCR`）、回灰联赛置信度（`ApplyRCRToLeague`） |
-| `universal_engine.go` | **P2 新增**：通用匹配引擎（`UniversalEngine`）、数据源适配器接口（`SourceAdapter`）、SR/LS 适配器实现（`SRSourceAdapter`/`LSSourceAdapter`） |
+| `universal_engine.go` | **P2 新增**：通用匹配引擎（`UniversalEngine`）、数据源适配器接口（`SourceAdapter`）、SR/LS 适配器实现（`SRSourceAdapter`/`LSSourceAdapter`）；集成 `KnownLeagueMapValidator` |
+| `known_map_validator.go` | **P2 新增**：已知映射表反向确认率自动验证（`KnownLeagueMapValidator`）：`ValidateLS`/`ValidateSR`、`MarkManualOverride`、`ListSuspectMappings`；持久化日志表 `known_map_validation_log` |
 | `name.go` | 名称归一化（`normalizeName`）、Jaccard 相似度、**P0 新增** Jaro-Winkler 相似度（`jaroWinklerSimilarity`）、`nameSimilarityMax` |
 | `team_name_normalizer.go` | 球队名称深度归一化（8 步流水线，去信乐部缩写/赞助商/变音符等） |
 | `result.go` | 匹配结果数据结构定义；**P1 扩展** `LSEventMatch`/`LSTeamMapping`/`LSMatchStats`/`LSMatchResult` 球员字段 |
@@ -149,3 +150,4 @@ type LeagueVetoResult struct {
 | v2.0 | 2026-04-17 | P0 阶段完成：新增 `league_features.go`（六维特征提取 + 强约束否决 + 层级数字提取）；`name.go` 新增 Jaro-Winkler；`ls_engine.go` 和 `league.go` 引入 `CheckLeagueVeto`；`docs/league_guard_keywords.json` 扩充完整的模块规范（职责、数据模型、业务规则、变更日志） |
 | v2.1 | 2026-04-17 | P1 阶段完成：`models.go` 新增 `LSPlayer`/`LSTeam`；新增 `ls_player_adapter.go`（数据库优先+Snapshot API 兆底，支持批量）；`team_player.go` 新增 LS 球员匹配和自底向上校验；`ls_engine.go` 激活球员匹配阶段；新增 `reverse_confirm.go`；`result.go` 扩展 LS 结构体 |
 | v3.0 | 2026-04-17 | P2 阶段完成：`event.go` 将硬性时间分级替换为高斯衰减连续模糊时间窗口（`gaussianTimeFactor`），新增 `InjectAlias` 实现 `db.AliasIndexLoader` 接口；新增 `internal/db/alias_store.go`（持久化球队别名知识图谱）；新增 `universal_engine.go`（通用匹配引擎，适配器模式统一 SR/LS 链路） |
+| v3.1 | 2026-04-17 | P2 剩余完成：新增 `known_map_validator.go`（`KnownLeagueMapValidator` 已知映射表反向确认率自动验证）；`LSEngine` 新增 `MapValidator` 字段和 `NewLSEngineWithValidator`；`UniversalEngine` 集成验证器；全项编译通过 |
