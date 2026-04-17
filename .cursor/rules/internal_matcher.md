@@ -20,6 +20,9 @@ globs: ["internal_matcher/**/*"]
 | `reverse_confirm.go` | **P1 新增**：比赛反向确认率（`ComputeReverseConfirmRate`）、分级（`ClassifyRCR`）、回灰联赛置信度（`ApplyRCRToLeague`） |
 | `universal_engine.go` | **P2 新增**：通用匹配引擎（`UniversalEngine`）、数据源适配器接口（`SourceAdapter`）、SR/LS 适配器实现（`SRSourceAdapter`/`LSSourceAdapter`）；集成 `KnownLeagueMapValidator` |
 | `known_map_validator.go` | **P2 新增**：已知映射表反向确认率自动验证（`KnownLeagueMapValidator`）：`ValidateLS`/`ValidateSR`、`MarkManualOverride`、`ListSuspectMappings`；持久化日志表 `known_map_validation_log` |
+| `dense_blocking.go` | **P3 新增**：稠密分块（`DenseBlocker`）：`encodeEntity`（trigram TF-IDF + L2 归一化）、NSW 近邻图索引、`Build`/`Query`/`QueryDefault`；`BuildTSEventBlocker`/`QueryTSCandidates` 集成辅助函数 |
+| `fs_model.go` | **P3 新增**：Fellegi-Sunter 模型（`FSModel`）：`CompareEventPair`、`Score`/`ScoreNormalized`/`Classify`、`FitEM`（无监督 EM 参数估计）；`FSModelStore`（联赛级模型缓存 + 增量学习） |
+| `event_dtw.go` | **P3 新增**：EventDTW 动态时间规整：`ExtractAnchors`（高置信度锁点提取）、`EstimateOffset`（中位数偏移量估计 + MAD）、`DTWAlign`（Sakoe-Chiba 带宽约束 DTW 路径对齐）、`EventDTWMatcher.TryCorrect`（兑底修正层） |
 | `name.go` | 名称归一化（`normalizeName`）、Jaccard 相似度、**P0 新增** Jaro-Winkler 相似度（`jaroWinklerSimilarity`）、`nameSimilarityMax` |
 | `team_name_normalizer.go` | 球队名称深度归一化（8 步流水线，去信乐部缩写/赞助商/变音符等） |
 | `result.go` | 匹配结果数据结构定义；**P1 扩展** `LSEventMatch`/`LSTeamMapping`/`LSMatchStats`/`LSMatchResult` 球员字段 |
@@ -151,3 +154,4 @@ type LeagueVetoResult struct {
 | v2.1 | 2026-04-17 | P1 阶段完成：`models.go` 新增 `LSPlayer`/`LSTeam`；新增 `ls_player_adapter.go`（数据库优先+Snapshot API 兆底，支持批量）；`team_player.go` 新增 LS 球员匹配和自底向上校验；`ls_engine.go` 激活球员匹配阶段；新增 `reverse_confirm.go`；`result.go` 扩展 LS 结构体 |
 | v3.0 | 2026-04-17 | P2 阶段完成：`event.go` 将硬性时间分级替换为高斯衰减连续模糊时间窗口（`gaussianTimeFactor`），新增 `InjectAlias` 实现 `db.AliasIndexLoader` 接口；新增 `internal/db/alias_store.go`（持久化球队别名知识图谱）；新增 `universal_engine.go`（通用匹配引擎，适配器模式统一 SR/LS 链路） |
 | v3.1 | 2026-04-17 | P2 剩余完成：新增 `known_map_validator.go`（`KnownLeagueMapValidator` 已知映射表反向确认率自动验证）；`LSEngine` 新增 `MapValidator` 字段和 `NewLSEngineWithValidator`；`UniversalEngine` 集成验证器；全项编译通过 |
+| v4.0 | 2026-04-17 | P3 阶段：新增 `dense_blocking.go`（Entity2Vec+NSW 稠密分块）、`fs_model.go`（Fellegi-Sunter EM 参数估计）、`event_dtw.go`（EventDTW 动态时间规整）；TODO-015/016/017 全部完成；全项编译通过 |
