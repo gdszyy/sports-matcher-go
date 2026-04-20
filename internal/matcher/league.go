@@ -50,7 +50,7 @@ var KnownLeagueMap = map[string]string{
 
 	// ── 篮球热门 ──────────────────────────────────────────────────────────
 	"basketball:sr:tournament:132": "49vjxm8xt4q6odg", // NBA (National Basketball Association)
-	"basketball:sr:tournament:23":  "jednm9ktd5ryox8", // EuroLeague
+	"basketball:sr:tournament:138": "jednm9ktd5ryox8", // EuroLeague (Basketball)
 
 	// ── 篮球常规 ──────────────────────────────────────────────────────────
 	"basketball:sr:tournament:390": "kjw2r02t6xqz84o", // FIBA Basketball Champions League

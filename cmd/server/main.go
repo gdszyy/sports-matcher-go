@@ -221,9 +221,9 @@ func printStats(s matcher.MatchStats) {
 	fmt.Printf("\n─── 匹配结果: %s (%s/%s) ───\n", s.LeagueSRName, s.Sport, s.Tier)
 	fmt.Printf("  联赛: %s → %s  rule=%-20s  conf=%.3f\n",
 		s.LeagueSRName, s.LeagueTSName, s.LeagueRule, s.LeagueConf)
-	fmt.Printf("  比赛: %d/%d (%.1f%%)  [L1=%d L2=%d L3=%d L4=%d]  avg_conf=%.3f\n",
+	fmt.Printf("  比赛: %d/%d (%.1f%%)  [L1=%d L2=%d L3=%d L4=%d L5=%d L4b=%d L6=%d]  avg_conf=%.3f\n",
 		s.EventMatched, s.EventTotal, s.EventMatchRate*100,
-		s.EventL1, s.EventL2, s.EventL3, s.EventL4, s.EventAvgConf)
+		s.EventL1, s.EventL2, s.EventL3, s.EventL4, s.EventL5, s.EventL4b, s.EventL6, s.EventAvgConf)
 	fmt.Printf("  球队: %d/%d (%.1f%%)\n",
 		s.TeamMatched, s.TeamTotal, s.TeamMatchRate*100)
 	fmt.Printf("  球员: %d/%d (%.1f%%)  avg_conf=%.3f\n",
@@ -233,16 +233,16 @@ func printStats(s matcher.MatchStats) {
 
 func printBatchTable(stats []matcher.MatchStats) {
 	w := tabwriter.NewWriter(os.Stdout, 0, 0, 2, ' ', 0)
-	fmt.Fprintln(w, "运动\t热度\t联赛(SR)\t联赛(TS)\t联赛规则\t联赛置信\t比赛总数\t已匹配\t匹配率\tL1\tL2\tL3\tL4\t比赛置信\t球队匹配\t球员匹配\t耗时(ms)")
-	fmt.Fprintln(w, "────\t────\t────────\t────────\t────────\t────────\t────────\t────────\t────────\t──\t──\t──\t──\t────────\t────────\t────────\t────────")
+	fmt.Fprintln(w, "运动\t热度\t联赛(SR)\t联赛(TS)\t联赛规则\t联赛置信\t比赛总数\t已匹配\t匹配率\tL1\tL2\tL3\tL4\tL5\tL4b\tL6\t比赛置信\t球队匹配\t球员匹配\t耗时(ms)")
+	fmt.Fprintln(w, "────\t────\t────────\t────────\t────────\t────────\t────────\t────────\t────────\t──\t──\t──\t──\t──\t───\t──\t────────\t────────\t────────\t────────")
 
 	for _, s := range stats {
-		fmt.Fprintf(w, "%s\t%s\t%s\t%s\t%s\t%.3f\t%d\t%d\t%.1f%%\t%d\t%d\t%d\t%d\t%.3f\t%d/%d\t%d/%d\t%d\n",
+		fmt.Fprintf(w, "%s\t%s\t%s\t%s\t%s\t%.3f\t%d\t%d\t%.1f%%\t%d\t%d\t%d\t%d\t%d\t%d\t%d\t%.3f\t%d/%d\t%d/%d\t%d\n",
 			s.Sport, s.Tier,
 			truncate(s.LeagueSRName, 20), truncate(s.LeagueTSName, 20),
 			s.LeagueRule, s.LeagueConf,
 			s.EventTotal, s.EventMatched, s.EventMatchRate*100,
-			s.EventL1, s.EventL2, s.EventL3, s.EventL4, s.EventAvgConf,
+			s.EventL1, s.EventL2, s.EventL3, s.EventL4, s.EventL5, s.EventL4b, s.EventL6, s.EventAvgConf,
 			s.TeamMatched, s.TeamTotal,
 			s.PlayerMatched, s.PlayerTotal,
 			s.ElapsedMs,

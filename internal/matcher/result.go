@@ -17,6 +17,7 @@ const (
 	RuleEventL4      MatchRule = "EVENT_L4"        // 超宽时间（≤72h）+ 别名强匹配（≥0.85），require_alias=true
 	RuleEventL5      MatchRule = "EVENT_L5"        // 无时间约束唯一性匹配（名称≥0.90 且 TS 候选唯一，时差≤30天）
 	RuleEventL4b     MatchRule = "EVENT_L4B"       // 球队 ID 精确对兜底（无时间限制）
+	RuleEventL6      MatchRule = "EVENT_L6"        // 占位符时间锚定匹配（SR 队名为占位符时，纯时间精确匹配）
 	RuleEventNoMatch MatchRule = "EVENT_NO_MATCH"  // 未匹配
 
 	RuleTeamDerived MatchRule = "TEAM_DERIVED" // 从比赛推导
@@ -119,6 +120,7 @@ type MatchStats struct {
 	EventL4           int     `json:"event_l4"`
 	EventL5           int     `json:"event_l5"`
 	EventL4b          int     `json:"event_l4b"`
+	EventL6           int     `json:"event_l6"`
 	EventAvgConf      float64 `json:"event_avg_confidence"`
 
 	TeamTotal      int     `json:"team_total"`

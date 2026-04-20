@@ -28,15 +28,24 @@
 //   L4b 球队 ID 精确对兜底（无时间限制）：
 //     需要外部传入 teamIDMap，仅在前四级均未命中时激活
 //
+//   L6 占位符时间锚定匹配（仅当 SR 队名为占位符时激活）：
+//     SR 队名为 "WQF*"、"Winner R16-*"、"Winner of *" 等赛程占位符时，
+//     改用纯时间精确匹配（Δt≤300s）+ 唯一性约束，绕过名称相似度检查。
+//     置信度固定为 0.70（低于正常匹配，标记为占位符匹配）。
+//
 // v4 变更：
 //   - 将 levelConfigs 中的硬性时间分级替换为高斯衰减连续模糊时间窗口
 //   - 新增 gaussianTimeFactor(timeDiff, sigma) 函数
 //   - eventMatchConfig 新增 sigma 字段（高斯标准差，秒），maxTimeDiffSec 仅作截止上限
 //   - 保留 TeamAliasIndex 联赛级别名学习机制（v3 引入）
+// v5 变更：
+//   - 新增 L6 占位符时间锚定匹配（isPlaceholderTeamName + tryMatchL6）
+//   - 修正 KnownLeagueMap 中 EuroLeague 的 SR tournament_id（sr:tournament:138）
 package matcher
 
 import (
 	"math"
+	"strings"
 	"time"
 
 	"github.com/gdszyy/sports-matcher/internal/db"
@@ -358,6 +367,18 @@ func MatchEvents(
 			if m, ok := tryMatchL4b(sr, tsEvents, teamIDMap, usedTSIDs); ok {
 				em = m
 				usedTSIDs[m.TSMatchID] = true
+				matched = true
+			}
+		}
+
+		// @section:l6_placeholder_time_anchor - L6 占位符时间锚定匹配
+		// L6: 当 SR 队名为赛程占位符（WQF*、Winner R16-*、Winner of * 等）时，
+		// 改用纯时间精确匹配（Δt≤300s）+ 唯一性约束，绕过名称相似度检查。
+		// 仅在 L1~L4b 均未命中时激活，置信度固定 0.70。
+		if !matched && isPlaceholderTeamName(sr.HomeName) && isPlaceholderTeamName(sr.AwayName) {
+			if m, ok := tryMatchL6Placeholder(sr, tsEvents, usedTSIDs); ok {
+				em = m
+				usedTSIDs[m.TSMatchID] = true
 			}
 		}
 
@@ -626,4 +647,87 @@ func buildEventMatch(
 // unixToUTCDay 将 Unix 时间戳转换为 UTC 日期字符串 "2006-01-02"
 func unixToUTCDay(unix int64) string {
 	return time.Unix(unix, 0).UTC().Format("2006-01-02")
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// L6 占位符时间锚定匹配
+// ─────────────────────────────────────────────────────────────────────────────
+
+// placeholderPatterns 占位符队名模式列表（大小写不敏感）
+// 匹配 SR 在赛程确定前使用的占位符队名，如：
+//   WQF1, Wqf2, WQF3 —— 冨赛定纤占位符
+//   Winner R16-1, Winner R16-8 —— 16强赛晩入者占位符
+//   Winner of EC, Winner of WC —— 总决赛分区冒入者占位符
+//   WSF1, WSF2 —— 半决赛占位符
+var placeholderPrefixes = []string{
+	"wqf",        // 冨赛定纤（WQF1/Wqf2 等）
+	"wsf",        // 半决赛（WSF1/WSF2 等）
+	"winner r",   // Winner R16-*, Winner R8-* 等
+	"winner of",  // Winner of EC, Winner of WC 等
+	"loser r",    // Loser R16-* 等
+	"loser of",   // Loser of EC 等
+}
+
+// isPlaceholderTeamName 判断队名是否为赛程占位符。
+// 占位符队名是 SR 在赛程确定前使用的临时标识，无法通过名称相似度匹配。
+func isPlaceholderTeamName(name string) bool {
+	if name == "" {
+		return false
+	}
+	// 转小写后检查前缀
+	lower := strings.ToLower(strings.TrimSpace(name))
+	for _, prefix := range placeholderPrefixes {
+		if strings.HasPrefix(lower, prefix) {
+			return true
+		}
+	}
+	return false
+}
+
+const (
+	// l6MaxTimeDiff 占位符匹配时间精度上限：300秒（5分钟）
+	l6MaxTimeDiff = 300
+	// l6Confidence 占位符匹配固定置信度（低于正常匹配，标记为占位符匹配）
+	l6Confidence = 0.70
+)
+
+// tryMatchL6Placeholder L6 占位符时间锚定匹配。
+// 当 SR 主客队名均为占位符时，改用纯时间精确匹配：
+//   - 时差≤300s（5分钟）
+//   - TS 候选有且仅有一场（唯一性约束）
+//   - 置信度固定 0.70
+func tryMatchL6Placeholder(
+	sr db.SREvent,
+	tsEvents []db.TSEvent,
+	usedTSIDs map[string]bool,
+) (EventMatch, bool) {
+	var candidates []db.TSEvent
+
+	for i := range tsEvents {
+		ts := &tsEvents[i]
+		if usedTSIDs[ts.ID] {
+			continue
+		}
+
+		timeDiff := sr.StartUnix - ts.MatchTime
+		if timeDiff < 0 {
+			timeDiff = -timeDiff
+		}
+		if timeDiff <= l6MaxTimeDiff {
+			candidates = append(candidates, *ts)
+		}
+	}
+
+	// 唯一性约束：有且仅有一个候选才匹配
+	if len(candidates) != 1 {
+		return EventMatch{}, false
+	}
+
+	ts := candidates[0]
+	timeDiff := sr.StartUnix - ts.MatchTime
+	if timeDiff < 0 {
+		timeDiff = -timeDiff
+	}
+	em := buildEventMatch(sr, ts, nil, RuleEventL6, l6Confidence, timeDiff)
+	return em, true
 }

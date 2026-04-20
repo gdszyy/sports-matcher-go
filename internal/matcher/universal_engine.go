@@ -290,7 +290,7 @@ func (e *UniversalEngine) RunLeague(
 	// ── Step 5: 比赛匹配第一轮（策略 1/2/3/4）────────────────────────────
 	log.Printf("%s [4/5] 比赛匹配第一轮...", prefix)
 	eventMatches := MatchEvents(srcEvents, tsEvents, srcTeamNames, tsTeamNames, nil)
-	l1, l2, l3, l4, l5, _, matched := countEventLevels(eventMatches)
+	l1, l2, l3, l4, l5, _, _, matched := countEventLevels(eventMatches)
 	log.Printf("%s   → 第一轮: %d/%d [L1=%d, L2=%d, L3=%d, L4=%d, L5=%d]",
 		prefix, matched, len(eventMatches), l1, l2, l3, l4, l5)
 
@@ -308,8 +308,8 @@ func (e *UniversalEngine) RunLeague(
 		}
 		log.Printf("%s [4b] 比赛匹配第二轮（L4b 球队ID兜底）...", prefix)
 		eventMatches = MatchEvents(srcEvents, tsEvents, srcTeamNames, tsTeamNames, teamIDMap)
-		_, _, _, _, _, l4b, matched2 := countEventLevels(eventMatches)
-		log.Printf("%s   → 第二轮: %d/%d [L4b新增=%d]", prefix, matched2, len(eventMatches), l4b)
+		_, _, _, _, _, l4b, l6, matched2 := countEventLevels(eventMatches)
+		log.Printf("%s   → 第二轮: %d/%d [L4b新增=%d, L6新增=%d]", prefix, matched2, len(eventMatches), l4b, l6)
 
 		teamMappings = adapter.DeriveTeamMappings(eventMatches, srcTeamNames, tsTeamNames)
 		log.Printf("%s   → 球队映射（第二轮）: %d 条", prefix, len(teamMappings))

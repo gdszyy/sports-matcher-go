@@ -101,7 +101,7 @@ func (e *Engine) RunLeague(tournamentID, sport, tier, tsCompetitionID string) (*
 	// L4（超宽时间+别名）由 MatchEvents 内部的 TeamAliasIndex 驱动，无需外部传入 teamIDMap。
 	log.Printf("  [4/5] 比赛匹配第一轮（L1/L2/L3/L4）...")
 	eventMatches := MatchEvents(srEvents, tsEvents, srTeamNames, tsTeamNames, nil)
-	l1, l2, l3, l4, l5, _, matched := countEventLevels(eventMatches)
+	l1, l2, l3, l4, l5, _, _, matched := countEventLevels(eventMatches)
 	log.Printf("    → 第一轮: %d/%d [L1=%d, L2=%d, L3=%d, L4=%d, L5=%d]", matched, len(eventMatches), l1, l2, l3, l4, l5)
 
 	// 推导球队映射（第一轮）
@@ -120,8 +120,8 @@ func (e *Engine) RunLeague(tournamentID, sport, tier, tsCompetitionID string) (*
 		}
 		log.Printf("  [4b] 比赛匹配第二轮（L4b 球队ID兜底）...")
 		eventMatches = MatchEvents(srEvents, tsEvents, srTeamNames, tsTeamNames, teamIDMap)
-		_, _, _, _, _, l4b, matched := countEventLevels(eventMatches)
-		log.Printf("    → 第二轮: %d/%d [L4b新增=%d]", matched, len(eventMatches), l4b)
+		_, _, _, _, _, l4b, l6, matched := countEventLevels(eventMatches)
+		log.Printf("    → 第二轮: %d/%d [L4b新增=%d, L6新增=%d]", matched, len(eventMatches), l4b, l6)
 
 		// 重新推导球队映射（包含 L4/L4b 场次贡献）
 		teamMappings = DeriveTeamMappings(eventMatches, srTeamNames, tsTeamNames)
@@ -208,6 +208,8 @@ func computeStats(r *MatchResult, sport, tier string, elapsed time.Duration) Mat
 				s.EventL5++
 			case RuleEventL4b:
 				s.EventL4b++
+			case RuleEventL6:
+				s.EventL6++
 			}
 		}
 	}
@@ -246,7 +248,7 @@ func computeStats(r *MatchResult, sport, tier string, elapsed time.Duration) Mat
 }
 
 // countEventLevels 统计各级匹配数量
-func countEventLevels(events []EventMatch) (l1, l2, l3, l4, l5, l4b, matched int) {
+func countEventLevels(events []EventMatch) (l1, l2, l3, l4, l5, l4b, l6, matched int) {
 	for _, ev := range events {
 		if !ev.Matched {
 			continue
@@ -265,9 +267,11 @@ func countEventLevels(events []EventMatch) (l1, l2, l3, l4, l5, l4b, matched int
 			l5++
 		case RuleEventL4b:
 			l4b++
+		case RuleEventL6:
+			l6++
 		}
 	}
-	return
+	return l1, l2, l3, l4, l5, l4b, l6, matched
 }
 
 func boolIcon(b bool) string {
