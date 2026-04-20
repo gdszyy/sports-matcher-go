@@ -1,89 +1,97 @@
 ---
 description: "sports-matcher-go 系统的全局架构概述、核心工作流串联及全局禁止行为清单"
-globs: ["README.md", "docs/**/*.md", "python/**/*.py", "internal/**/*.go"]
+globs: ["README.md", "docs/**/*.md"]
 ---
 
 # 全局架构规范 (Global Architecture)
 
 ## 1. 架构概述
 
-**sports-matcher-go** 是 XP-BET 平台的体育赛事数据匹配服务，负责将 **LSports（左）** 的联赛/比赛数据与 **TheSports（右）** 进行 ID 映射，为下游赔率系统提供统一赛事标识。
+**sports-matcher-go** 是 XP-BET 平台的跨库体育赛事数据匹配服务，负责将 **SportRadar（SR）** 的联赛/比赛/球队/球员数据单向匹配到 **TheSports（TS）**，为下游赔率系统提供统一的赛事标识。
+
+| 维度 | 说明 |
+|------|------|
+| 语言 | Go（主服务）+ Python（数据分析/批量匹配脚本） |
+| 数据源 | SportRadar（`xp-bet-test`）、TheSports（`test-thesports-db`） |
+| 数据库访问 | 通过 SSH 隧道连接 AWS RDS（`test-db.cluster-cdgqiwig2x00.us-west-2.rds.amazonaws.com`） |
+| 当前覆盖运动 | 足球（sport_id=6046）、篮球（sport_id=48242） |
+| HTTP 框架 | Gin |
+
+### 目录结构
 
 ```
-LSports DB (test-xp-lsports)      TheSports DB (test-thesports-db)
-           └──────── SSH 隧道 (54.69.237.139) ────────┘
-                        本地端口 3308
-                              │
-              ┌───────────────┴───────────────┐
-              │        sports-matcher-go       │
-              │  Go: internal/db + matcher     │  ← 主服务
-              │  Python: python/db + match_*   │  ← 批量脚本
-              └───────────────────────────────┘
-                              │
-                      Excel / API 响应
+cmd/server/main.go          CLI 入口（serve / match 命令）
+internal/
+  config/config.go          配置读取（环境变量 / 默认值）
+  db/
+    tunnel.go               SSH 隧道 + MySQL 连接池管理
+    models.go               数据模型（SR/TS 联赛、比赛、球队、球员）
+    sr_adapter.go           SR 数据库查询适配器
+    ts_adapter.go           TS 数据库查询适配器
+    ls_adapter.go           LSports 数据库查询适配器
+    alias_store.go          球队别名存储
+    league_alias_store.go   联赛别名存储
+    data_router.go          标准化数据路由
+  matcher/
+    result.go               匹配结果数据结构和规则常量
+    name.go                 名称归一化（变音符/先后名/中间名/Unicode）
+    league.go               联赛匹配（已知映射表 + 名称相似度 + 全局占用机制）
+    league_alias.go         联赛别名匹配逻辑
+    league_features.go      联赛特征提取
+    event.go                比赛匹配（五级降级规则 L1/L2/L3/L4/L4b + TeamAliasIndex）
+    event_dtw.go            DTW 时间序列比赛匹配
+    team_player.go          球队映射推导 + 球员匹配（多格式名称）
+    engine.go               主流程编排（两轮迭代 + 自底向上校验）
+    universal_engine.go     通用匹配引擎（LSports ↔ TheSports）
+    ls_engine.go            LSports 专用匹配引擎
+    dense_blocking.go       密集候选块生成
+    fs_model.go             特征评分模型
+  api/server.go             HTTP API 服务（Gin）
+python/
+  match_2026.py             2026 年批量匹配脚本
+  db/connector.py           Python 数据库连接工具
 ```
-
-### 数据库连接信息
-
-| 参数 | 值 |
-|------|-----|
-| RDS Host | `test-db.cluster-cdgqiwig2x00.us-west-2.rds.amazonaws.com` |
-| RDS Port | `3306` |
-| User | `root` |
-| Password | `r74pqyYtgdjlYB41jmWA` |
-| SSH Host | `54.69.237.139` |
-| SSH User | `ubuntu` |
-| SSH Key | `~/skills/xp-bet-db-connector/templates/id_ed25519` |
-| 本地隧道端口 | `3308`（主）/ `3309`（备） |
-
-### Sport ID 对照
-
-| 运动 | LS sport_id | TS 表前缀 |
-|------|------------|----------|
-| 足球 | `6046` | `ts_fb_*` |
-| 篮球 | `48242` | `ts_bb_*` |
 
 ## 2. 核心工作流串联
 
-### 联赛匹配流程
-1. 优先查 `KNOWN_LS_TS_MAP`（硬编码已验证映射）
-2. 回退：名称相似度（Jaccard + SequenceMatcher）+ 地理过滤
-3. 阈值：`NAME_HI`（≥0.85）、`NAME_MED`（≥0.70）、`NAME_LOW`（≥0.55）
+### 五级匹配规则（v3）
 
-### 比赛匹配流程
-1. 一次性预加载所有 TS 2026 年比赛（约 4 秒），内存中按 competition_id 分组
-2. 对每场 LS 比赛，用 `bisect` 二分查找 ±24h 时间窗口内的候选比赛
-3. 对候选比赛计算主客队名称相似度，取最高分且 ≥0.7 的作为匹配结果
+| 级别 | 触发条件 | 时间窗口 | 名称阈值 | 最低置信度 | 特殊约束 |
+|:----:|:--------|:-------:|:-------:|:---------:|:--------|
+| **L1** | 精确时间 | ≤ 5 min | 0.40 | 0.50 | — |
+| **L2** | 宽松时间 | ≤ 6 h | 0.65 | 0.60 | — |
+| **L3** | 同一 UTC 日期 | ≤ 24 h（同日） | 0.75 | 0.70 | — |
+| **L4** | 超宽时间 + 别名强匹配 | ≤ 72 h | 0.85 | 0.80 | `require_alias=true` |
+| **L4b** | 球队 ID 精确对兜底 | 无限制 | — | 0.75 | 需第一轮推导的 `teamIDMap` |
 
-### 已知联赛 ID 映射（经验证，勿随意修改）
+### 两轮迭代流程
 
-| LS 联赛名 | LS ID | TS 联赛名 | TS ID |
-|----------|-------|----------|-------|
-| Premier League | `67` | English Premier League | `jednm9whz0ryox8` |
-| LaLiga | `8363` | Spanish La Liga | `vl7oqdehlyr510j` |
-| Ligue 1 | `61` | French Ligue 1 | `yl5ergphnzr8k0o` |
-| Bundesliga (Germany) | `65` | Bundesliga | `gy0or5jhg6qwzv3` |
-| 2.Bundesliga | `66` | German Bundesliga 2 | `kn54qllhjzqvy9d` |
-| UEFA Champions League | `32644` | UEFA Champions League | `z8yomo4h7wq0j6l` |
-| UEFA Europa League | `30444` | UEFA Europa League | `56ypq3nh0xmd7oj` |
-| NBA | `64` | National Basketball Association | `49vjxm8xt4q6odg` |
+```
+第一轮：MatchEvents(teamIDMap=nil)
+        → L1 / L2 / L3 / L4（TeamAliasIndex 内部驱动）
+        → DeriveTeamMappings → teamIDMap
 
-> ⚠️ **陷阱**：LS Bundesliga ID=56 是奥地利联赛，ID=65 才是德国联赛！
+第二轮：MatchEvents(teamIDMap=<第一轮推导>)
+        → L4b 球队 ID 精确对兜底
+        → DeriveTeamMappings（最终）
+```
 
-### 关键数据特征（避坑）
+### HTTP API 入口
 
-1. **`scheduled` 格式不统一**：同表中存在 `2026-04-18T14:00:00` 和 `...Z` 两种格式
-2. **`competitor_id` 类型不匹配**：`ls_competitor_en.competitor_id` 是 `bigint`（Python int），`ls_sport_event.home_competitor_id` 是 `varchar`（Python str）→ 构建字典必须 `{str(r[0]): r[1]}`
-3. **`ls_category_en` JOIN 放大**：同一 `category_id` 对应多个 `sport_id`，JOIN 必须加 `AND cat.sport_id = e.sport_id`
-4. **TS `match_time` 是 Unix 时间戳**：2026 年范围 = `[1767225600, 1798761600)`
-5. **虚拟体育识别（v4 `is_virtual_sport()` 已实现）**：联赛名以 `E-`、`E |` 开头，或含 `(E)`、`eSports`、`Cyber`、`2K`、`Blitz`、`H2H GG`、时间格式（`8 Minutes`/`2x5 Mins`）等关键词→跳过 TS 匹配，橙色标注
+| 接口 | 方法 | 说明 |
+|------|------|------|
+| `/health` | GET | 健康检查 |
+| `/api/v1/match/league` | GET | 单联赛匹配 |
+| `/api/v1/match/batch` | POST | 批量联赛匹配 |
 
 ## 3. 全局禁止行为清单
 
-1. **禁止提交 SSH 私钥**：私钥在 `~/skills/xp-bet-db-connector/templates/id_ed25519`，绝不提交 git
-2. **禁止绕过 SSH 隧道**：数据库不对公网开放，必须通过跳板机 `54.69.237.139`
-3. **禁止直接 JOIN `ls_category_en`**：必须加 `AND cat.sport_id = e.sport_id` 或用 `COUNT(DISTINCT event_id)`
-4. **禁止混用 competitor_id 类型**：构建字典时必须统一转 `str`
-5. **禁止修改 `KNOWN_LS_TS_MAP` 而不同步更新 `python/db/db_queries.md`**
-6. **禁止破坏"代码-文档同步"契约**：修改核心逻辑时必须同步更新 `.cursor/rules/` 对应文档
+为保障项目架构的纯净性和系统稳定性，特制定以下禁止行为清单：
 
+1.  **禁止破坏"代码-文档同步"契约**：在修改任何架构设计、API 或核心逻辑时，必须同步更新 `.cursor/rules/` 下对应的规则文档。
+2.  **禁止硬编码凭证信息**：在所有文档示例和代码中，严禁出现真实的 API Key、Token、密码或数据库连接串，必须使用占位符代替。
+3.  **禁止跳过流程洞察沉淀**：在任务中发现隐蔽逻辑或耦合陷阱时，必须在 `.cursor/rules/process_insights/` 中记录对应洞察。
+4.  **禁止手动编辑自动索引**：`.cursor/rules/auto_index/` 目录下的文件由 `code-indexer` 脚本自动生成，严禁手动编辑。
+5.  **巨型函数必须标记内部节点**：当函数超过 200 行时，必须在内部按业务逻辑块添加 `// @section:{snake_case_name} - {一句话说明}` 标记，以便索引器提取内部节点。
+6.  **禁止修改五级匹配阈值而不更新文档**：L1–L4b 的时间窗口和置信度阈值是经过验证的核心参数，任何调整必须同步更新 `README.md` 和 `global.md`。
+7.  **禁止绕过 SSH 隧道直连数据库**：所有数据库连接必须通过 `internal/db/tunnel.go` 建立的 SSH 隧道，严禁直接配置外网数据库连接。

@@ -3,5 +3,9 @@
 请立即读取以下文件：
 1. `AGENTS.md` — 全局协作规范与模块索引入口
 2. `.cursor/rules/global.md` — 全局架构概述与禁止行为清单
+3. `.cursor/rules/auto_index/INDEX.md` — 自动函数索引汇总（涉及大文件时必读）
+4. `.cursor/rules/process_insights/index.md` — 流程洞察注册表（涉及复杂流程时必读）
 
 所有模块级规范位于 `.cursor/rules/` 目录下，按需读取。
+流程洞察文档位于 `.cursor/rules/process_insights/` 目录下，按需读取。
+函数级索引位于 `.cursor/rules/auto_index/` 目录下，按需读取。

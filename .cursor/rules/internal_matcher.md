@@ -1,157 +1,103 @@
 ---
-description: "internal_matcher 模块的设计规范与核心逻辑说明"
-globs: ["internal_matcher/**/*"]
+description: "internal/matcher 模块的设计规范与核心逻辑说明，包含五级匹配规则、TeamAliasIndex、通用引擎等"
+globs: ["internal/matcher/**/*"]
 ---
 
-# internal_matcher 模块规范
+# internal/matcher 模块规范
 
 ## 1. 模块职责
 
-`internal/matcher` 包是 `sports-matcher-go` 的核心匹配引擎，负责将 LSports（LS）和 SportRadar（SR）的联赛、比赛、球队数据与 TheSports（TS）进行双向 ID 映射。
+`internal/matcher` 是系统的核心匹配引擎，负责将 SR 的联赛/比赛/球队/球员数据与 TS 数据进行相似度计算和 ID 映射。模块采用多级降级策略，在精度与召回率之间取得平衡。
 
 | 文件 | 职责 |
 |------|------|
-| `engine.go` | SR↔TS 匹配引擎入口（`MatchLeagues`、`MatchEvents`） |
-| `ls_engine.go` | LS↔TS 匹配引擎入口（`LSEngine.RunLeague`） |
-| `league.go` | SR 侧联赛匹配逻辑（`MatchLeague`、`leagueNameScore`）+ 已知映射表 `KnownLeagueMap` |
-| `league_features.go` | **P0 新增**：联赛名称结构化特征提取（`ExtractLeagueFeatures`）+ 六维强约束一票否决（`CheckLeagueVeto`）+ 层级数字提取（`extractTierNumber`） |
-| `event.go` | 多策略比赛匹配（**P2 重构**：高斯衰减连续时间窗口 + L5 + L4b）、`TeamAliasIndex` 动态别名学习、`InjectAlias`（实现 `db.AliasIndexLoader`） |
-| `team_player.go` | SR 球队/球员匹配、`ApplyBottomUp`；**P1 新增** `LSPlayerMatch`、`MatchPlayersForLSTeam`、`DeriveTeamMappingsFromLS`、`ApplyBottomUpLS` |
-| `reverse_confirm.go` | **P1 新增**：比赛反向确认率（`ComputeReverseConfirmRate`）、分级（`ClassifyRCR`）、回灰联赛置信度（`ApplyRCRToLeague`） |
-| `universal_engine.go` | **P2 新增**：通用匹配引擎（`UniversalEngine`）、数据源适配器接口（`SourceAdapter`）、SR/LS 适配器实现（`SRSourceAdapter`/`LSSourceAdapter`）；集成 `KnownLeagueMapValidator` |
-| `known_map_validator.go` | **P2 新增**：已知映射表反向确认率自动验证（`KnownLeagueMapValidator`）：`ValidateLS`/`ValidateSR`、`MarkManualOverride`、`ListSuspectMappings`；持久化日志表 `known_map_validation_log` |
-| `dense_blocking.go` | **P3 新增**：稠密分块（`DenseBlocker`）：`encodeEntity`（trigram TF-IDF + L2 归一化）、NSW 近邻图索引、`Build`/`Query`/`QueryDefault`；`BuildTSEventBlocker`/`QueryTSCandidates` 集成辅助函数 |
-| `fs_model.go` | **P3 新增**：Fellegi-Sunter 模型（`FSModel`）：`CompareEventPair`、`Score`/`ScoreNormalized`/`Classify`、`FitEM`（无监督 EM 参数估计）；`FSModelStore`（联赛级模型缓存 + 增量学习） |
-| `event_dtw.go` | **P3 新增**：EventDTW 动态时间规整：`ExtractAnchors`（高置信度锁点提取）、`EstimateOffset`（中位数偏移量估计 + MAD）、`DTWAlign`（Sakoe-Chiba 带宽约束 DTW 路径对齐）、`EventDTWMatcher.TryCorrect`（兑底修正层） |
-| `name.go` | 名称归一化（`normalizeName`）、Jaccard 相似度、**P0 新增** Jaro-Winkler 相似度（`jaroWinklerSimilarity`）、`nameSimilarityMax` |
-| `team_name_normalizer.go` | 球队名称深度归一化（8 步流水线，去信乐部缩写/赞助商/变音符等） |
-| `result.go` | 匹配结果数据结构定义；**P1 扩展** `LSEventMatch`/`LSTeamMapping`/`LSMatchStats`/`LSMatchResult` 球员字段 |
+| `engine.go` | 主流程编排（两轮迭代 + 自底向上校验） |
+| `universal_engine.go` | 通用匹配引擎（LSports ↔ TheSports，844 行） |
+| `ls_engine.go` | LSports 专用匹配引擎（760 行） |
+| `event.go` | 比赛匹配（五级降级规则 L1–L4b + TeamAliasIndex，625 行） |
+| `event_dtw.go` | DTW 时间序列比赛匹配（525 行） |
+| `league.go` | 联赛匹配（已知映射表 + 名称相似度 + 全局占用机制） |
+| `league_alias.go` | 联赛别名匹配（629 行） |
+| `league_features.go` | 联赛特征提取（624 行） |
+| `team_player.go` | 球队映射推导 + 球员匹配（487 行） |
+| `name.go` | 名称归一化（变音符/先后名/中间名/Unicode，308 行） |
+| `result.go` | 匹配结果数据结构和规则常量 |
+| `dense_blocking.go` | 密集候选块生成（450 行） |
+| `fs_model.go` | 特征评分模型（519 行） |
+| `known_map_validator.go` | 已知映射验证器（433 行） |
+| `reverse_confirm.go` | 反向确认逻辑 |
+| `team_name_normalizer.go` | 球队名称归一化（332 行） |
 
----
+## 2. 核心数据模型
 
-## 2. 核心数据模型 / API 接口
-
-### 2.1 联赛特征向量（P0 新增）
+### 匹配结果（result.go）
 
 ```go
-// LeagueFeatures 联赛名称结构化特征向量（六维强约束 + 辅助信息）
-type LeagueFeatures struct {
-    Gender          LeagueGender // 性别：Unknown / Men / Women
-    AgeGroup        string       // 年龄段："" / "u23" / "u21" / "u19" / "youth" 等
-    Region          string       // 区域分区："" / "north" / "south" / "east" / "west" / "central" 等
-    CompetitionType string       // 赛制类型："" / "cup" / "league" / "short_format" / "playoff" / "friendly"
-    TierNumber      int          // 层级数字：0 表示未检测到；1=顶级，2=次级…
-    TierRoman       string       // 层级罗马数字原始值（调试用）
-    NormalizedName  string       // 归一化后的核心名称
+// MatchResult 包含单场比赛的匹配结果
+type MatchResult struct {
+    SREventID   string
+    TSEventID   string
+    Confidence  float64
+    Level       MatchLevel  // L1/L2/L3/L4/L4b
+    TeamIDMap   map[string]string
 }
 ```
 
-### 2.2 强约束否决结果
+### 五级匹配规则常量
 
-```go
-type LeagueVetoResult struct {
-    Vetoed bool
-    Reason VetoReason // gender_conflict / age_conflict / region_conflict / competition_type_conflict / tier_number_conflict / short_format_conflict
-    Detail string
-}
-```
-
-### 2.3 匹配规则常量（`result.go`）
-
-| 常量 | 含义 |
-|------|------|
-| `RuleLeagueKnown` | 已知映射表命中（最高置信度） |
-| `RuleLeagueNameHi` | 名称相似度 ≥ 0.85 |
-| `RuleLeagueNameMed` | 名称相似度 ≥ 0.70 |
-| `RuleLeagueNameLow` | 名称相似度 ≥ 0.55 |
-| `RuleLeagueNoMatch` | 未匹配 |
-| `RuleEventL1` ~ `RuleEventL5` | 比赛多策略匹配（**P2 重构后**：L1=标准匹配 σ=3600s, L2=宽松匹配 σ=10800s, L3=超宽容差匹配 同日UTC, L4=别名强匹配 σ=43200s, L5=唯一性匹配） || `RuleEventL4b` | 球队 ID 兜底匹配 |
-
----
+| 常量 | 值 | 说明 |
+|------|-----|------|
+| `LevelL1` | 1 | 精确时间（≤5min），名称阈值 0.40，置信度 0.50 |
+| `LevelL2` | 2 | 宽松时间（≤6h），名称阈值 0.65，置信度 0.60 |
+| `LevelL3` | 3 | 同日期（≤24h），名称阈值 0.75，置信度 0.70 |
+| `LevelL4` | 4 | 超宽时间（≤72h）+ 别名强匹配，置信度 0.80 |
+| `LevelL4b` | 5 | 球队 ID 精确对兜底，置信度 0.75 |
 
 ## 3. 状态流转 / 业务规则
 
-### 3.1 联赛匹配流程（P0 更新后）
+### TeamAliasIndex（联赛级队伍别名学习）
+
+在同一联赛的比赛匹配过程中，每当 L1/L2/L3/L4 成功匹配一场比赛，自动将 `(sr_team_id → ts_team_id)` 写入别名索引。后续比赛若两队均在索引中命中，直接返回高置信度分数（0.92），不再依赖字面名称相似度。
+
+**解决的问题**：`Chelsea FC`（SR）vs `Chelsea`（TS）等名称细微差异导致置信度偏低进而漏匹配的问题。
+
+### 两轮迭代流程
 
 ```
-输入：LS/SR 联赛 + TS 联赛候选列表
-  │
-  ├─ Step 1: 已知映射表查询（KnownLSLeagueMap / KnownLeagueMap）
-  │     命中 → 直接返回，跳过强约束校验（人工审核白名单）
-  │
-  └─ Step 2: 名称相似度兜底（对每个 TS 候选）
-        ├─ lsLocationVeto：地区明显不匹配 → 0.0（跨国否决）
-        ├─ ExtractLeagueFeatures(ls.Name) + ExtractLeagueFeatures(ts.Name)
-        ├─ nameSimilarityMax(Jaccard, JW) → base 分数
-        ├─ 确定 confLevel（hi/med/low）
-        ├─ CheckLeagueVeto(lsFeatures, tsFeatures, confLevel)
-        │     六维否决：性别 / 年龄段 / 区域分区 / 赛制类型 / 短赛制 / 层级数字
-        │     任一否决 → 0.0
-        └─ 同国加权 → 最终分数
-              ≥ 0.85 → RuleLeagueNameHi
-              ≥ 0.70 → RuleLeagueNameMed
-              ≥ 0.55 → RuleLeagueNameLow
-              < 0.55 → 未匹配
+第一轮：MatchEvents(teamIDMap=nil)
+        → L1 / L2 / L3 / L4（TeamAliasIndex 内部驱动）
+        → DeriveTeamMappings → teamIDMap
+
+第二轮：MatchEvents(teamIDMap=<第一轮推导>)
+        → L4b 球队 ID 精确对兜底
+        → DeriveTeamMappings（最终）
 ```
 
-### 3.2 高斯衰减时间评分（P2 新增）
+### 名称归一化规则（name.go）
 
-**公式**：$S_{time}(\Delta t) = \exp(-\Delta t^2 / 2\sigma^2)$
+- 去除变音符（如 `Müller → Muller`）
+- 处理先后名顺序（`John Smith` ↔ `Smith John`）
+- 处理中间名缩写
+- Unicode 标准化
 
-| 策略 | 对应规则 | σ | 时差上限 | 名称阈値 | 时间权重 |
-|------|---------|---|---------|---------|----------|
-| 标准匹配 | `RuleEventL1` | 3600s | 21600s (6h) | 0.40 | 0.30 |
-| 宽松匹配 | `RuleEventL2` | 10800s | 32400s (9h) | 0.65 | 0.15 |
-| 超宽容差 | `RuleEventL3` | 43200s | 同日 UTC | 0.75 | 0.0 |
-| 别名强匹配 | `RuleEventL4` | 43200s | 259200s (72h) | 0.85 | 0.0 |
+## 4. 大文件函数索引
 
-**与旧版硬性分级的对比**：旧版时差超过阈値直接截断（断崖效应）；新版时差越大评分越低，但不硬性截断，由 `maxTimeDiffSec` 作为最终上限。
+以下文件超过 500 行，已由 `code-indexer` 生成函数级索引，修改前必须查阅：
 
-### 3.3 六维强约束否决规则
-
-| 维度 | 否决条件 | 典型案例 |
-|------|---------|---------|
-| **性别** | 一侧 Women，另一侧 Men 或 Unknown | `UEFA U19 Women` vs `UEFA U19` → 否决 |
-| **年龄段** | 两侧年龄段不一致，或一侧有年龄标注另一侧无 | `Premier League U19` vs `Premier League` → 否决 |
-| **区域分区** | 两侧区域不一致，或一侧有区域另一侧无 | `National League South` vs `National League` → 否决 |
-| **赛制类型** | Cup vs League；short_format vs 任何非 short_format | `LFL 5x5` vs `Bundesliga` → 否决 |
-| **层级数字** | 两侧层级数字不一致（仅在 med/low 置信度时否决） | `4 Liga` vs `Liga 3` → 否决（med） |
-| **短赛制** | short_format 与任何非 short_format 类型冲突 | `Futsal Cup` vs `FA Cup` → 否决 |
-
-### 3.4 Jaro-Winkler 相似度使用规范
-
-- `nameSimilarityMax(a, b)` = max(Jaccard(a,b), JaroWinkler(a,b))
-- 适用于联赛名称、球队名称等短文本场景
-- 对公共前缀（最多 4 字符，p=0.1）给予额外加分，比 Jaccard 更适合处理缩写和短名称
-
-### 3.5 层级数字提取规则
-
-优先级从高到低：
-1. 正则模式：`2.Bundesliga`、`Liga 3`、`3 Liga`、`Division 2`、`Serie B`
-2. 文字层级词：`first division`=1、`second division`=2、`third division`=3
-3. 独立罗马数字（仅名称末尾或括号内）：`II`=2、`III`=3
-
----
-
-## 4. 详细设计文档索引
-
-| 文档 | 说明 |
-| --- | --- |
-| [`docs/ls_ts_matching_assessment.md`](../../docs/ls_ts_matching_assessment.md) | LS 与 TS 联赛匹配的历史评估与背景说明 |
-| [`docs/league_match_evaluation_rule.md`](../../docs/league_match_evaluation_rule.md) | 当前阶段正式使用的联赛评价口径、最小比赛数阈值与准确率结论 |
-| [`docs/league_guard_keywords.json`](../../docs/league_guard_keywords.json) | 地区、性别、年龄、区域与赛制形态的强约束关键词词典（P0 已扩充） |
-| [`docs/universal_matching_algorithm_design.md`](../../docs/universal_matching_algorithm_design.md) | 通用匹配算法完整设计文档（P0-P3 路线图） |
-| [`.cursor/rules/process_insights/PI-001_universal_matching_algorithm_design.md`](process_insights/PI-001_universal_matching_algorithm_design.md) | P0-P3 优化 TODO 清单与防坑指南 |
-
----
-
-## 5. 变更日志
-
-| 版本 | 日期 | 变更内容 |
+| 文件 | 行数 | 索引文件 |
 |------|------|---------|
-| v1.0 | 2026-04-16 | 初始规范文档（占位） |
-| v2.0 | 2026-04-17 | P0 阶段完成：新增 `league_features.go`（六维特征提取 + 强约束否决 + 层级数字提取）；`name.go` 新增 Jaro-Winkler；`ls_engine.go` 和 `league.go` 引入 `CheckLeagueVeto`；`docs/league_guard_keywords.json` 扩充完整的模块规范（职责、数据模型、业务规则、变更日志） |
-| v2.1 | 2026-04-17 | P1 阶段完成：`models.go` 新增 `LSPlayer`/`LSTeam`；新增 `ls_player_adapter.go`（数据库优先+Snapshot API 兆底，支持批量）；`team_player.go` 新增 LS 球员匹配和自底向上校验；`ls_engine.go` 激活球员匹配阶段；新增 `reverse_confirm.go`；`result.go` 扩展 LS 结构体 |
-| v3.0 | 2026-04-17 | P2 阶段完成：`event.go` 将硬性时间分级替换为高斯衰减连续模糊时间窗口（`gaussianTimeFactor`），新增 `InjectAlias` 实现 `db.AliasIndexLoader` 接口；新增 `internal/db/alias_store.go`（持久化球队别名知识图谱）；新增 `universal_engine.go`（通用匹配引擎，适配器模式统一 SR/LS 链路） |
-| v3.1 | 2026-04-17 | P2 剩余完成：新增 `known_map_validator.go`（`KnownLeagueMapValidator` 已知映射表反向确认率自动验证）；`LSEngine` 新增 `MapValidator` 字段和 `NewLSEngineWithValidator`；`UniversalEngine` 集成验证器；全项编译通过 |
-| v4.0 | 2026-04-17 | P3 阶段：新增 `dense_blocking.go`（Entity2Vec+NSW 稠密分块）、`fs_model.go`（Fellegi-Sunter EM 参数估计）、`event_dtw.go`（EventDTW 动态时间规整）；TODO-015/016/017 全部完成；全项编译通过 |
+| `universal_engine.go` | 844 | [auto_index](auto_index/internal_matcher_universal_engine_go_index.md) |
+| `ls_engine.go` | 760 | [auto_index](auto_index/internal_matcher_ls_engine_go_index.md) |
+| `integration_test.go` | 642 | [auto_index](auto_index/internal_matcher_integration_test_go_index.md) |
+| `league_alias.go` | 629 | [auto_index](auto_index/internal_matcher_league_alias_go_index.md) |
+| `event.go` | 625 | [auto_index](auto_index/internal_matcher_event_go_index.md) |
+| `league_features.go` | 624 | [auto_index](auto_index/internal_matcher_league_features_go_index.md) |
+| `event_dtw.go` | 525 | [auto_index](auto_index/internal_matcher_event_dtw_go_index.md) |
+| `fs_model.go` | 519 | [auto_index](auto_index/internal_matcher_fs_model_go_index.md) |
+
+## 5. 详细设计文档索引
+
+- [通用匹配算法设计](../../docs/universal_matching_algorithm_design.md)
+- [联赛匹配评估规则](../../docs/league_match_evaluation_rule.md)
+- [LS/TS 匹配评估报告](../../docs/ls_ts_matching_assessment.md)
+- [优化测试报告](../../docs/optimization_test_report.md)
