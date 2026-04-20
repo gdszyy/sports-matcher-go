@@ -59,6 +59,7 @@ func (e *LSEngine) RunLeague(lsTournamentID, sport, tier, tsCompetitionID string
 	t0 := time.Now()
 	result := &LSMatchResult{}
 
+	// @section:load_ls_league - 加载 LSports 联赛数据
 	// ── Step 1: 加载 LSports 联赛 ────────────────────────────────────────
 	log.Printf("[LS] [1/4] 联赛匹配: %s", lsTournamentID)
 	lsTour, err := e.LS.GetTournament(lsTournamentID)
@@ -70,6 +71,7 @@ func (e *LSEngine) RunLeague(lsTournamentID, sport, tier, tsCompetitionID string
 	}
 	lsTour.Sport = sport
 
+	// @section:league_match - 联赛匹配（已知映射 + 名称相似度）
 	// ── Step 2: 联赛匹配 ─────────────────────────────────────────────────
 	var tsComps []db.TSCompetition
 	if tsCompetitionID != "" {
@@ -107,6 +109,7 @@ func (e *LSEngine) RunLeague(lsTournamentID, sport, tier, tsCompetitionID string
 
 	tsCompID := leagueMatch.TSCompetitionID
 
+	// @section:load_events - 加载 LS/TS 比赛与球队名称数据
 	// ── Step 3: 加载比赛数据 ─────────────────────────────────────────────
 	log.Printf("[LS] [2/4] 加载比赛数据...")
 	lsEvents, err := e.LS.GetEvents(lsTournamentID)
@@ -131,6 +134,7 @@ func (e *LSEngine) RunLeague(lsTournamentID, sport, tier, tsCompetitionID string
 	}
 	log.Printf("[LS]   LS 球队: %d, TS 球队: %d", len(lsTeamNames), len(tsTeamNames))
 
+	// @section:event_match_round1 - 比赛匹配第一轮（L1/L2/L3/L4）+ 球队映射推导
 	// ── Step 5: 比赛匹配（第一轮：L1/L2/L3/L4）──────────────────────────
 	log.Printf("[LS] [4/4] 比赛匹配第一轮（L1/L2/L3/L4）...")
 	eventMatches := matchLSEvents(lsEvents, tsEvents, lsTeamNames, tsTeamNames, nil)
@@ -142,6 +146,7 @@ func (e *LSEngine) RunLeague(lsTournamentID, sport, tier, tsCompetitionID string
 	teamMappings := deriveLSTeamMappings(eventMatches, lsTeamNames, tsTeamNames)
 	log.Printf("[LS]   → 球队映射（第一轮）: %d 条", len(teamMappings))
 
+	// @section:event_match_round2 - 比赛匹配第二轮（L4b 球队ID兜底）
 	// ── Step 6: 比赛匹配（第二轮：L4b 球队ID兜底）───────────────────────
 	if len(teamMappings) > 0 {
 		teamIDMap := make(map[string]string, len(teamMappings))
@@ -162,6 +167,7 @@ func (e *LSEngine) RunLeague(lsTournamentID, sport, tier, tsCompetitionID string
 	result.Events = eventMatches
 	result.Teams = teamMappings
 
+	// @section:known_map_validation - 已知映射反向确认率验证（P2）
 	// ── Step 7b: 已知映射反向确认率验证（P2 新增，TODO-014）────────────────
 	// 仅在联赛匹配规则为 LEAGUE_KNOWN 时触发验证
 	if e.MapValidator != nil && leagueMatch.MatchRule == RuleLeagueKnown {
@@ -182,6 +188,7 @@ func (e *LSEngine) RunLeague(lsTournamentID, sport, tier, tsCompetitionID string
 		}
 	}
 
+	// @section:player_match_bottom_up - 球员匹配 + 自底向上反向验证（P1）
 	// ── Step 8: 球员匹配 + 自底向上反向验证（P1 新增）──────────────────
 	// 触发条件：
 	//   1. 常规路径：e.RunPlayers == true（由调用方显式开启）

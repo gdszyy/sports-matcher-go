@@ -298,10 +298,12 @@ func MatchEvents(
 	tsTeamNames map[string]string,
 	teamIDMap map[string]string,
 ) []EventMatch {
+	// @section:init_state - 初始化匹配状态（usedTSIDs、results、aliasIdx）
 	usedTSIDs := make(map[string]bool)
 	results := make([]EventMatch, 0, len(srEvents))
 	aliasIdx := newTeamAliasIndex() // 联赛级别名索引，随匹配过程动态学习
 
+	// @section:multi_level_match - 逐条 SR 比赛执行策略 1/2/3/4 + L5 + L4b 匹配
 	for _, sr := range srEvents {
 		em := EventMatch{
 			SREventID:   sr.ID,
@@ -315,7 +317,7 @@ func MatchEvents(
 			MatchRule:   RuleEventNoMatch,
 		}
 
-		// 策略 1/2/3/4 逐级尝试（策略 4 依赖 aliasIdx）
+		// @section:strategy_1_to_4 - 策略 1/2/3/4 逐级尝试（策略 4 依赖 aliasIdx）
 		matched := false
 		for _, cfg := range levelConfigs {
 			if m, ok := tryMatchLevel(sr, tsEvents, srTeamNames, tsTeamNames, cfg, usedTSIDs, aliasIdx); ok {
@@ -338,6 +340,7 @@ func MatchEvents(
 			}
 		}
 
+		// @section:l5_unique_match - L5 无时间约束唯一性匹配（策略 1~4 均未命中时激活）
 		// L5: 无时间约束的唯一性匹配（策略 1~4 均未命中时激活）
 		// 规则：名称相似度 ≥ 0.90 且主客场顺序一致，且 TS 侧满足条件的候选有且仅有一场。
 		// 时差上限：30 天（防止跨赛季误匹配）。
@@ -349,6 +352,7 @@ func MatchEvents(
 			}
 		}
 
+		// @section:l4b_team_id_fallback - L4b 球队ID 精确对兜底
 		// L4b: 球队 ID 精确对兜底（仅当 teamIDMap 非空且前四级未命中）
 		if !matched && len(teamIDMap) > 0 {
 			if m, ok := tryMatchL4b(sr, tsEvents, teamIDMap, usedTSIDs); ok {

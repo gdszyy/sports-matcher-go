@@ -9,14 +9,14 @@
 |------|--------|--------|----------|--------------|---------|
 | `python/match_2026.py` | 1054 | 24 | 0 | 0 | [python_match_2026_py_index.md](python_match_2026_py_index.md) |
 | `internal/matcher/universal_engine.go` | 844 | 0 | 0 | 0 | [internal_matcher_universal_engine_go_index.md](internal_matcher_universal_engine_go_index.md) |
-| `internal/matcher/ls_engine.go` | 760 | 2 | **1** | 0 | [internal_matcher_ls_engine_go_index.md](internal_matcher_ls_engine_go_index.md) |
+| `internal/matcher/ls_engine.go` | 767 | 2 | **1** | 7 | [internal_matcher_ls_engine_go_index.md](internal_matcher_ls_engine_go_index.md) |
 | `direct_match_export.py` | 706 | 13 | **1** | 0 | [direct_match_export_py_index.md](direct_match_export_py_index.md) |
 | `tasks/tsk-97cf2032-032/deliverables/ls_engine.go` | 648 | 1 | **1** | 0 | [tasks_tsk-97cf2032-032_deliverables_ls_engine_go_index.md](tasks_tsk-97cf2032-032_deliverables_ls_engine_go_index.md) |
 | `internal/matcher/integration_test.go` | 642 | 26 | 0 | 0 | [internal_matcher_integration_test_go_index.md](internal_matcher_integration_test_go_index.md) |
+| `internal/matcher/event.go` | 629 | 2 | **1** | 5 | [internal_matcher_event_go_index.md](internal_matcher_event_go_index.md) |
 | `internal/matcher/league_alias.go` | 629 | 4 | 0 | 0 | [internal_matcher_league_alias_go_index.md](internal_matcher_league_alias_go_index.md) |
+| `internal/matcher/league_features.go` | 629 | 1 | **1** | 5 | [internal_matcher_league_features_go_index.md](internal_matcher_league_features_go_index.md) |
 | `tasks/tsk-97cf2032-032/deliverables/league_alias.go` | 629 | 4 | 0 | 0 | [tasks_tsk-97cf2032-032_deliverables_league_alias_go_index.md](tasks_tsk-97cf2032-032_deliverables_league_alias_go_index.md) |
-| `internal/matcher/event.go` | 625 | 2 | **1** | 0 | [internal_matcher_event_go_index.md](internal_matcher_event_go_index.md) |
-| `internal/matcher/league_features.go` | 624 | 1 | **1** | 0 | [internal_matcher_league_features_go_index.md](internal_matcher_league_features_go_index.md) |
 | `internal/matcher/event_dtw.go` | 525 | 0 | 0 | 0 | [internal_matcher_event_dtw_go_index.md](internal_matcher_event_dtw_go_index.md) |
 | `internal/matcher/fs_model.go` | 519 | 0 | 0 | 0 | [internal_matcher_fs_model_go_index.md](internal_matcher_fs_model_go_index.md) |
 

@@ -394,6 +394,7 @@ type LeagueVetoResult struct {
 //
 //	层级冲突仅在 med/low 时否决，hi 时放行（已知映射白名单场景）
 func CheckLeagueVeto(a, b LeagueFeatures, confidenceLevel string) LeagueVetoResult {
+	// @section:gender_veto - 性别强约束一票否决
 	// ── 1. 性别强约束 ────────────────────────────────────────────────────────
 	if a.Gender != GenderUnknown && b.Gender != GenderUnknown && a.Gender != b.Gender {
 		return LeagueVetoResult{
@@ -418,6 +419,7 @@ func CheckLeagueVeto(a, b LeagueFeatures, confidenceLevel string) LeagueVetoResu
 		}
 	}
 
+	// @section:age_group_veto - 年龄段强约束一票否决
 	// ── 2. 年龄段强约束 ──────────────────────────────────────────────────────
 	if a.AgeGroup != "" && b.AgeGroup != "" && a.AgeGroup != b.AgeGroup {
 		return LeagueVetoResult{
@@ -439,6 +441,7 @@ func CheckLeagueVeto(a, b LeagueFeatures, confidenceLevel string) LeagueVetoResu
 		}
 	}
 
+	// @section:region_veto - 区域分区强约束一票否决
 	// ── 3. 区域分区强约束 ────────────────────────────────────────────────────
 	if a.Region != "" && b.Region != "" && a.Region != b.Region {
 		return LeagueVetoResult{
@@ -460,6 +463,7 @@ func CheckLeagueVeto(a, b LeagueFeatures, confidenceLevel string) LeagueVetoResu
 		}
 	}
 
+	// @section:competition_type_veto - 赛制类型强约束一票否决
 	// ── 4. 赛制类型强约束 ────────────────────────────────────────────────────
 	// short_format 与任何非 short_format 类型冲突
 	if a.CompetitionType == "short_format" && b.CompetitionType != "short_format" && b.CompetitionType != "" {
@@ -537,6 +541,7 @@ func CheckLeagueVeto(a, b LeagueFeatures, confidenceLevel string) LeagueVetoResu
 		}
 	}
 
+	// @section:tier_number_veto - 层级数字强约束一票否决
 	// ── 5. 层级数字强约束（在所有置信度级别下均生效）─────────────────────
 	// 层级数字冲突属于强约束，不应因名称相似度高而豪免。
 	// 典型场景："Liga 2 Peru" vs "Liga 1 Peru" 名称相似度高（~0.97）但层级不同，应否决。
