@@ -357,6 +357,340 @@ var staticLeagueAliasGroups = []LeagueAliasGroup{
 			"Turkish Airlines EuroLeague",
 		},
 	},
+	// ── 俄罗斯足球联赛体系（修复 FNL→Finalissima 误配）────────────────────────
+	{
+		CanonicalName: "Russian First League",
+		Aliases: []string{
+			"Russian First League",
+			"FNL",
+			"Pari Premyer Liga",
+			"Russian Football National League",
+			"First League Russia",
+		},
+	},
+	// ── 克罗地亚足球联赛体系（修复 HNL 缩写歧义）────────────────────────────
+	{
+		CanonicalName: "Croatian Football League",
+		Aliases: []string{
+			"Croatian Football League",
+			"HNL",
+			"Prva HNL",
+			"Supersport HNL",
+			"Croatian First Football League",
+			"1. HNL",
+		},
+	},
+	// ── 澳大利亚篮球联赛（修复 NBL→ENBL 误配）──────────────────────────────
+	{
+		CanonicalName: "NBL Australia",
+		Aliases: []string{
+			"NBL Australia",
+			"NBL",
+			"National Basketball League Australia",
+			"Australian NBL",
+		},
+	},
+	// ── 比利时足球联赛体系（修复 Jupiler League 跨国误配）───────────────────
+	{
+		CanonicalName: "Belgian First Division A",
+		Aliases: []string{
+			"Belgian First Division A",
+			"Jupiler Pro League",
+			"Jupiler League",
+			"Belgian Pro League",
+			"First Division A Belgium",
+			"Belgian First Division",
+		},
+	},
+	// ── 中国篮球联赛（防止 CBA 与 CBA Draft 混淆）──────────────────────────
+	{
+		CanonicalName: "CBA",
+		Aliases: []string{
+			"CBA",
+			"Chinese Basketball Association",
+			"China Basketball Association",
+			"Chinese CBA",
+		},
+	},
+	// ── 美国职业足球联赛（修复 MLS→MLS All Star 误配）──────────────────────
+	{
+		CanonicalName: "MLS All-Stars",
+		Aliases: []string{
+			"MLS All-Stars",
+			"MLS All Star Game",
+			"MLS ASG",
+			"MLS All Stars",
+		},
+	},
+	// ── 日本足球联赛体系（修复 J1/J2 层级数字识别）──────────────────────────
+	{
+		CanonicalName: "J2 League",
+		Aliases: []string{
+			"J2 League",
+			"J.League 2",
+			"J-League 2",
+			"Japanese J2 League",
+			"Meiji Yasuda J2 League",
+		},
+	},
+	{
+		CanonicalName: "J3 League",
+		Aliases: []string{
+			"J3 League",
+			"J.League 3",
+			"J-League 3",
+			"Japanese J3 League",
+		},
+	},
+	// ── 韩国足球联赛体系（修复 K1/K2 层级数字识别）──────────────────────────
+	{
+		CanonicalName: "K League 1",
+		Aliases: []string{
+			"K League 1",
+			"K1 League",
+			"Korean K League 1",
+			"K-League 1",
+			"Hana1Q K League 1",
+		},
+	},
+	{
+		CanonicalName: "K League 2",
+		Aliases: []string{
+			"K League 2",
+			"K2 League",
+			"Korean K League 2",
+			"K-League 2",
+		},
+	},
+	// ── 苏格兰足球联赛体系 ──────────────────────────────────────────────────
+	{
+		CanonicalName: "Scottish Premiership",
+		Aliases: []string{
+			"Scottish Premiership",
+			"Scottish Premier League",
+			"SPL",
+			"SPFL Premiership",
+			"Cinch Premiership",
+		},
+	},
+	{
+		CanonicalName: "Scottish Championship",
+		Aliases: []string{
+			"Scottish Championship",
+			"SPFL Championship",
+			"Cinch Championship Scotland",
+		},
+	},
+	// ── 荷兰足球联赛体系 ─────────────────────────────────────────────────────
+	{
+		CanonicalName: "Eerste Divisie",
+		Aliases: []string{
+			"Eerste Divisie",
+			"Dutch Eerste Divisie",
+			"Netherlands Eerste Divisie",
+			"Keuken Kampioen Divisie",
+		},
+	},
+	// ── 希腊足球联赛体系 ─────────────────────────────────────────────────────
+	{
+		CanonicalName: "Super League Greece",
+		Aliases: []string{
+			"Super League Greece",
+			"Greek Super League",
+			"Super League 1",
+			"Super League Greece 1",
+		},
+	},
+	// ── 奥地利足球联赛体系 ──────────────────────────────────────────────────
+	{
+		CanonicalName: "Austrian Bundesliga",
+		Aliases: []string{
+			"Austrian Bundesliga",
+			"Austria Bundesliga",
+			"Admiral Bundesliga",
+			"Austrian Football Bundesliga",
+		},
+	},
+	// ── 瑞士足球联赛体系 ─────────────────────────────────────────────────────
+	{
+		CanonicalName: "Swiss Super League",
+		Aliases: []string{
+			"Swiss Super League",
+			"Switzerland Super League",
+			"Raiffeisen Super League",
+		},
+	},
+	// ── 丹麦足球联赛体系 ─────────────────────────────────────────────────────
+	{
+		CanonicalName: "Danish Superliga",
+		Aliases: []string{
+			"Danish Superliga",
+			"Denmark Superliga",
+			"Superliga Denmark",
+			"3F Superliga",
+		},
+	},
+	// ── 挪威足球联赛体系 ─────────────────────────────────────────────────────
+	{
+		CanonicalName: "Norwegian Eliteserien",
+		Aliases: []string{
+			"Norwegian Eliteserien",
+			"Eliteserien",
+			"Norway Eliteserien",
+			"Tippeligaen",
+		},
+	},
+	// ── 瑞典足球联赛体系 ─────────────────────────────────────────────────────
+	{
+		CanonicalName: "Allsvenskan",
+		Aliases: []string{
+			"Allsvenskan",
+			"Swedish Allsvenskan",
+			"Sweden Allsvenskan",
+		},
+	},
+	// ── 波兰足球联赛体系 ─────────────────────────────────────────────────────
+	{
+		CanonicalName: "Ekstraklasa",
+		Aliases: []string{
+			"Ekstraklasa",
+			"Polish Ekstraklasa",
+			"Poland Ekstraklasa",
+			"PKO BP Ekstraklasa",
+		},
+	},
+	// ── 捷克足球联赛体系 ─────────────────────────────────────────────────────
+	{
+		CanonicalName: "Czech First League",
+		Aliases: []string{
+			"Czech First League",
+			"Czech Republic First League",
+			"Fortuna Liga Czech",
+			"Czech Liga",
+		},
+	},
+	// ── 罗马尼亚足球联赛体系 ────────────────────────────────────────────────
+	{
+		CanonicalName: "Romanian Liga 1",
+		Aliases: []string{
+			"Romanian Liga 1",
+			"Liga 1 Romania",
+			"Romania Liga 1",
+			"SuperLiga Romania",
+		},
+	},
+	// ── 塞尔维亚足球联赛体系 ────────────────────────────────────────────────
+	{
+		CanonicalName: "Serbian SuperLiga",
+		Aliases: []string{
+			"Serbian SuperLiga",
+			"Serbia SuperLiga",
+			"Mozzart Bet SuperLiga",
+		},
+	},
+	// ── 乌克兰足球联赛体系 ──────────────────────────────────────────────────
+	{
+		CanonicalName: "Ukrainian Premier League",
+		Aliases: []string{
+			"Ukrainian Premier League",
+			"Ukraine Premier League",
+			"UPL",
+			"Ukrainian Football Premier League",
+		},
+	},
+	// ── 墨西哥足球联赛体系 ──────────────────────────────────────────────────
+	{
+		CanonicalName: "Liga MX",
+		Aliases: []string{
+			"Liga MX",
+			"Mexican Liga MX",
+			"Liga BBVA MX",
+			"Primera Division Mexico",
+		},
+	},
+	// ── 阿根廷足球联赛体系 ──────────────────────────────────────────────────
+	{
+		CanonicalName: "Argentine Primera Division",
+		Aliases: []string{
+			"Argentine Primera Division",
+			"Primera Division Argentina",
+			"Liga Profesional Argentina",
+			"Superliga Argentina",
+		},
+	},
+	// ── 哥伦比亚足球联赛体系 ────────────────────────────────────────────────
+	{
+		CanonicalName: "Colombian Primera A",
+		Aliases: []string{
+			"Colombian Primera A",
+			"Liga BetPlay Colombia",
+			"Primera A Colombia",
+			"Categoria Primera A",
+		},
+	},
+	// ── 智利足球联赛体系 ─────────────────────────────────────────────────────
+	{
+		CanonicalName: "Chilean Primera Division",
+		Aliases: []string{
+			"Chilean Primera Division",
+			"Primera Division Chile",
+			"Campeonato AFP PlanVital",
+		},
+	},
+	// ── 秘鲁足球联赛体系 ─────────────────────────────────────────────────────
+	{
+		CanonicalName: "Liga 1 Peru",
+		Aliases: []string{
+			"Liga 1 Peru",
+			"Peruvian Primera Division",
+			"Liga 1 Betsson",
+		},
+	},
+	// ── 沙特阿拉伯足球联赛体系 ──────────────────────────────────────────────
+	{
+		CanonicalName: "Saudi Pro League",
+		Aliases: []string{
+			"Saudi Pro League",
+			"Saudi Professional League",
+			"Saudi Arabia Pro League",
+			"Roshn Saudi League",
+			"Saudi Premier League",
+		},
+	},
+	// ── 以色列足球联赛体系（防止 Jupiler League 误配到 Israel C League）──────
+	{
+		CanonicalName: "Israeli Premier League",
+		Aliases: []string{
+			"Israeli Premier League",
+			"Israel Premier League",
+			"Ligat ha'Al",
+			"Ligat HaAl",
+		},
+	},
+	// ── 国际足球赛事 ─────────────────────────────────────────────────────────
+	{
+		CanonicalName: "FIFA World Cup",
+		Aliases: []string{
+			"FIFA World Cup",
+			"World Cup",
+			"FIFA World Cup Qualification",
+		},
+	},
+	{
+		CanonicalName: "UEFA Nations League",
+		Aliases: []string{
+			"UEFA Nations League",
+			"Nations League",
+			"UNL",
+		},
+	},
+	{
+		CanonicalName: "Finalissima",
+		Aliases: []string{
+			"Finalissima",
+			"CONMEBOL-UEFA Cup of Champions",
+		},
+	},
 }
 
 // ─────────────────────────────────────────────────────────────────────────────

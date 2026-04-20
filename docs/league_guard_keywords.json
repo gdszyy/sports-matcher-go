@@ -2,132 +2,592 @@
   "version": "2026-04-17",
   "purpose": "用于联赛匹配中的强约束校验；地区、性别、年龄、区域、赛制形态等关键词一旦显式出现，LS 与 TS 必须保持一致或满足可接受同义映射，否则直接否决候选。",
   "country_alias_groups": [
-    ["england", "english"],
-    ["scotland", "scottish"],
-    ["greece", "greek"],
-    ["italy", "italian"],
-    ["brazil", "brazilian"],
-    ["argentina", "argentinian", "argentine"],
-    ["finland", "finnish"],
-    ["hungary", "hungarian"],
-    ["serbia", "serbian"],
-    ["poland", "polish"],
-    ["slovenia", "slovenian"],
-    ["czech republic", "czech", "czechia"],
-    ["norway", "norwegian"],
-    ["sweden", "swedish"],
-    ["denmark", "danish"],
-    ["netherlands", "dutch", "holland"],
-    ["germany", "german"],
-    ["france", "french"],
-    ["spain", "spanish"],
-    ["portugal", "portuguese"],
-    ["turkey", "turkish"],
-    ["mexico", "mexican"],
-    ["japan", "japanese"],
-    ["korea", "korean", "south korea"],
-    ["china", "chinese"],
-    ["russia", "russian"],
-    ["austria", "austrian"],
-    ["switzerland", "swiss"],
-    ["belgium", "belgian"],
-    ["croatia", "croatian"],
-    ["romania", "romanian"],
-    ["ukraine", "ukrainian"],
-    ["ireland", "irish"],
-    ["wales", "welsh"],
-    ["northern ireland", "northern irish"],
-    ["slovakia", "slovak"],
-    ["bulgaria", "bulgarian"],
-    ["albania", "albanian"],
-    ["estonia", "estonian"],
-    ["latvia", "latvian"],
-    ["lithuania", "lithuanian"],
-    ["iceland", "icelandic"],
-    ["cyprus", "cypriot"],
-    ["luxembourg", "luxembourgish"],
-    ["malta", "maltese"],
-    ["moldova", "moldovan"],
-    ["georgia", "georgian"],
-    ["armenia", "armenian"],
-    ["azerbaijan", "azerbaijani"],
-    ["kazakhstan", "kazakhstani"],
-    ["uzbekistan", "uzbek"],
-    ["israel", "israeli"],
-    ["saudi arabia", "saudi"],
-    ["uae", "united arab emirates"],
-    ["usa", "united states", "us"],
-    ["canada", "canadian"],
-    ["australia", "australian"],
-    ["new zealand", "new zealander"],
-    ["south africa", "south african"],
-    ["nigeria", "nigerian"],
-    ["egypt", "egyptian"],
-    ["morocco", "moroccan"],
-    ["colombia", "colombian"],
-    ["chile", "chilean"],
-    ["peru", "peruvian"],
-    ["uruguay", "uruguayan"],
-    ["venezuela", "venezuelan"],
-    ["ecuador", "ecuadorian"],
-    ["paraguay", "paraguayan"],
-    ["bolivia", "bolivian"],
-    ["costa rica", "costa rican"],
-    ["panama", "panamanian"],
-    ["honduras", "honduran"],
-    ["guatemala", "guatemalan"],
-    ["el salvador", "salvadoran"],
-    ["asean", "southeast asia"],
-    ["international", "world", "global"],
-    ["europe", "european", "europa"],
-    ["africa", "african"],
-    ["asia", "asian"],
-    ["america", "americas"],
-    ["oceania", "oceanian"],
-    ["concacaf"],
-    ["conmebol"],
-    ["afc"],
-    ["caf"],
-    ["uefa"],
-    ["fifa"]
+    [
+      "england",
+      "english"
+    ],
+    [
+      "scotland",
+      "scottish"
+    ],
+    [
+      "greece",
+      "greek"
+    ],
+    [
+      "italy",
+      "italian"
+    ],
+    [
+      "brazil",
+      "brazilian"
+    ],
+    [
+      "argentina",
+      "argentinian",
+      "argentine"
+    ],
+    [
+      "finland",
+      "finnish"
+    ],
+    [
+      "hungary",
+      "hungarian"
+    ],
+    [
+      "serbia",
+      "serbian"
+    ],
+    [
+      "poland",
+      "polish"
+    ],
+    [
+      "slovenia",
+      "slovenian"
+    ],
+    [
+      "czech republic",
+      "czech",
+      "czechia"
+    ],
+    [
+      "norway",
+      "norwegian"
+    ],
+    [
+      "sweden",
+      "swedish"
+    ],
+    [
+      "denmark",
+      "danish"
+    ],
+    [
+      "netherlands",
+      "dutch",
+      "holland"
+    ],
+    [
+      "germany",
+      "german"
+    ],
+    [
+      "france",
+      "french"
+    ],
+    [
+      "spain",
+      "spanish"
+    ],
+    [
+      "portugal",
+      "portuguese"
+    ],
+    [
+      "turkey",
+      "turkish"
+    ],
+    [
+      "mexico",
+      "mexican"
+    ],
+    [
+      "japan",
+      "japanese"
+    ],
+    [
+      "korea",
+      "korean",
+      "south korea"
+    ],
+    [
+      "china",
+      "chinese"
+    ],
+    [
+      "russia",
+      "russian"
+    ],
+    [
+      "austria",
+      "austrian"
+    ],
+    [
+      "switzerland",
+      "swiss"
+    ],
+    [
+      "belgium",
+      "belgian"
+    ],
+    [
+      "croatia",
+      "croatian"
+    ],
+    [
+      "romania",
+      "romanian"
+    ],
+    [
+      "ukraine",
+      "ukrainian"
+    ],
+    [
+      "ireland",
+      "irish"
+    ],
+    [
+      "wales",
+      "welsh"
+    ],
+    [
+      "northern ireland",
+      "northern irish"
+    ],
+    [
+      "slovakia",
+      "slovak"
+    ],
+    [
+      "bulgaria",
+      "bulgarian"
+    ],
+    [
+      "albania",
+      "albanian"
+    ],
+    [
+      "estonia",
+      "estonian"
+    ],
+    [
+      "latvia",
+      "latvian"
+    ],
+    [
+      "lithuania",
+      "lithuanian"
+    ],
+    [
+      "iceland",
+      "icelandic"
+    ],
+    [
+      "cyprus",
+      "cypriot"
+    ],
+    [
+      "luxembourg",
+      "luxembourgish"
+    ],
+    [
+      "malta",
+      "maltese"
+    ],
+    [
+      "moldova",
+      "moldovan"
+    ],
+    [
+      "georgia",
+      "georgian"
+    ],
+    [
+      "armenia",
+      "armenian"
+    ],
+    [
+      "azerbaijan",
+      "azerbaijani"
+    ],
+    [
+      "kazakhstan",
+      "kazakhstani"
+    ],
+    [
+      "uzbekistan",
+      "uzbek"
+    ],
+    [
+      "israel",
+      "israeli"
+    ],
+    [
+      "saudi arabia",
+      "saudi"
+    ],
+    [
+      "uae",
+      "united arab emirates"
+    ],
+    [
+      "usa",
+      "united states",
+      "us"
+    ],
+    [
+      "canada",
+      "canadian"
+    ],
+    [
+      "australia",
+      "australian"
+    ],
+    [
+      "new zealand",
+      "new zealander"
+    ],
+    [
+      "south africa",
+      "south african"
+    ],
+    [
+      "nigeria",
+      "nigerian"
+    ],
+    [
+      "egypt",
+      "egyptian"
+    ],
+    [
+      "morocco",
+      "moroccan"
+    ],
+    [
+      "colombia",
+      "colombian"
+    ],
+    [
+      "chile",
+      "chilean"
+    ],
+    [
+      "peru",
+      "peruvian"
+    ],
+    [
+      "uruguay",
+      "uruguayan"
+    ],
+    [
+      "venezuela",
+      "venezuelan"
+    ],
+    [
+      "ecuador",
+      "ecuadorian"
+    ],
+    [
+      "paraguay",
+      "paraguayan"
+    ],
+    [
+      "bolivia",
+      "bolivian"
+    ],
+    [
+      "costa rica",
+      "costa rican"
+    ],
+    [
+      "panama",
+      "panamanian"
+    ],
+    [
+      "honduras",
+      "honduran"
+    ],
+    [
+      "guatemala",
+      "guatemalan"
+    ],
+    [
+      "el salvador",
+      "salvadoran"
+    ],
+    [
+      "asean",
+      "southeast asia"
+    ],
+    [
+      "international",
+      "world",
+      "global"
+    ],
+    [
+      "europe",
+      "european",
+      "europa"
+    ],
+    [
+      "africa",
+      "african"
+    ],
+    [
+      "asia",
+      "asian"
+    ],
+    [
+      "america",
+      "americas"
+    ],
+    [
+      "oceania",
+      "oceanian"
+    ],
+    [
+      "concacaf"
+    ],
+    [
+      "conmebol"
+    ],
+    [
+      "afc"
+    ],
+    [
+      "caf"
+    ],
+    [
+      "uefa"
+    ],
+    [
+      "fifa"
+    ]
   ],
   "gender_keywords": {
-    "women": ["women", "woman", "w", "ladies", "feminine", "female", "girls", "femenino", "feminin", "donne", "frauen", "vrouwen", "mulheres", "naiset", "damer"],
-    "men": ["men", "man", "m", "male", "boys", "masculino", "masculin", "uomini", "männer", "mannen", "homens", "miehet", "herrar"]
+    "women": [
+      "women",
+      "woman",
+      "w",
+      "ladies",
+      "feminine",
+      "female",
+      "girls",
+      "femenino",
+      "feminin",
+      "donne",
+      "frauen",
+      "vrouwen",
+      "mulheres",
+      "naiset",
+      "damer"
+    ],
+    "men": [
+      "men",
+      "man",
+      "m",
+      "male",
+      "boys",
+      "masculino",
+      "masculin",
+      "uomini",
+      "männer",
+      "mannen",
+      "homens",
+      "miehet",
+      "herrar"
+    ]
   },
   "age_keywords": {
-    "u23": ["u23", "under 23", "under-23", "under23", "u-23"],
-    "u22": ["u22", "under 22", "under-22", "under22", "u-22"],
-    "u21": ["u21", "under 21", "under-21", "under21", "u-21"],
-    "u20": ["u20", "under 20", "under-20", "under20", "u-20"],
-    "u19": ["u19", "under 19", "under-19", "under19", "u-19"],
-    "u18": ["u18", "under 18", "under-18", "under18", "u-18"],
-    "u17": ["u17", "under 17", "under-17", "under17", "u-17"],
-    "u16": ["u16", "under 16", "under-16", "under16", "u-16"],
-    "u15": ["u15", "under 15", "under-15", "under15", "u-15"],
-    "u14": ["u14", "under 14", "under-14", "under14", "u-14"],
-    "youth": ["youth", "junior", "juniors", "reserve", "reserves", "academy", "u-team", "b team", "b-team", "ii team"]
+    "u23": [
+      "u23",
+      "under 23",
+      "under-23",
+      "under23",
+      "u-23"
+    ],
+    "u22": [
+      "u22",
+      "under 22",
+      "under-22",
+      "under22",
+      "u-22"
+    ],
+    "u21": [
+      "u21",
+      "under 21",
+      "under-21",
+      "under21",
+      "u-21"
+    ],
+    "u20": [
+      "u20",
+      "under 20",
+      "under-20",
+      "under20",
+      "u-20"
+    ],
+    "u19": [
+      "u19",
+      "under 19",
+      "under-19",
+      "under19",
+      "u-19"
+    ],
+    "u18": [
+      "u18",
+      "under 18",
+      "under-18",
+      "under18",
+      "u-18"
+    ],
+    "u17": [
+      "u17",
+      "under 17",
+      "under-17",
+      "under17",
+      "u-17"
+    ],
+    "u16": [
+      "u16",
+      "under 16",
+      "under-16",
+      "under16",
+      "u-16"
+    ],
+    "u15": [
+      "u15",
+      "under 15",
+      "under-15",
+      "under15",
+      "u-15"
+    ],
+    "u14": [
+      "u14",
+      "under 14",
+      "under-14",
+      "under14",
+      "u-14"
+    ],
+    "youth": [
+      "youth",
+      "junior",
+      "juniors",
+      "reserve",
+      "reserves",
+      "academy",
+      "u-team",
+      "b team",
+      "b-team",
+      "ii team"
+    ]
   },
   "region_keywords": {
-    "north": ["north", "northern"],
-    "south": ["south", "southern"],
-    "east": ["east", "eastern"],
-    "west": ["west", "western"],
-    "central": ["central", "center", "centre"],
-    "northeast": ["north east", "north-east", "northeast"],
-    "northwest": ["north west", "north-west", "northwest"],
-    "southeast": ["south east", "south-east", "southeast"],
-    "southwest": ["south west", "south-west", "southwest"],
-    "midlands": ["midlands", "midland"],
-    "islands": ["islands", "island"]
+    "north": [
+      "north",
+      "northern"
+    ],
+    "south": [
+      "south",
+      "southern"
+    ],
+    "east": [
+      "east",
+      "eastern"
+    ],
+    "west": [
+      "west",
+      "western"
+    ],
+    "central": [
+      "central",
+      "center",
+      "centre"
+    ],
+    "northeast": [
+      "north east",
+      "north-east",
+      "northeast"
+    ],
+    "northwest": [
+      "north west",
+      "north-west",
+      "northwest"
+    ],
+    "southeast": [
+      "south east",
+      "south-east",
+      "southeast"
+    ],
+    "southwest": [
+      "south west",
+      "south-west",
+      "southwest"
+    ],
+    "midlands": [
+      "midlands",
+      "midland"
+    ],
+    "islands": [
+      "islands",
+      "island"
+    ]
   },
   "tier_keywords": {
-    "top": ["premier", "super", "first division", "division 1", "liga 1", "1 liga", "serie a", "a league", "1. liga", "primera", "ekstraklasa", "superliga", "premiership"],
-    "second": ["championship", "division 2", "second division", "2 liga", "serie b", "2. liga", "liga ii", "segunda", "superleague", "2. bundesliga", "2.bundesliga"],
-    "third": ["division 3", "third division", "3 liga", "serie c", "3. liga", "liga iii", "tercera", "3. bundesliga", "3.bundesliga"],
-    "fourth": ["division 4", "fourth division", "4 liga", "4. liga", "liga iv", "cuarta", "4. bundesliga", "4.bundesliga"],
-    "fifth": ["division 5", "fifth division", "5 liga", "5. liga", "liga v"],
-    "sixth": ["division 6", "sixth division", "6 liga", "6. liga"]
+    "top": [
+      "premier",
+      "super",
+      "first division",
+      "division 1",
+      "liga 1",
+      "1 liga",
+      "serie a",
+      "a league",
+      "1. liga",
+      "primera",
+      "ekstraklasa",
+      "superliga",
+      "premiership"
+    ],
+    "second": [
+      "championship",
+      "division 2",
+      "second division",
+      "2 liga",
+      "serie b",
+      "2. liga",
+      "liga ii",
+      "segunda",
+      "superleague",
+      "2. bundesliga",
+      "2.bundesliga"
+    ],
+    "third": [
+      "division 3",
+      "third division",
+      "3 liga",
+      "serie c",
+      "3. liga",
+      "liga iii",
+      "tercera",
+      "3. bundesliga",
+      "3.bundesliga"
+    ],
+    "fourth": [
+      "division 4",
+      "fourth division",
+      "4 liga",
+      "4. liga",
+      "liga iv",
+      "cuarta",
+      "4. bundesliga",
+      "4.bundesliga"
+    ],
+    "fifth": [
+      "division 5",
+      "fifth division",
+      "5 liga",
+      "5. liga",
+      "liga v"
+    ],
+    "sixth": [
+      "division 6",
+      "sixth division",
+      "6 liga",
+      "6. liga"
+    ]
   },
   "tier_number_patterns": {
     "description": "用于从联赛名称中提取层级数字的正则模式，数字必须精确匹配",
@@ -142,18 +602,106 @@
       "(?i)\\b(i{1,4}|iv|v|vi|vii|viii|ix|x)\\b"
     ],
     "roman_to_arabic": {
-      "i": 1, "ii": 2, "iii": 3, "iv": 4, "v": 5,
-      "vi": 6, "vii": 7, "viii": 8, "ix": 9, "x": 10
+      "i": 1,
+      "ii": 2,
+      "iii": 3,
+      "iv": 4,
+      "v": 5,
+      "vi": 6,
+      "vii": 7,
+      "viii": 8,
+      "ix": 9,
+      "x": 10
     }
   },
   "competition_type_keywords": {
-    "cup": ["cup", "copa", "coppa", "cupe", "pokal", "trophy", "coupe", "taca", "kupa", "puchar", "cupen", "cupp", "pokalen", "beker", "fa cup", "league cup", "super cup", "supercup"],
-    "league": ["league", "liga", "ligue", "serie", "division", "championship", "ekstraklasa", "superliga", "premiership"],
-    "playoff": ["playoff", "play-offs", "play offs", "final stage", "championship round", "relegation round", "promotion playoff", "relegation playoff"],
-    "short_format": ["5x5", "6x6", "7x7", "futsal", "indoor", "amateur", "lfl", "mini", "street", "beach", "sala", "futsala"],
-    "friendly": ["friendly", "friendlies", "test match", "exhibition", "international friendly"],
-    "super_cup": ["super cup", "supercup", "super copa", "supercoppa", "super coupe", "charity shield"],
-    "conference": ["conference", "north conference", "south conference", "east conference", "west conference"]
+    "cup": [
+      "cup",
+      "copa",
+      "coppa",
+      "cupe",
+      "pokal",
+      "trophy",
+      "coupe",
+      "taca",
+      "kupa",
+      "puchar",
+      "cupen",
+      "cupp",
+      "pokalen",
+      "beker",
+      "fa cup",
+      "league cup",
+      "super cup",
+      "supercup"
+    ],
+    "league": [
+      "league",
+      "liga",
+      "ligue",
+      "serie",
+      "division",
+      "championship",
+      "ekstraklasa",
+      "superliga",
+      "premiership"
+    ],
+    "playoff": [
+      "playoff",
+      "play-offs",
+      "play offs",
+      "final stage",
+      "championship round",
+      "relegation round",
+      "promotion playoff",
+      "relegation playoff"
+    ],
+    "short_format": [
+      "5x5",
+      "6x6",
+      "7x7",
+      "futsal",
+      "indoor",
+      "amateur",
+      "lfl",
+      "mini",
+      "street",
+      "beach",
+      "sala",
+      "futsala"
+    ],
+    "friendly": [
+      "friendly",
+      "friendlies",
+      "test match",
+      "exhibition",
+      "international friendly"
+    ],
+    "super_cup": [
+      "super cup",
+      "supercup",
+      "super copa",
+      "supercoppa",
+      "super coupe",
+      "charity shield"
+    ],
+    "conference": [
+      "conference",
+      "north conference",
+      "south conference",
+      "east conference",
+      "west conference"
+    ],
+    "draft": [
+      "draft"
+    ],
+    "all_star": [
+      "all star",
+      "all-star",
+      "allstar",
+      "asg",
+      "all stars"
+    ]
   },
   "hard_constraints": [
     {

@@ -10,7 +10,9 @@
 | 函数名 | 类型 | 起始行 | 结束行 | 行数 | 签名 |
 |--------|------|--------|--------|------|------|
 | jaccardSimilarity | function | L442 | L485 | 44 | `jaccardSimilarity()` |
-| lsLocationVeto | function | L486 | L768 | **283** | `lsLocationVeto()` |
+| lsLocationVeto | function | L486~L640 | — | — | `lsLocationVeto(lsCategory, tsCountry string) bool` |
+| lsLocationVetoByName | function | L641~L680 | — | — | `lsLocationVetoByName(lsName, tsCountry string) bool` *(新增，修复缩写联赛跨国误配)* |
+| lsLeagueNameScore | function | L681~L800 | — | — | `lsLeagueNameScore(ls, ts) float64` |
 
 ## 巨型函数内部节点 (@section 标记)
 

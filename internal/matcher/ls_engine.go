@@ -6,6 +6,7 @@ import (
 	"log"
 	"math"
 	"sort"
+	"strings"
 	"time"
 
 	"github.com/gdszyy/sports-matcher/internal/db"
@@ -550,6 +551,71 @@ var geoAliasGroups = [][]string{
 	{"uae", "united arab emirates"},
 }
 
+// leagueAbbrevCountryMap 联赛缩写/简称 → 所属国家/地区（归一化小写）
+// 用于当 LS CategoryName 为空或不明确时，从联赛名称中推断国家，强化地理约束
+// 修复场景：FNL→Finalissima（俄罗斯联赛误配到国际赛事）、HNL→Israel C League（克罗地亚误配到以色列）
+var leagueAbbrevCountryMap = map[string]string{
+// 足球 - 欧洲
+"fnl":          "russia",      // Russian First League (FNL)
+"hnl":          "croatia",     // Hrvatska Nogometna Liga
+"prva hnl":     "croatia",
+"upl":          "ukraine",     // Ukrainian Premier League
+"spl":          "scotland",    // Scottish Premier League
+"spfl":         "scotland",
+"ekstraklasa":  "poland",
+"allsvenskan":  "sweden",
+"eliteserien":  "norway",
+"superliga":    "",            // 多国使用，不约束
+"jupiler":      "belgium",     // Jupiler Pro League
+"jupiler pro league": "belgium",
+"eredivisie":   "netherlands",
+"primeira liga": "portugal",
+"liga nos":     "portugal",
+"super lig":    "turkey",
+"super league greece": "greece",
+"super league 1": "greece",
+"bundesliga":   "germany",     // 顶级德甲
+"2. bundesliga": "germany",
+"3. liga":      "germany",
+"laliga":       "spain",
+"la liga":      "spain",
+"ligue 1":      "france",
+"ligue 2":      "france",
+"serie a":      "",            // 多国使用（意大利/巴西），不约束
+"serie b":      "",            // 多国使用，不约束
+"premier league": "",          // 多国使用，不约束
+// 足球 - 亚洲
+"j1 league":    "japan",
+"j2 league":    "japan",
+"j3 league":    "japan",
+"j league":     "japan",
+"k league 1":   "south korea",
+"k league 2":   "south korea",
+"k1 league":    "south korea",
+"k2 league":    "south korea",
+"csl":          "china",       // Chinese Super League
+"chinese super league": "china",
+// 足球 - 美洲
+"mls":          "usa",
+"liga mx":      "mexico",
+"liga 1 peru":  "peru",
+"liga 1 betsson": "peru",
+"liga profesional": "argentina",
+"superliga argentina": "argentina",
+// 篮球
+"nba":          "usa",
+"nbl":          "australia",   // National Basketball League Australia
+"cba":          "china",       // Chinese Basketball Association
+"euroleague":   "",            // 国际赛事，不约束
+// 国际赛事（不约束国家）
+"finalissima":  "",
+"nations league": "",
+"world cup":    "",
+"champions league": "",
+"europa league": "",
+"conference league": "",
+}
+
 // geoAliasIndex 地理别名快速查询索引（归一化名称 → 组索引）
 var geoAliasIndex = func() map[string]int {
 	idx := make(map[string]int)
@@ -608,7 +674,37 @@ func lsLocationVeto(lsCategory, tsCountry string) bool {
 	catNorm := normalizeName(lsCategory)
 	cntNorm := normalizeName(tsCountry)
 	// 相似度低于 0.4 时否决（避免如 Libya vs Laos 的跨国误匹配）
-	return jaccardSimilarity(catNorm, cntNorm) < 0.4
+	return geoSimilarity(catNorm, cntNorm) < 0.4
+}
+
+// lsLocationVetoByName 通过联赛名称中的缩写/简称推断国家，强化地理约束
+// 当 LS CategoryName 为空或不明确时，尝试从联赛名称本身推断所属国家
+// 返回 true 表示应否决该匹配
+func lsLocationVetoByName(lsName, tsCountry string) bool {
+	if lsName == "" || tsCountry == "" {
+		return false
+	}
+	lsNorm := normalizeName(lsName)
+	tsNorm := normalizeName(tsCountry)
+
+	// 遍历联赛缩写-国家知识图谱，查找最长匹配
+	for abbrev, country := range leagueAbbrevCountryMap {
+		if country == "" {
+			// 空字符串表示多国使用，不约束
+			continue
+		}
+		// 检查联赛名称是否包含该缩写/简称（完整词匹配）
+		if strings.Contains(lsNorm, abbrev) || lsNorm == abbrev {
+			countryNorm := normalizeName(country)
+			// 如果推断出的国家与 TS 国家明显不匹配，则否决
+			if geoSimilarity(countryNorm, tsNorm) < 0.4 {
+				return true
+			}
+			// 找到匹配后直接返回，不继续遍历
+			return false
+		}
+	}
+	return false
 }
 
 // lsLeagueNameScore 计算 LS 联赛与 TS 联赛的名称相似度
@@ -620,6 +716,11 @@ func lsLocationVeto(lsCategory, tsCountry string) bool {
 func lsLeagueNameScore(ls *db.LSTournament, ts *db.TSCompetition) float64 {
 	// 强约束：地区明显不匹配时直接否决
 	if lsLocationVeto(ls.CategoryName, ts.CountryName) {
+		return 0.0
+	}
+	// 强约束：通过联赛名称中的缩写/简称推断国家，强化地理约束
+	// 修复场景：FNL/HNL/NBL 等缩写联赛因 CategoryName 为空而跨国误匹配
+	if lsLocationVetoByName(ls.Name, ts.CountryName) {
 		return 0.0
 	}
 

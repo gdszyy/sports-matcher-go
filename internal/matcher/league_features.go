@@ -114,12 +114,18 @@ var competitionTypeKeywords = map[string][]string{
 	// regional_league: 州联赛/地区性联赛（优化建议 §3.4）
 	// 针对巴西等国家的州级赛事，防止与全国性 Serie A/B 误匹配
 	"regional_league": {"paulista", "carioca", "gaucho", "mineiro", "baiano", "pernambucano", "paraense", "cearense", "paranaense", "alagoano", "sergipano", "capixaba", "potiguar"},
+	// draft: 选秀赛事（修复 CBA→CBA Draft 误配）
+	// 注意："draft" 需在 "league" 之前检测，防止被泛化关键词覆盖
+	"draft":           {"draft"},
+	// all_star: 全明星/明星赛（修复 Bundesliga→German All Star 误配）
+	"all_star":        {"all star", "all-star", "allstar", "asg", "all stars"},
 	"league":          {"league", "liga", "ligue", "serie", "division", "championship", "ekstraklasa", "superliga", "premiership"},
 }
 
 // competitionTypeOrder short_format 和 super_cup 优先于 cup/league（避免误匹配）
 // reserve 和 regional_league 在 league 之前检测，防止被泛化的 "league" 关键词先行匹配
-var competitionTypeOrder = []string{"short_format", "super_cup", "cup", "playoff", "friendly", "reserve", "regional_league", "league"}
+// draft 和 all_star 在 league 之前检测，防止被 "league" 关键词先行匹配（修复 CBA→CBA Draft 误配）
+var competitionTypeOrder = []string{"short_format", "super_cup", "cup", "playoff", "friendly", "draft", "all_star", "reserve", "regional_league", "league"}
 
 // ─────────────────────────────────────────────────────────────────────────────
 // 层级数字提取（TODO-004 的核心逻辑，在本文件中实现）
@@ -153,6 +159,17 @@ var tierPatterns = []*regexp.Regexp{
 	regexp.MustCompile(`(?i)\b(\d+)\s*\.?\s*division\b`),
 	// "Serie A" / "Serie B" / "Serie C"
 	regexp.MustCompile(`(?i)\bserie\s+([a-e])\b`),
+	// "J1 League" / "J2 League" / "J3 League"（日本足球）
+	regexp.MustCompile(`(?i)\bj(\d+)\s*league\b`),
+	// "K League 1" / "K League 2"（韩国足球）
+	regexp.MustCompile(`(?i)\bk\s*league\s*(\d+)\b`),
+	// "K1 League" / "K2 League"（韩国足球缩写格式）
+	regexp.MustCompile(`(?i)\bk(\d+)\s*league\b`),
+	// "Ligue 1" / "Ligue 2"（法国足球）
+	regexp.MustCompile(`(?i)\bligue\s*(\d+)\b`),
+	// "Super League 1" / "Super League 2"（希腊等）
+	regexp.MustCompile(`(?i)\bsuper\s+league\s*(\d+)\b`),
+	// "Liga 1" / "Liga 2" 已有，但补充 "1. Liga" / "2. Liga" 等格式
 	// "First Division" / "Second Division" 等文字层级
 	// 注意：这些已在 tier_keywords 中处理，此处不再重复
 }
@@ -176,6 +193,14 @@ var wordTierMap = map[string]int{
 	"primera liga": 1, "segunda liga": 2, "terceira liga": 3, "tercera liga": 3,
 	// 德语层级词（优化建议 §3.3）
 	"erste liga": 1, "zweite liga": 2, "dritte liga": 3, "vierte liga": 4,
+	// 法语层级词
+	"ligue 1": 1, "ligue 2": 2, "ligue 3": 3,
+	// 日本 J 联赛
+	"j1 league": 1, "j2 league": 2, "j3 league": 3,
+	// 韩国 K 联赛
+	"k league 1": 1, "k league 2": 2, "k1 league": 1, "k2 league": 2,
+	// 希腊超级联赛
+	"super league 1": 1, "super league 2": 2,
 }
 
 // extractTierNumber 从归一化联赛名称中提取层级数字
@@ -538,6 +563,67 @@ func CheckLeagueVeto(a, b LeagueFeatures, confidenceLevel string) LeagueVetoResu
 			Vetoed: true,
 			Reason: VetoCompetitionType,
 			Detail: a.CompetitionType + " vs regional_league",
+		}
+	}
+
+	// draft 与非 draft 赛事不得互相映射（修复 CBA→CBA Draft 误配）
+	if a.CompetitionType == "draft" && b.CompetitionType != "draft" && b.CompetitionType != "" {
+		return LeagueVetoResult{
+			Vetoed: true,
+			Reason: VetoCompetitionType,
+			Detail: "draft vs " + b.CompetitionType,
+		}
+	}
+	if b.CompetitionType == "draft" && a.CompetitionType != "draft" && a.CompetitionType != "" {
+		return LeagueVetoResult{
+			Vetoed: true,
+			Reason: VetoCompetitionType,
+			Detail: a.CompetitionType + " vs draft",
+		}
+	}
+	// draft 与未知类型（正赛）不得互相映射
+	if a.CompetitionType == "draft" && b.CompetitionType == "" {
+		return LeagueVetoResult{
+			Vetoed: true,
+			Reason: VetoCompetitionType,
+			Detail: "draft vs unknown(assumed main competition)",
+		}
+	}
+	if b.CompetitionType == "draft" && a.CompetitionType == "" {
+		return LeagueVetoResult{
+			Vetoed: true,
+			Reason: VetoCompetitionType,
+			Detail: "unknown(assumed main competition) vs draft",
+		}
+	}
+	// all_star 与非 all_star 赛事不得互相映射（修复 Bundesliga→German All Star 误配）
+	if a.CompetitionType == "all_star" && b.CompetitionType != "all_star" && b.CompetitionType != "" {
+		return LeagueVetoResult{
+			Vetoed: true,
+			Reason: VetoCompetitionType,
+			Detail: "all_star vs " + b.CompetitionType,
+		}
+	}
+	if b.CompetitionType == "all_star" && a.CompetitionType != "all_star" && a.CompetitionType != "" {
+		return LeagueVetoResult{
+			Vetoed: true,
+			Reason: VetoCompetitionType,
+			Detail: a.CompetitionType + " vs all_star",
+		}
+	}
+	// all_star 与未知类型（正赛）不得互相映射
+	if a.CompetitionType == "all_star" && b.CompetitionType == "" {
+		return LeagueVetoResult{
+			Vetoed: true,
+			Reason: VetoCompetitionType,
+			Detail: "all_star vs unknown(assumed main competition)",
+		}
+	}
+	if b.CompetitionType == "all_star" && a.CompetitionType == "" {
+		return LeagueVetoResult{
+			Vetoed: true,
+			Reason: VetoCompetitionType,
+			Detail: "unknown(assumed main competition) vs all_star",
 		}
 	}
 
