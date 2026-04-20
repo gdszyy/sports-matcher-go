@@ -1,0 +1,407 @@
+[
+  {
+    "id": "37386",
+    "name": "E-Football | Battle (E) | 8 Minutes",
+    "category": "International",
+    "event_count": 1875,
+    "sport": "football",
+    "sport_id": "6046",
+    "event_count_fetched": 1875
+  },
+  {
+    "id": "78273",
+    "name": "E-Football | H2H GG League (E) | 8 Minutes",
+    "category": "International",
+    "event_count": 1362,
+    "sport": "football",
+    "sport_id": "6046",
+    "event_count_fetched": 1362
+  },
+  {
+    "id": "71746",
+    "name": "E-Football | Battle Volta (E) | 2x3 Minutes",
+    "category": "International",
+    "event_count": 1326,
+    "sport": "football",
+    "sport_id": "6046",
+    "event_count_fetched": 1326
+  },
+  {
+    "id": "68326",
+    "name": "E-Football | Adriatic League (E) | 2x5 Minutes",
+    "category": "International",
+    "event_count": 1230,
+    "sport": "football",
+    "sport_id": "6046",
+    "event_count_fetched": 1230
+  },
+  {
+    "id": "78623",
+    "name": "E-Football | Valhalla Cup (E) | 8 Minutes",
+    "category": "International",
+    "event_count": 1202,
+    "sport": "football",
+    "sport_id": "6046",
+    "event_count_fetched": 1202
+  },
+  {
+    "id": "38301",
+    "name": "E-Football | GT Leagues (E) | 12 Minutes",
+    "category": "International",
+    "event_count": 1158,
+    "sport": "football",
+    "sport_id": "6046",
+    "event_count_fetched": 1158
+  },
+  {
+    "id": "79316",
+    "name": "E-Football | Valkyrie Cup (E) | 8 Minutes",
+    "category": "International",
+    "event_count": 791,
+    "sport": "football",
+    "sport_id": "6046",
+    "event_count_fetched": 791
+  },
+  {
+    "id": "81669",
+    "name": "E-Football | Battle (E) | 12 Minutes",
+    "category": "International",
+    "event_count": 524,
+    "sport": "football",
+    "sport_id": "6046",
+    "event_count_fetched": 524
+  },
+  {
+    "id": "75458",
+    "name": "BudnesLiga LFL 5x5",
+    "category": "International",
+    "event_count": 345,
+    "sport": "football",
+    "sport_id": "6046",
+    "event_count_fetched": 345
+  },
+  {
+    "id": "78555",
+    "name": "E-Football | FC 26 United Esports Leagues (E) | 2X3 Minutes",
+    "category": "International",
+    "event_count": 307,
+    "sport": "football",
+    "sport_id": "6046",
+    "event_count_fetched": 307
+  },
+  {
+    "id": "25545",
+    "name": "Oberliga",
+    "category": "Germany",
+    "event_count": 267,
+    "sport": "football",
+    "sport_id": "6046",
+    "event_count_fetched": 267
+  },
+  {
+    "id": "87980",
+    "name": "E-Football | FC 26 United Esports Leagues (E) | 2X4 Minutes",
+    "category": "International",
+    "event_count": 185,
+    "sport": "football",
+    "sport_id": "6046",
+    "event_count_fetched": 185
+  },
+  {
+    "id": "12341",
+    "name": "Tercera Division RFEF",
+    "category": "Spain",
+    "event_count": 157,
+    "sport": "football",
+    "sport_id": "6046",
+    "event_count_fetched": 157
+  },
+  {
+    "id": "12355",
+    "name": "Landesliga",
+    "category": "Austria",
+    "event_count": 134,
+    "sport": "football",
+    "sport_id": "6046",
+    "event_count_fetched": 134
+  },
+  {
+    "id": "44960",
+    "name": "League 3",
+    "category": "Poland",
+    "event_count": 118,
+    "sport": "football",
+    "sport_id": "6046",
+    "event_count_fetched": 118
+  },
+  {
+    "id": "24401",
+    "name": "Segunda Division RFEF",
+    "category": "Spain",
+    "event_count": 114,
+    "sport": "football",
+    "sport_id": "6046",
+    "event_count_fetched": 114
+  },
+  {
+    "id": "54289",
+    "name": "E-Football | FIFA 23 Volta Daily League (E) | 2x3 Minutes",
+    "category": "International",
+    "event_count": 107,
+    "sport": "football",
+    "sport_id": "6046",
+    "event_count_fetched": 107
+  },
+  {
+    "id": "32534",
+    "name": "Campeonato Brasileiro - Série D",
+    "category": "Brazil",
+    "event_count": 93,
+    "sport": "football",
+    "sport_id": "6046",
+    "event_count_fetched": 93
+  },
+  {
+    "id": "13507",
+    "name": "Liga 3",
+    "category": "Romania",
+    "event_count": 80,
+    "sport": "football",
+    "sport_id": "6046",
+    "event_count_fetched": 80
+  },
+  {
+    "id": "2305",
+    "name": "3. Division",
+    "category": "Norway",
+    "event_count": 66,
+    "sport": "football",
+    "sport_id": "6046",
+    "event_count_fetched": 66
+  },
+  {
+    "id": "11585",
+    "name": "Bundesliga U19",
+    "category": "Germany",
+    "event_count": 64,
+    "sport": "football",
+    "sport_id": "6046",
+    "event_count_fetched": 64
+  },
+  {
+    "id": "18632",
+    "name": "Serie D",
+    "category": "Italy",
+    "event_count": 62,
+    "sport": "football",
+    "sport_id": "6046",
+    "event_count_fetched": 62
+  },
+  {
+    "id": "11934",
+    "name": "3rd Liga",
+    "category": "Czech Republic",
+    "event_count": 59,
+    "sport": "football",
+    "sport_id": "6046",
+    "event_count_fetched": 59
+  },
+  {
+    "id": "25469",
+    "name": "Serie C",
+    "category": "Italy",
+    "event_count": 56,
+    "sport": "football",
+    "sport_id": "6046",
+    "event_count_fetched": 56
+  },
+  {
+    "id": "156",
+    "name": "Major League Soccer",
+    "category": "United States",
+    "event_count": 56,
+    "sport": "football",
+    "sport_id": "6046",
+    "event_count_fetched": 56
+  },
+  {
+    "id": "85661",
+    "name": "Nelonen Division 4",
+    "category": "Finland",
+    "event_count": 55,
+    "sport": "football",
+    "sport_id": "6046",
+    "event_count_fetched": 55
+  },
+  {
+    "id": "12525",
+    "name": "1. Liga Classic",
+    "category": "Switzerland",
+    "event_count": 54,
+    "sport": "football",
+    "sport_id": "6046",
+    "event_count_fetched": 54
+  },
+  {
+    "id": "47528",
+    "name": "Primera Division RFEF",
+    "category": "Spain",
+    "event_count": 53,
+    "sport": "football",
+    "sport_id": "6046",
+    "event_count_fetched": 53
+  },
+  {
+    "id": "14738",
+    "name": "Srpska Liga",
+    "category": "Serbia",
+    "event_count": 51,
+    "sport": "football",
+    "sport_id": "6046",
+    "event_count_fetched": 51
+  },
+  {
+    "id": "89462",
+    "name": "Meiji Yasuda J2/J3 100 Year Vision League",
+    "category": "Japan",
+    "event_count": 50,
+    "sport": "football",
+    "sport_id": "6046",
+    "event_count_fetched": 50
+  },
+  {
+    "id": "38374",
+    "name": "NBA Blitz H2H GG league (E)",
+    "category": "International",
+    "event_count": 655,
+    "sport": "basketball",
+    "sport_id": "48242",
+    "event_count_fetched": 655
+  },
+  {
+    "id": "38256",
+    "name": "NBA eSports Battle (E)",
+    "category": "International",
+    "event_count": 640,
+    "sport": "basketball",
+    "sport_id": "48242",
+    "event_count_fetched": 640
+  },
+  {
+    "id": "86296",
+    "name": "Ebasketball | Eadriatic League East-west | 4X5 Minutes",
+    "category": "International",
+    "event_count": 402,
+    "sport": "basketball",
+    "sport_id": "48242",
+    "event_count_fetched": 402
+  },
+  {
+    "id": "79545",
+    "name": "Ebasketball Valhalla League - 4 X 5 Mins",
+    "category": "International",
+    "event_count": 343,
+    "sport": "basketball",
+    "sport_id": "48242",
+    "event_count_fetched": 343
+  },
+  {
+    "id": "82136",
+    "name": "NBA 2K25 (E) | Khabarovsk | 4X4 Minutes",
+    "category": "International",
+    "event_count": 201,
+    "sport": "basketball",
+    "sport_id": "48242",
+    "event_count_fetched": 201
+  },
+  {
+    "id": "65717",
+    "name": "IPBL. Pro Division",
+    "category": "Russia",
+    "event_count": 177,
+    "sport": "basketball",
+    "sport_id": "48242",
+    "event_count_fetched": 177
+  },
+  {
+    "id": "73076",
+    "name": "NBA 2K25. Cyber League",
+    "category": "International",
+    "event_count": 118,
+    "sport": "basketball",
+    "sport_id": "48242",
+    "event_count_fetched": 118
+  },
+  {
+    "id": "90087",
+    "name": "NBA 2K26. Cyber Euro League",
+    "category": "International",
+    "event_count": 100,
+    "sport": "basketball",
+    "sport_id": "48242",
+    "event_count_fetched": 100
+  },
+  {
+    "id": "68254",
+    "name": "IPBL. Pro Division - Women",
+    "category": "Russia",
+    "event_count": 96,
+    "sport": "basketball",
+    "sport_id": "48242",
+    "event_count_fetched": 96
+  },
+  {
+    "id": "44159",
+    "name": "NBL1",
+    "category": "Australia",
+    "event_count": 89,
+    "sport": "basketball",
+    "sport_id": "48242",
+    "event_count_fetched": 89
+  },
+  {
+    "id": "68249",
+    "name": "IPBL. Prime Division",
+    "category": "Russia",
+    "event_count": 58,
+    "sport": "basketball",
+    "sport_id": "48242",
+    "event_count_fetched": 58
+  },
+  {
+    "id": "29650",
+    "name": "NBL 1 - Women",
+    "category": "Australia",
+    "event_count": 51,
+    "sport": "basketball",
+    "sport_id": "48242",
+    "event_count_fetched": 51
+  },
+  {
+    "id": "59404",
+    "name": "Bskt Cup",
+    "category": "Ukraine",
+    "event_count": 41,
+    "sport": "basketball",
+    "sport_id": "48242",
+    "event_count_fetched": 41
+  },
+  {
+    "id": "65534",
+    "name": "IPBL. Space Division - Mens",
+    "category": "Russia",
+    "event_count": 35,
+    "sport": "basketball",
+    "sport_id": "48242",
+    "event_count_fetched": 35
+  },
+  {
+    "id": "4871",
+    "name": "CBA",
+    "category": "China",
+    "event_count": 32,
+    "sport": "basketball",
+    "sport_id": "48242",
+    "event_count_fetched": 32
+  }
+]

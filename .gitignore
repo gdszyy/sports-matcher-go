@@ -19,8 +19,11 @@ id_rsa.pub
 
 # 运行时输出
 results/
-*.json
 /tmp/
+# JSON 输出（全局排除，但 python/data/ 中的数据文件除外）
+*.json
+!python/data/*.json
+!docs/*.json
 
 # Go 工具链
 vendor/

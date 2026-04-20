@@ -1,0 +1,362 @@
+[
+  {
+    "id": "gpxwrxlhgpryk0j",
+    "name": "International Club Friendly",
+    "country": "",
+    "event_count": 4967,
+    "sport": "football",
+    "event_count_fetched": 4967
+  },
+  {
+    "id": "9dn1m1ghew6moep",
+    "name": "Spanish Tercera División RFEF",
+    "country": "",
+    "event_count": 3092,
+    "sport": "football",
+    "event_count_fetched": 3092
+  },
+  {
+    "id": "8y39mp1hjoemojx",
+    "name": "German Bundesliga 5",
+    "country": "",
+    "event_count": 1381,
+    "sport": "football",
+    "event_count_fetched": 1381
+  },
+  {
+    "id": "v2y8m4zhjlzql07",
+    "name": "Italian Serie D",
+    "country": "",
+    "event_count": 1298,
+    "sport": "football",
+    "event_count_fetched": 1298
+  },
+  {
+    "id": "56ypq3nhz63md7o",
+    "name": "Norwegian 3.Divisjon",
+    "country": "",
+    "event_count": 1092,
+    "sport": "football",
+    "event_count_fetched": 1092
+  },
+  {
+    "id": "z318q66h7yqo9jd",
+    "name": "Sweden Division 2",
+    "country": "",
+    "event_count": 994,
+    "sport": "football",
+    "event_count_fetched": 994
+  },
+  {
+    "id": "v2y8m4zhzjql074",
+    "name": "Spanish Segunda División RFEF",
+    "country": "Spain",
+    "event_count": 813,
+    "sport": "football",
+    "event_count_fetched": 813
+  },
+  {
+    "id": "l965mkyhyw2r1ge",
+    "name": "RUS D3B",
+    "country": "",
+    "event_count": 790,
+    "sport": "football",
+    "event_count_fetched": 790
+  },
+  {
+    "id": "jednm9whk0ryox8",
+    "name": "International Friendly",
+    "country": "",
+    "event_count": 672,
+    "sport": "football",
+    "event_count_fetched": 672
+  },
+  {
+    "id": "4zp5rzghx5q82w1",
+    "name": "German Regionalliga",
+    "country": "",
+    "event_count": 668,
+    "sport": "football",
+    "event_count_fetched": 668
+  },
+  {
+    "id": "9vjxm8ghonr6odg",
+    "name": "ARG Primera Nacional",
+    "country": "Argentina",
+    "event_count": 648,
+    "sport": "football",
+    "event_count_fetched": 648
+  },
+  {
+    "id": "p4jwq2ghxgm0veo",
+    "name": "Italian Serie C",
+    "country": "Italy",
+    "event_count": 570,
+    "sport": "football",
+    "event_count_fetched": 570
+  },
+  {
+    "id": "p4jwq2ghvdjm0ve",
+    "name": "Spanish U19 League ",
+    "country": "",
+    "event_count": 562,
+    "sport": "football",
+    "event_count_fetched": 562
+  },
+  {
+    "id": "kn54qllhg2qvy9d",
+    "name": "United States Major League Soccer",
+    "country": "USA",
+    "event_count": 510,
+    "sport": "football",
+    "event_count_fetched": 510
+  },
+  {
+    "id": "e4wyrn4hdzvq86p",
+    "name": "Poland Liga 3",
+    "country": "",
+    "event_count": 501,
+    "sport": "football",
+    "event_count_fetched": 501
+  },
+  {
+    "id": "gpxwrxlh9pyryk0",
+    "name": "Brazilian Serie D",
+    "country": "",
+    "event_count": 480,
+    "sport": "football",
+    "event_count_fetched": 480
+  },
+  {
+    "id": "9dn1m1ghl1moepl",
+    "name": "Turkish Third League",
+    "country": "",
+    "event_count": 480,
+    "sport": "football",
+    "event_count_fetched": 480
+  },
+  {
+    "id": "9k82rekh84repzj",
+    "name": "Sweden Division 1",
+    "country": "Sweden",
+    "event_count": 480,
+    "sport": "football",
+    "event_count_fetched": 480
+  },
+  {
+    "id": "gx7lm7phd4m2wdk",
+    "name": "Argentine Group B Tebolidun League Manchester",
+    "country": "Argentina",
+    "event_count": 462,
+    "sport": "football",
+    "event_count_fetched": 462
+  },
+  {
+    "id": "9dn1m1gh290moep",
+    "name": "Indo D4",
+    "country": "",
+    "event_count": 458,
+    "sport": "football",
+    "event_count_fetched": 458
+  },
+  {
+    "id": "9dn1m1ghp6ymoep",
+    "name": "GER JBH",
+    "country": "",
+    "event_count": 456,
+    "sport": "football",
+    "event_count_fetched": 456
+  },
+  {
+    "id": "jednm9wh0nryox8",
+    "name": "Czech Third League",
+    "country": "Czech Republic",
+    "event_count": 427,
+    "sport": "football",
+    "event_count_fetched": 427
+  },
+  {
+    "id": "v2y8m4zh3e9ql07",
+    "name": "Argentine Group C Tebolidun League Manchester",
+    "country": "",
+    "event_count": 424,
+    "sport": "football",
+    "event_count_fetched": 424
+  },
+  {
+    "id": "gy0or5jhgwpqwzv",
+    "name": "Spanish Primera División RFEF",
+    "country": "",
+    "event_count": 420,
+    "sport": "football",
+    "event_count_fetched": 420
+  },
+  {
+    "id": "kdj2ryoh2kq1zpg",
+    "name": "French Championnat National 2",
+    "country": "",
+    "event_count": 409,
+    "sport": "football",
+    "event_count_fetched": 409
+  },
+  {
+    "id": "gpxwrxlh7zryk0j",
+    "name": "Finnish Ykkonen",
+    "country": "",
+    "event_count": 402,
+    "sport": "football",
+    "event_count_fetched": 402
+  },
+  {
+    "id": "9dn1m1ghno7moep",
+    "name": "Ghana Division 1",
+    "country": "",
+    "event_count": 382,
+    "sport": "football",
+    "event_count_fetched": 382
+  },
+  {
+    "id": "4zp5rzgh9zq82w1",
+    "name": "Brazilian Serie A",
+    "country": "Brazil",
+    "event_count": 380,
+    "sport": "football",
+    "event_count_fetched": 380
+  },
+  {
+    "id": "j1l4rjnh0xm7vx5",
+    "name": "Brazilian Serie B",
+    "country": "Brazil",
+    "event_count": 380,
+    "sport": "football",
+    "event_count_fetched": 380
+  },
+  {
+    "id": "p4jwq2ghvo8m0ve",
+    "name": "Portuguese Campeonato Nacional",
+    "country": "",
+    "event_count": 375,
+    "sport": "football",
+    "event_count_fetched": 375
+  },
+  {
+    "id": "9vjxm8xtl5q6odg",
+    "name": "National Collegiate Athletic Association",
+    "country": "ngy0or5gteqwzv3",
+    "event_count": 3532,
+    "sport": "basketball",
+    "event_count_fetched": 3532
+  },
+  {
+    "id": "kn54ql7t05rvy9d",
+    "name": "Women's National Collegiate Athletic Association",
+    "country": "ngy0or5gteqwzv3",
+    "event_count": 1083,
+    "sport": "basketball",
+    "event_count_fetched": 1083
+  },
+  {
+    "id": "49vjxm8xt4q6odg",
+    "name": "National Basketball Association",
+    "country": "ngy0or5gteqwzv3",
+    "event_count": 777,
+    "sport": "basketball",
+    "event_count_fetched": 777
+  },
+  {
+    "id": "8y39mp4t92dmojx",
+    "name": "National Basketball Association G League",
+    "country": "ngy0or5gteqwzv3",
+    "event_count": 509,
+    "sport": "basketball",
+    "event_count_fetched": 509
+  },
+  {
+    "id": "8y39mp4tgkmojxg",
+    "name": "Argentina Liga Nacional",
+    "country": "ngy0or5gteqwzv3",
+    "event_count": 484,
+    "sport": "basketball",
+    "event_count_fetched": 484
+  },
+  {
+    "id": "gx7lm73tkor2wdk",
+    "name": "B1 League",
+    "country": "xkn54ql7t8rvy9d",
+    "event_count": 416,
+    "sport": "basketball",
+    "event_count_fetched": 416
+  },
+  {
+    "id": "0gx7lm73tor2wdk",
+    "name": "Women's National Basketball Association",
+    "country": "ngy0or5gteqwzv3",
+    "event_count": 347,
+    "sport": "basketball",
+    "event_count_fetched": 347
+  },
+  {
+    "id": "ngy0or5gteqwzv3",
+    "name": "Chinese Basketball Association",
+    "country": "xkn54ql7t8rvy9d",
+    "event_count": 339,
+    "sport": "basketball",
+    "event_count_fetched": 339
+  },
+  {
+    "id": "9k82re8t1lerepz",
+    "name": "Greece A2",
+    "country": "0gx7lm73tor2wdk",
+    "event_count": 331,
+    "sport": "basketball",
+    "event_count_fetched": 331
+  },
+  {
+    "id": "gy0or5gtlg9qwzv",
+    "name": "Baloncesto Superior Nacional\t",
+    "country": "ngy0or5gteqwzv3",
+    "event_count": 293,
+    "sport": "basketball",
+    "event_count_fetched": 293
+  },
+  {
+    "id": "z318q6ntk53mo9j",
+    "name": "Liga Profesional de Baloncesto",
+    "country": "ngy0or5gteqwzv3",
+    "event_count": 268,
+    "sport": "basketball",
+    "event_count_fetched": 268
+  },
+  {
+    "id": "9k82re8t9wrepzj",
+    "name": "Lega Nazionale Pallacanestro Serie A2",
+    "country": "0gx7lm73tor2wdk",
+    "event_count": 227,
+    "sport": "basketball",
+    "event_count_fetched": 227
+  },
+  {
+    "id": "e4wyrn1tnoq86pv",
+    "name": "France Nationale 1",
+    "country": "0gx7lm73tor2wdk",
+    "event_count": 225,
+    "sport": "basketball",
+    "event_count_fetched": 225
+  },
+  {
+    "id": "vl7oqd4t4kq510j",
+    "name": "B2 League",
+    "country": "xkn54ql7t8rvy9d",
+    "event_count": 224,
+    "sport": "basketball",
+    "event_count_fetched": 224
+  },
+  {
+    "id": "kjw2r02tldqz84o",
+    "name": "Novo Basquete Brasil",
+    "country": "ngy0or5gteqwzv3",
+    "event_count": 214,
+    "sport": "basketball",
+    "event_count_fetched": 214
+  }
+]

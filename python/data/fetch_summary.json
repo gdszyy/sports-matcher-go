@@ -1,0 +1,18 @@
+{
+  "fetch_time": "2026-04-20T06:33:53.043724",
+  "year": 2026,
+  "sr": {
+    "leagues": 47,
+    "events": 22618,
+    "hot_leagues": 7,
+    "mapped_leagues": 13
+  },
+  "ls": {
+    "leagues": 45,
+    "events": 15039
+  },
+  "ts": {
+    "leagues": 45,
+    "events": 34242
+  }
+}

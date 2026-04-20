@@ -1,0 +1,129 @@
+{
+  "generated_at": "2026-04-20T06:37:50.802683",
+  "total_mappings": 2858,
+  "complete_mappings": 2858,
+  "football_mappings": 2030,
+  "basketball_mappings": 828,
+  "leagues_covered": 14,
+  "avg_mapping_score": 0.9757,
+  "score_distribution": {
+    "1.0": 1934,
+    ">=0.9": 2753,
+    ">=0.75": 2849,
+    "<0.75": 9
+  },
+  "leagues": [
+    {
+      "sr_tournament_id": "sr:tournament:132",
+      "sr_tournament_name": "NBA",
+      "sport": "basketball",
+      "total": 828,
+      "complete": 828,
+      "avg_score": 0.9316
+    },
+    {
+      "sr_tournament_id": "sr:tournament:18",
+      "sr_tournament_name": "Championship",
+      "sport": "football",
+      "total": 244,
+      "complete": 244,
+      "avg_score": 0.9988
+    },
+    {
+      "sr_tournament_id": "sr:tournament:242",
+      "sr_tournament_name": "MLS",
+      "sport": "football",
+      "total": 244,
+      "complete": 244,
+      "avg_score": 0.9924
+    },
+    {
+      "sr_tournament_id": "sr:tournament:17",
+      "sr_tournament_name": "Premier League",
+      "sport": "football",
+      "total": 223,
+      "complete": 223,
+      "avg_score": 0.9973
+    },
+    {
+      "sr_tournament_id": "sr:tournament:23",
+      "sr_tournament_name": "Serie A",
+      "sport": "football",
+      "total": 196,
+      "complete": 196,
+      "avg_score": 0.9974
+    },
+    {
+      "sr_tournament_id": "sr:tournament:8",
+      "sr_tournament_name": "LaLiga",
+      "sport": "football",
+      "total": 191,
+      "complete": 191,
+      "avg_score": 0.9976
+    },
+    {
+      "sr_tournament_id": "sr:tournament:35",
+      "sr_tournament_name": "Bundesliga",
+      "sport": "football",
+      "total": 167,
+      "complete": 167,
+      "avg_score": 0.9993
+    },
+    {
+      "sr_tournament_id": "sr:tournament:34",
+      "sr_tournament_name": "Ligue 1",
+      "sport": "football",
+      "total": 143,
+      "complete": 143,
+      "avg_score": 0.9955
+    },
+    {
+      "sr_tournament_id": "sr:tournament:37",
+      "sr_tournament_name": "Eredivisie",
+      "sport": "football",
+      "total": 141,
+      "complete": 141,
+      "avg_score": 0.9951
+    },
+    {
+      "sr_tournament_id": "sr:tournament:325",
+      "sr_tournament_name": "Brasileiro Serie A",
+      "sport": "football",
+      "total": 135,
+      "complete": 135,
+      "avg_score": 0.9966
+    },
+    {
+      "sr_tournament_id": "sr:tournament:52",
+      "sr_tournament_name": "Super Lig",
+      "sport": "football",
+      "total": 127,
+      "complete": 127,
+      "avg_score": 0.9934
+    },
+    {
+      "sr_tournament_id": "sr:tournament:203",
+      "sr_tournament_name": "Premier League",
+      "sport": "football",
+      "total": 88,
+      "complete": 88,
+      "avg_score": 0.9919
+    },
+    {
+      "sr_tournament_id": "sr:tournament:7",
+      "sr_tournament_name": "UEFA Champions League",
+      "sport": "football",
+      "total": 68,
+      "complete": 68,
+      "avg_score": 0.9973
+    },
+    {
+      "sr_tournament_id": "sr:tournament:679",
+      "sr_tournament_name": "UEFA Europa League",
+      "sport": "football",
+      "total": 63,
+      "complete": 63,
+      "avg_score": 0.9117
+    }
+  ]
+}
