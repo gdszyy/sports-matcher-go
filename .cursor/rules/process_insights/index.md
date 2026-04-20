@@ -10,7 +10,7 @@
 
 ## 活跃洞察 (Active Insights)
 
-当前共有 **4** 条活跃洞察。
+当前共有 **5** 条活跃洞察。
 
 | ID | 标题 | 版本 | 关联模块 | 最后更新 | 文档链接 |
 |----|------|------|---------|---------|---------|  
@@ -18,6 +18,7 @@
 | PI-002 | 联赛别名索引与匹配防崩指南 | v1.0 | internal/matcher | 2026-04-20 | [PI-002](PI-002_league_alias_index.md) |
 | PI-003 | SR/LS/TS 2026 年算法测试数据集使用指南 | v1.0 | python, python/data | 2026-04-20 | [PI-003](PI-003_2026_dataset_usage.md) |
 | PI-004 | SR 2026 算法测试结果与最佳实践 | v1.0 | python, python/data, internal/matcher, cmd, internal/api | 2026-04-20 | [PI-004](PI-004_sr_2026_test_results.md) |
+| PI-005 | LS→TS 联赛匹配高频算法误匹配修复指南 | v1.0 | internal/matcher, docs | 2026-04-21 | [PI-005](PI-005_ls_ts_league_match_algo_fix.md) |
 
 ---
 

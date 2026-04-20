@@ -551,6 +551,7 @@ var geoAliasGroups = [][]string{
 	{"uae", "united arab emirates"},
 }
 
+// @section:league_abbrev_country_map - 联赛缩写/简称→国家知识图谱（修复缩写联赛跨国误配）
 // leagueAbbrevCountryMap 联赛缩写/简称 → 所属国家/地区（归一化小写）
 // 用于当 LS CategoryName 为空或不明确时，从联赛名称中推断国家，强化地理约束
 // 修复场景：FNL→Finalissima（俄罗斯联赛误配到国际赛事）、HNL→Israel C League（克罗地亚误配到以色列）
@@ -677,6 +678,7 @@ func lsLocationVeto(lsCategory, tsCountry string) bool {
 	return geoSimilarity(catNorm, cntNorm) < 0.4
 }
 
+// @section:location_veto_by_name - 通过联赛名称缩写推断国家的地理否决函数（新增）
 // lsLocationVetoByName 通过联赛名称中的缩写/简称推断国家，强化地理约束
 // 当 LS CategoryName 为空或不明确时，尝试从联赛名称本身推断所属国家
 // 返回 true 表示应否决该匹配
