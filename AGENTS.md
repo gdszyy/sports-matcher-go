@@ -53,7 +53,45 @@
 *   **python/data 数据集规范**：[`.cursor/rules/python_data.md`](.cursor/rules/python_data.md) - SR/LS/TS 2026 年算法测试数据集结构、字段说明与使用方式（**算法测试必读**）。
 *   **docs 模块规范**：[`.cursor/rules/docs.md`](.cursor/rules/docs.md) - docs 模块的专属设计规范与 SOP。
 
-## 5. 流程洞察索引 (Process Insights)
+## 5. 核心算法入口与测试脚本快速路由
+
+> 本节记录最新算法实现和测试脚本的精确入口，Agent 在执行算法相关任务时应优先查阅。
+
+### 5.1 最新匹配算法（UniversalEngine）
+
+| 组件 | 路径 | 说明 |
+|------|------|------|
+| 通用引擎主体 | `internal/matcher/universal_engine.go` | UniversalEngine、SRSourceAdapter、TSSourceAdapter、RunLeague 主流程 |
+| 事件级匹配核心 | `internal/matcher/event.go` | MatchEvents、高斯时间衰减、TeamAliasIndex、L1~L6 七级策略 |
+| 联赛特征约束 | `internal/matcher/league_features.go` | 六维强约束一票否决（性别/年龄/赛制/层级/区域/国家） |
+| 联赛别名知识图谱 | `internal/matcher/league_alias.go` | LeagueAliasIndex、AliasStore 持久化 |
+| 已知映射验证 | `internal/matcher/known_map_validator.go` | KnownLeagueMapValidator、RCR < 0.30 自动降级 |
+| Fellegi-Sunter EM | `internal/matcher/fs_model.go` | 无监督参数估计 |
+| EventDTW 兜底 | `internal/matcher/event_dtw.go` | 动态时间规整兜底匹配 |
+| 已知联赛映射表 | `internal/matcher/league.go` | KnownLeagueMap（SR tournament_id → TS competition_id） |
+| 命令行入口 | `cmd/server/main.go` | `match2`（单联赛）、`batch2`（批量 SR 2026）子命令 |
+| HTTP API 入口 | `internal/api/server.go` | `/api/v2/match/league`、`/api/v2/match/batch` |
+
+### 5.2 SR 2026 算法测试脚本
+
+| 脚本 | 路径 | 说明 |
+|------|------|------|
+| SR↔TS 2026 测试（最新） | `python/test_sr_2026.py` | 复现 UniversalEngine 完整逻辑，支持 GT 重建 TS 候选集，覆盖 14 个 GT 联赛 |
+| LS↔TS 2026 测试 | `python/match_2026.py` | LS 链路测试脚本（旧版，仅供参考） |
+
+**SR 2026 测试最新结果**（2026-04-20，commit `afd4e5e`）：
+
+| 维度 | 加权 Precision | 加权 Recall | 加权 F1 | 平均置信度 |
+|------|--------------|------------|---------|----------|
+| 全量（14 GT 联赛） | 0.8927 | 0.8681 | 0.8799 | 0.9737 |
+| 热门联赛（7足球+NBA） | 0.851 | 0.815 | 0.832 | — |
+| 常规联赛（6个有GT） | 0.973 | 0.970 | 0.972 | — |
+
+详见流程洞察：[PI-004](`.cursor/rules/process_insights/PI-004_sr_2026_test_results.md`)
+
+---
+
+## 6. 流程洞察索引 (Process Insights)
 
 流程洞察是 Agent 在完成任务后沉淀的经验文档，记录非直观的隐蔽逻辑、跨模块耦合陷阱和关键操作流程。与静态模块规范不同，流程洞察随任务持续积累，并通过版本号管理演进。
 

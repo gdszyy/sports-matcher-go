@@ -10,13 +10,14 @@
 
 ## 活跃洞察 (Active Insights)
 
-当前共有 **3** 条活跃洞察。
+当前共有 **4** 条活跃洞察。
 
 | ID | 标题 | 版本 | 关联模块 | 最后更新 | 文档链接 |
 |----|------|------|---------|---------|---------|  
 | PI-001 | 通用匹配算法设计与五级降级规则 | v1.0 | internal/matcher | 2026-04-20 | [PI-001](PI-001_universal_matching_algorithm_design.md) |
 | PI-002 | 联赛别名索引与匹配防崩指南 | v1.0 | internal/matcher | 2026-04-20 | [PI-002](PI-002_league_alias_index.md) |
 | PI-003 | SR/LS/TS 2026 年算法测试数据集使用指南 | v1.0 | python, python/data | 2026-04-20 | [PI-003](PI-003_2026_dataset_usage.md) |
+| PI-004 | SR 2026 算法测试结果与最佳实践 | v1.0 | python, python/data, internal/matcher, cmd, internal/api | 2026-04-20 | [PI-004](PI-004_sr_2026_test_results.md) |
 
 ---
 

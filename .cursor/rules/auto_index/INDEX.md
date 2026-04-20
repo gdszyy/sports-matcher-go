@@ -3,20 +3,18 @@
 > 自动生成于 2026-04-20 | 由 code-indexer 脚本维护
 > **本文件由脚本自动生成，严禁手动编辑。**
 
-## 已索引文件 (15 个)
+## 已索引文件 (13 个)
 
 | 文件 | 总行数 | 函数数 | 巨型函数 | @section 标记 | 索引文件 |
 |------|--------|--------|----------|--------------|---------|
 | `python/match_2026.py` | 1054 | 24 | 0 | 0 | [python_match_2026_py_index.md](python_match_2026_py_index.md) |
-| `python/fetch_2026_data.py` | 480 | 7 | 0 | 0 | [python_fetch_2026_data_py_index.md](python_fetch_2026_data_py_index.md) |
-| `python/build_sr_ts_ground_truth.py` | 416 | 10 | 0 | 0 | [python_build_sr_ts_ground_truth_py_index.md](python_build_sr_ts_ground_truth_py_index.md) |
-| `python/explore_leagues.py` | 276 | 5 | 0 | 0 | [python_explore_leagues_py_index.md](python_explore_leagues_py_index.md) |
 | `internal/matcher/universal_engine.go` | 844 | 0 | 0 | 0 | [internal_matcher_universal_engine_go_index.md](internal_matcher_universal_engine_go_index.md) |
 | `internal/matcher/ls_engine.go` | 767 | 2 | **1** | 7 | [internal_matcher_ls_engine_go_index.md](internal_matcher_ls_engine_go_index.md) |
+| `python/test_sr_2026.py` | 751 | 19 | 0 | 0 | [python_test_sr_2026_py_index.md](python_test_sr_2026_py_index.md) |
+| `internal/matcher/event.go` | 733 | 2 | **1** | 6 | [internal_matcher_event_go_index.md](internal_matcher_event_go_index.md) |
 | `direct_match_export.py` | 706 | 13 | **1** | 0 | [direct_match_export_py_index.md](direct_match_export_py_index.md) |
 | `tasks/tsk-97cf2032-032/deliverables/ls_engine.go` | 648 | 1 | **1** | 0 | [tasks_tsk-97cf2032-032_deliverables_ls_engine_go_index.md](tasks_tsk-97cf2032-032_deliverables_ls_engine_go_index.md) |
 | `internal/matcher/integration_test.go` | 642 | 26 | 0 | 0 | [internal_matcher_integration_test_go_index.md](internal_matcher_integration_test_go_index.md) |
-| `internal/matcher/event.go` | 629 | 2 | **1** | 5 | [internal_matcher_event_go_index.md](internal_matcher_event_go_index.md) |
 | `internal/matcher/league_alias.go` | 629 | 4 | 0 | 0 | [internal_matcher_league_alias_go_index.md](internal_matcher_league_alias_go_index.md) |
 | `internal/matcher/league_features.go` | 629 | 1 | **1** | 5 | [internal_matcher_league_features_go_index.md](internal_matcher_league_features_go_index.md) |
 | `tasks/tsk-97cf2032-032/deliverables/league_alias.go` | 629 | 4 | 0 | 0 | [tasks_tsk-97cf2032-032_deliverables_league_alias_go_index.md](tasks_tsk-97cf2032-032_deliverables_league_alias_go_index.md) |
@@ -31,24 +29,24 @@
 |------|------|--------|
 | `internal/matcher/team_player.go` | 487 | 0 |
 | `python/fetch_2026_data.py` | 480 | 7 |
+| `cmd/server/main.go` | 467 | 9 |
 | `internal/matcher/dense_blocking.go` | 450 | 1 |
 | `internal/matcher/known_map_validator.go` | 433 | 3 |
 | `python/build_sr_ts_ground_truth.py` | 416 | 10 |
 | `internal/db/alias_store.go` | 402 | 3 |
+| `internal/api/server.go` | 399 | 0 |
 | `tasks/tsk-c93a8ede-fc7/deliverables/league_country_test.go` | 378 | 7 |
 | `internal/db/ls_player_adapter.go` | 349 | 3 |
 | `internal/db/league_alias_store.go` | 336 | 2 |
 | `tasks/tsk-97cf2032-032/deliverables/league_alias_store.go` | 336 | 2 |
 | `internal/matcher/team_name_normalizer.go` | 332 | 1 |
 | `internal/matcher/name.go` | 308 | 3 |
-| `internal/matcher/engine.go` | 278 | 0 |
+| `internal/matcher/engine.go` | 282 | 0 |
 | `internal/db/normalizer.go` | 276 | 0 |
 | `python/explore_leagues.py` | 276 | 5 |
 | `tasks/tsk-c93a8ede-fc7/deliverables/league.go` | 276 | 2 |
 | `internal/db/ts_adapter.go` | 266 | 1 |
-| `internal/api/server.go` | 265 | 0 |
-| `cmd/server/main.go` | 260 | 5 |
-| `internal/matcher/result.go` | 254 | 0 |
+| `internal/matcher/result.go` | 256 | 0 |
 | `internal/db/data_router.go` | 241 | 0 |
 | `internal/matcher/optimization_test.go` | 236 | 10 |
 | `internal/db/sr_adapter.go` | 209 | 0 |
