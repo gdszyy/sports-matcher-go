@@ -3,11 +3,14 @@
 > 自动生成于 2026-04-20 | 由 code-indexer 脚本维护
 > **本文件由脚本自动生成，严禁手动编辑。**
 
-## 已索引文件 (12 个)
+## 已索引文件 (15 个)
 
 | 文件 | 总行数 | 函数数 | 巨型函数 | @section 标记 | 索引文件 |
 |------|--------|--------|----------|--------------|---------|
 | `python/match_2026.py` | 1054 | 24 | 0 | 0 | [python_match_2026_py_index.md](python_match_2026_py_index.md) |
+| `python/fetch_2026_data.py` | 480 | 7 | 0 | 0 | [python_fetch_2026_data_py_index.md](python_fetch_2026_data_py_index.md) |
+| `python/build_sr_ts_ground_truth.py` | 416 | 10 | 0 | 0 | [python_build_sr_ts_ground_truth_py_index.md](python_build_sr_ts_ground_truth_py_index.md) |
+| `python/explore_leagues.py` | 276 | 5 | 0 | 0 | [python_explore_leagues_py_index.md](python_explore_leagues_py_index.md) |
 | `internal/matcher/universal_engine.go` | 844 | 0 | 0 | 0 | [internal_matcher_universal_engine_go_index.md](internal_matcher_universal_engine_go_index.md) |
 | `internal/matcher/ls_engine.go` | 767 | 2 | **1** | 7 | [internal_matcher_ls_engine_go_index.md](internal_matcher_ls_engine_go_index.md) |
 | `direct_match_export.py` | 706 | 13 | **1** | 0 | [direct_match_export_py_index.md](direct_match_export_py_index.md) |
@@ -20,15 +23,17 @@
 | `internal/matcher/event_dtw.go` | 525 | 0 | 0 | 0 | [internal_matcher_event_dtw_go_index.md](internal_matcher_event_dtw_go_index.md) |
 | `internal/matcher/fs_model.go` | 519 | 0 | 0 | 0 | [internal_matcher_fs_model_go_index.md](internal_matcher_fs_model_go_index.md) |
 
-## 未索引文件 (35 个)
+## 未索引文件 (38 个)
 
 以下文件未达到大文件阈值，不生成独立索引（可通过 `--force` 强制生成）。
 
 | 文件 | 行数 | 函数数 |
 |------|------|--------|
 | `internal/matcher/team_player.go` | 487 | 0 |
+| `python/fetch_2026_data.py` | 480 | 7 |
 | `internal/matcher/dense_blocking.go` | 450 | 1 |
 | `internal/matcher/known_map_validator.go` | 433 | 3 |
+| `python/build_sr_ts_ground_truth.py` | 416 | 10 |
 | `internal/db/alias_store.go` | 402 | 3 |
 | `tasks/tsk-c93a8ede-fc7/deliverables/league_country_test.go` | 378 | 7 |
 | `internal/db/ls_player_adapter.go` | 349 | 3 |
@@ -38,6 +43,7 @@
 | `internal/matcher/name.go` | 308 | 3 |
 | `internal/matcher/engine.go` | 278 | 0 |
 | `internal/db/normalizer.go` | 276 | 0 |
+| `python/explore_leagues.py` | 276 | 5 |
 | `tasks/tsk-c93a8ede-fc7/deliverables/league.go` | 276 | 2 |
 | `internal/db/ts_adapter.go` | 266 | 1 |
 | `internal/api/server.go` | 265 | 0 |

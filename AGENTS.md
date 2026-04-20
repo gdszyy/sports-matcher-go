@@ -50,6 +50,7 @@
 *   **internal_db 模块规范**：[`.cursor/rules/internal_db.md`](.cursor/rules/internal_db.md) - internal_db 模块的专属设计规范与 SOP。
 *   **internal_api 模块规范**：[`.cursor/rules/internal_api.md`](.cursor/rules/internal_api.md) - internal_api 模块的专属设计规范与 SOP。
 *   **python 模块规范**：[`.cursor/rules/python.md`](.cursor/rules/python.md) - python 模块的专属设计规范与 SOP。
+*   **python/data 数据集规范**：[`.cursor/rules/python_data.md`](.cursor/rules/python_data.md) - SR/LS/TS 2026 年算法测试数据集结构、字段说明与使用方式（**算法测试必读**）。
 *   **docs 模块规范**：[`.cursor/rules/docs.md`](.cursor/rules/docs.md) - docs 模块的专属设计规范与 SOP。
 
 ## 5. 流程洞察索引 (Process Insights)
