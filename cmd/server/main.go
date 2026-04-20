@@ -4,9 +4,11 @@
 //
 //	sports-matcher serve               启动 HTTP API 服务
 //	sports-matcher match <tournament>  命令行单联赛匹配（旧版 Engine）
-//	sports-matcher match2 <tournament> 命令行单联赛匹配（最新 UniversalEngine）
+//	sports-matcher match2 <tournament> 命令行单联赛匹配（最新 UniversalEngine，SR 数据源）
+//	sports-matcher ls-match <id>       命令行单联赛匹配（最新 UniversalEngine，LS 数据源）
 //	sports-matcher batch               批量匹配（旧版 Engine，读取内置联赛配置）
 //	sports-matcher batch2              批量匹配（最新 UniversalEngine，SR 2026 热门+常规）
+//	sports-matcher ls-batch            批量匹配（最新 UniversalEngine，LS 2026 热门+常规）
 package main
 
 import (
@@ -32,7 +34,7 @@ func main() {
 		Short: "体育数据跨库匹配服务（SR → TS）",
 	}
 
-	root.AddCommand(serveCmd(), matchCmd(), matchUniversalCmd(), batchCmd(), batchUniversalCmd())
+	root.AddCommand(serveCmd(), matchCmd(), matchUniversalCmd(), lsMatchCmd(), batchCmd(), batchUniversalCmd(), lsBatchCmd())
 
 	if err := root.Execute(); err != nil {
 		os.Exit(1)
@@ -308,6 +310,192 @@ var sr2026Leagues = []LeagueConfig{
 	{"sr:tournament:390", "basketball", "regular", "kjw2r02t6xqz84o"}, // FIBA Basketball Champions League
 }
 
+// ── ls-match（最新 UniversalEngine，LS 数据源）─────────────────────────────────
+
+func lsMatchCmd() *cobra.Command {
+	var sport, tier, tsCompID string
+	var noPlayers bool
+	var outputJSON bool
+
+	cmd := &cobra.Command{
+		Use:   "ls-match <tournament_id>",
+		Short: "对单个 LS 联赛执行匹配（最新 UniversalEngine，含高斯时间衰减+FS模型+DTW）",
+		Args:  cobra.ExactArgs(1),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			tournamentID := args[0]
+			cfg.RunPlayers = !noPlayers
+
+			tunnel, err := db.NewTunnel(cfg)
+			if err != nil {
+				return err
+			}
+			defer tunnel.Close()
+
+			lsAdapter := db.NewLSAdapter(tunnel.LSDb)
+			lsPlayerAdapter := db.NewLSPlayerAdapter(tunnel.LSDb, db.DefaultLSPlayerConfig)
+			tsAdapter := db.NewTSAdapter(tunnel.TSDb)
+
+			eng := matcher.NewUniversalEngine(tsAdapter, cfg.RunPlayers)
+			srcAdapter := matcher.NewLSSourceAdapter(lsAdapter, lsPlayerAdapter, cfg.RunPlayers)
+
+			log.Printf("[UniversalEngine/LS] 开始匹配联赛: %s  sport=%s  tier=%s", tournamentID, sport, tier)
+			result, err := eng.RunLeague(srcAdapter, tournamentID, sport, tier, tsCompID)
+			if err != nil {
+				return err
+			}
+
+			if outputJSON {
+				enc := json.NewEncoder(os.Stdout)
+				enc.SetIndent("", "  ")
+				return enc.Encode(result)
+			}
+
+			printUniversalStats(result.Stats)
+			return nil
+		},
+	}
+
+	cmd.Flags().StringVar(&sport, "sport", "football", "运动类型: football / basketball")
+	cmd.Flags().StringVar(&tier, "tier", "hot", "联赛热度: hot / regular / cold")
+	cmd.Flags().StringVar(&tsCompID, "ts-id", "", "TS competition_id（可选，跳过联赛匹配）")
+	cmd.Flags().BoolVar(&noPlayers, "no-players", false, "跳过球员匹配（加速）")
+	cmd.Flags().BoolVar(&outputJSON, "json", false, "输出完整 JSON 结果")
+	return cmd
+}
+
+// ── ls-batch（最新 UniversalEngine，LS 2026 热门+常规）─────────────────────────
+
+// ls2026Leagues LS 2026 年热门 + 常规联赛配置
+// LS tournament_id 来自 test-xp-lsports.ls_tournament_en（已通过数据库查询验证）
+// TS competition_id 来自 test-thesports-db（已通过 KnownLSLeagueMap 验证）
+// 覆盖足球：五大联赛+UEFA+英格兰次级+主要欧洲+全球热门；篮球：NBA+EuroLeague+主要国内联赛
+var ls2026Leagues = []LeagueConfig{
+	// ── 足球热门 ──
+	{"67", "football", "hot", "jednm9whz0ryox8"},  // Premier League (England) → English Premier League
+	{"8363", "football", "hot", "vl7oqdehlyr510j"},  // LaLiga (Spain) → Spanish La Liga
+	{"65", "football", "hot", "gy0or5jhg6qwzv3"},   // Bundesliga (Germany) → Bundesliga
+	{"4", "football", "hot", "4zp5rzghp5q82w1"},    // Serie A (Italy) → Italian Serie A
+	{"61", "football", "hot", "yl5ergphnzr8k0o"},   // Ligue 1 (France) → French Ligue 1
+	{"32644", "football", "hot", "z8yomo4h7wq0j6l"}, // UEFA Champions League
+	{"30444", "football", "hot", "56ypq3nh0xmd7oj"}, // UEFA Europa League
+	{"27738", "football", "hot", "v2y8m4zhe6ql074"}, // CONMEBOL Copa Libertadores
+	{"36297", "football", "hot", "56ypq3nhpkmd7oj"}, // Copa Sudamericana
+	// ── 足球常规 ──
+	{"58", "football", "regular", "l965mkyh32r1ge4"},    // The Championship (England)
+	{"68", "football", "regular", "8y39mp1hjzmojxg"},    // League One (England)
+	{"70", "football", "regular", "9k82rekhygrepzj"},    // League Two (England)
+	{"8203", "football", "regular", "z318q66hv8qo9jd"},  // National League (England)
+	{"66", "football", "regular", "kn54qllhjzqvy9d"},   // 2. Bundesliga (Germany)
+	{"8", "football", "regular", "j1l4rjnhx9m7vx5"},    // Serie B (Italy)
+	{"60", "football", "regular", "kjw2r09hw8rz84o"},   // Ligue 2 (France)
+	{"22263", "football", "regular", "kdj2ryohnkq1zpg"}, // LaLiga2 (Spain)
+	{"59", "football", "regular", "9vjxm8gh22r6odg"},   // Jupiler League (Belgium)
+	{"2944", "football", "regular", "vl7oqdeheyr510j"},  // Eredivisie (Netherlands)
+	{"6603", "football", "regular", "9vjxm8ghx2r6odg"},  // Primeira Liga (Portugal)
+	{"63", "football", "regular", "8y39mp1h6jmojxg"},   // Super Lig (Turkey)
+	{"3799", "football", "regular", "8y39mp1hwxmojxg"},  // FNL (Russia)
+	{"32521", "football", "regular", "vl7oqdeh3lr510j"}, // Ekstraklasa (Poland)
+	{"61243", "football", "regular", "gx7lm7pho13m2wd"}, // HNL (Croatia)
+	{"30058", "football", "regular", "p4jwq2gh1gm0veo"}, // Scotland Premiership
+	{"72", "football", "regular", "e4wyrn4hoeq86pv"},   // Super League (Greece)
+	{"3", "football", "regular", "l965mkyhg0r1ge4"},    // Allsvenskan (Sweden)
+	{"38", "football", "regular", "8y39mp1hk8mojxg"},   // Superettan (Sweden)
+	{"24289", "football", "regular", "gy0or5jhj6qwzv3"}, // Eliteserien (Norway)
+	{"156", "football", "regular", "kn54qllhg2qvy9d"},  // MLS (USA)
+	{"5299", "football", "regular", "9k82rekhp6repzj"},  // Liga MX (Mexico)
+	{"20913", "football", "regular", "4zp5rzgh9zq82w1"}, // Serie A (Brazil)
+	{"41558", "football", "regular", "p3glrw7hevqdyjv"}, // Liga Profesional (Argentina)
+	{"1543", "football", "regular", "9k82rekh52repzj"},  // China Super League
+	{"35637", "football", "regular", "z318q66hl1qo9jd"}, // J1 League (Japan)
+	{"24585", "football", "regular", "gy0or5jhlxgqwzv"}, // K League Classic (South Korea)
+	{"28898", "football", "regular", "kn54qllh25dqvy9"}, // K2 League (South Korea)
+	{"2018", "football", "regular", "56ypq3nh01nmd7o"},  // Premier League (Egypt)
+	// ── 篮球热门 ──
+	{"64", "basketball", "hot", "49vjxm8xt4q6odg"},   // NBA (United States)
+	{"33249", "basketball", "hot", "jednm9ktd5ryox8"}, // Euroleague (International)
+	// ── 篮球常规 ──
+	{"4871", "basketball", "regular", "ngy0or5gteqwzv3"},  // CBA (China)
+	{"3111", "basketball", "regular", "v2y8m4ptdeml074"},  // Liga ACB Endesa (Spain)
+	{"621", "basketball", "regular", "0l965mk8tom1ge4"},   // Bundesliga (Germany)
+	{"62013", "basketball", "regular", "v2y8m4ptx1ml074"}, // VTB United League (Russia)
+	{"293", "basketball", "regular", "x4zp5rzkt1r82w1"},   // Serie A (Italy)
+	{"48524", "basketball", "regular", "l965mk8tzpkm1ge"}, // BNXT League
+	{"34184", "basketball", "regular", "ngy0or5gteqwzv3"}, // B.League - B1 (Japan)
+	{"25357", "basketball", "regular", "v2y8m4ptx1ml074"}, // Orlen Basket Liga (Poland)
+	{"1834", "basketball", "regular", "x4zp5rzkt1r82w1"},  // NBL (Australia)
+}
+
+func lsBatchCmd() *cobra.Command {
+	var noPlayers bool
+	var configFile string
+	var tierFilter string
+
+	cmd := &cobra.Command{
+		Use:   "ls-batch",
+		Short: "批量匹配 LS 2026 热门+常规联赛（最新 UniversalEngine，含高斯时间衰减+FS模型+DTW）",
+		RunE: func(cmd *cobra.Command, args []string) error {
+			cfg.RunPlayers = !noPlayers
+
+			leagues := ls2026Leagues
+			if configFile != "" {
+				f, err := os.Open(configFile)
+				if err != nil {
+					return err
+				}
+				defer f.Close()
+				if err := json.NewDecoder(f).Decode(&leagues); err != nil {
+					return err
+				}
+			}
+
+			// 按 tier 过滤
+			if tierFilter != "" {
+				var filtered []LeagueConfig
+				for _, lc := range leagues {
+					if lc.Tier == tierFilter {
+						filtered = append(filtered, lc)
+					}
+				}
+				leagues = filtered
+			}
+
+			tunnel, err := db.NewTunnel(cfg)
+			if err != nil {
+				return err
+			}
+			defer tunnel.Close()
+
+			lsAdapter := db.NewLSAdapter(tunnel.LSDb)
+			lsPlayerAdapter := db.NewLSPlayerAdapter(tunnel.LSDb, db.DefaultLSPlayerConfig)
+			tsAdapter := db.NewTSAdapter(tunnel.TSDb)
+			eng := matcher.NewUniversalEngine(tsAdapter, cfg.RunPlayers)
+
+			log.Printf("[UniversalEngine/LS] 开始批量匹配 LS 2026 联赛，共 %d 个", len(leagues))
+
+			var allStats []matcher.UniversalMatchStats
+			for _, lc := range leagues {
+				log.Printf("\n══ [UniversalEngine/LS] 匹配联赛: %s [%s/%s] ══", lc.TournamentID, lc.Sport, lc.Tier)
+				srcAdapter := matcher.NewLSSourceAdapter(lsAdapter, lsPlayerAdapter, cfg.RunPlayers)
+				result, err := eng.RunLeague(srcAdapter, lc.TournamentID, lc.Sport, lc.Tier, lc.TSCompetitionID)
+				if err != nil {
+					log.Printf("  ✗ 错误: %v", err)
+					continue
+				}
+				allStats = append(allStats, result.Stats)
+			}
+
+			fmt.Println()
+			printLSBatchTable(allStats)
+			return nil
+		},
+	}
+
+	cmd.Flags().BoolVar(&noPlayers, "no-players", false, "跳过球员匹配（加速）")
+	cmd.Flags().StringVar(&configFile, "config", "", "自定义联赛配置文件（JSON）")
+	cmd.Flags().StringVar(&tierFilter, "tier", "", "仅匹配指定热度的联赛: hot / regular / cold（空=全部）")
+	return cmd
+}
+
 func batchUniversalCmd() *cobra.Command {
 	var noPlayers bool
 	var configFile string
@@ -451,6 +639,35 @@ func printUniversalBatchTable(stats []matcher.UniversalMatchStats) {
 	}
 	w.Flush()
 
+	if totalEvents > 0 {
+		fmt.Printf("\n汇总: %d 个联赛，%d/%d 场比赛匹配 (%.1f%%)\n",
+			len(stats), totalMatched, totalEvents,
+			float64(totalMatched)/float64(totalEvents)*100)
+	}
+}
+
+func printLSBatchTable(stats []matcher.UniversalMatchStats) {
+	w := tabwriter.NewWriter(os.Stdout, 0, 0, 2, ' ', 0)
+	fmt.Fprintln(w, "[UniversalEngine/LS] LS 2026 批量匹配结果")
+	fmt.Fprintln(w, "运动\t热度\t联赛(LS)\t联赛(TS)\t联配规则\t联配置信\t比赛总数\t已匹配\t匹配率\tL1\tL2\tL3\tL4\tL5\tL4b\t比赛置信\t球队匹配\t球员匹配\t耗时(ms)")
+	fmt.Fprintln(w, "────\t────\t────────\t────────\t────────\t────────\t────────\t────────\t────────\t──\t──\t──\t──\t──\t───\t────────\t────────\t────────\t────────")
+
+	totalEvents, totalMatched := 0, 0
+	for _, s := range stats {
+		fmt.Fprintf(w, "%s\t%s\t%s\t%s\t%s\t%.3f\t%d\t%d\t%.1f%%\t%d\t%d\t%d\t%d\t%d\t%d\t%.3f\t%d/%d\t%d/%d\t%d\n",
+			s.Sport, s.Tier,
+			truncate(s.SrcLeagueName, 20), truncate(s.TSLeagueName, 20),
+			s.LeagueRule, s.LeagueConf,
+			s.EventTotal, s.EventMatched, s.EventMatchRate*100,
+			s.EventL1, s.EventL2, s.EventL3, s.EventL4, s.EventL5, s.EventL4b, s.EventAvgConf,
+			s.TeamMatched, s.TeamTotal,
+			s.PlayerMatched, s.PlayerTotal,
+			s.ElapsedMs,
+		)
+		totalEvents += s.EventTotal
+		totalMatched += s.EventMatched
+	}
+	w.Flush()
 	if totalEvents > 0 {
 		fmt.Printf("\n汇总: %d 个联赛，%d/%d 场比赛匹配 (%.1f%%)\n",
 			len(stats), totalMatched, totalEvents,

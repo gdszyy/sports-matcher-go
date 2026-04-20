@@ -308,18 +308,92 @@ func (e *LSEngine) RunLeague(lsTournamentID, sport, tier, tsCompetitionID string
 
 // KnownLSLeagueMap LS tournament_id → TS competition_id 已知映射
 // key 格式: "sport:ls_tournament_id"，如 "football:8363"
+// 更新日期: 2026-04，覆盖 2026 年所有热门 + 常规联赛（足球 + 篮球）
+// LS tournament_id 来自 test-xp-lsports.ls_tournament_en，TS competition_id 来自 test-thesports-db
 var KnownLSLeagueMap = map[string]string{
-	// ── 足球热门 ──────────────────────────────────────────────────────────
-	// LS tournament_id 与 SR 完全不同，需要根据 LSports 数据库实际值配置
-	"football:67":    "jednm9whz0ryox8", // Premier League (England)
-	"football:8363":  "vl7oqdehlyr510j", // LaLiga (Spain)
-	"football:61":    "yl5ergphnzr8k0o", // Ligue 1 (France)
-	"football:66":    "gy0or5jhg6qwzv3", // 2.Bundesliga (Germany) → Bundesliga in TS
-	// UEFA 赛事
+	// ══════════════════════════════════════════════════════════════════════
+	// 足球 热门（hot）—— 五大联赛 + UEFA + 南美杯
+	// ══════════════════════════════════════════════════════════════════════
+	"football:67":    "jednm9whz0ryox8", // Premier League (England) → English Premier League
+	"football:8363":  "vl7oqdehlyr510j", // LaLiga (Spain) → Spanish La Liga
+	"football:65":    "gy0or5jhg6qwzv3", // Bundesliga (Germany) → Bundesliga
+	"football:4":     "4zp5rzghp5q82w1", // Serie A (Italy) → Italian Serie A
+	"football:61":    "yl5ergphnzr8k0o", // Ligue 1 (France) → French Ligue 1
 	"football:32644": "z8yomo4h7wq0j6l", // UEFA Champions League
 	"football:30444": "56ypq3nh0xmd7oj", // UEFA Europa League
-	// ── 篮球热门 ──────────────────────────────────────────────────────────
-	"basketball:132": "49vjxm8xt4q6odg", // NBA
+	"football:27738": "v2y8m4zhe6ql074", // CONMEBOL Copa Libertadores
+	"football:36297": "56ypq3nhpkmd7oj", // Copa Sudamericana
+
+	// ══════════════════════════════════════════════════════════════════════
+	// 足球 常规（regular）—— 英格兰次级联赛 + 主要欧洲联赛 + 全球热门联赛
+	// ══════════════════════════════════════════════════════════════════════
+	// 英格兰次级联赛
+	"football:58":    "l965mkyh32r1ge4", // The Championship (England) → English Football League Championship
+	"football:68":    "8y39mp1hjzmojxg", // League One (England) → English Football League One
+	"football:70":    "9k82rekhygrepzj", // League Two (England) → English Football League Two
+	"football:8203":  "z318q66hv8qo9jd", // National League (England) → English National League
+	// 德法意西班次级联赛
+	"football:66":    "kn54qllhjzqvy9d", // 2. Bundesliga (Germany) → German Bundesliga 2
+	"football:8":     "j1l4rjnhx9m7vx5", // Serie B (Italy) → Italian Serie B
+	"football:60":    "kjw2r09hw8rz84o", // Ligue 2 (France) → French Ligue 2
+	"football:22263": "kdj2ryohnkq1zpg", // LaLiga2 (Spain) → Spanish Segunda Division
+	// 主要欧洲联赛
+	"football:59":    "9vjxm8gh22r6odg", // Jupiler League (Belgium) → Belgian Pro League
+	"football:2944":  "vl7oqdeheyr510j", // Eredivisie (Netherlands) → Netherlands Eredivisie
+	"football:6603":  "9vjxm8ghx2r6odg", // Primeira Liga (Portugal) → Portuguese Primera Liga
+	"football:63":    "8y39mp1h6jmojxg", // Super Lig (Turkey) → Turkish Super League
+	"football:3799":  "8y39mp1hwxmojxg", // FNL (Russia) → Russian Premier League
+	"football:32521": "vl7oqdeh3lr510j", // Ekstraklasa (Poland) → PKO Bank Polski EKSTRAKLASA
+	"football:61243": "gx7lm7pho13m2wd", // HNL (Croatia) → Croatian First Football League
+	"football:30058": "p4jwq2gh1gm0veo", // Scotland Premiership → Scottish Premiership
+	"football:72":    "e4wyrn4hoeq86pv", // Super League (Greece) → Greek Super League
+	"football:3":     "l965mkyhg0r1ge4", // Allsvenskan (Sweden) → Sweden Allsvenskan
+	"football:38":    "8y39mp1hk8mojxg", // Superettan (Sweden) → Sweden Superettan
+	"football:24289": "gy0or5jhj6qwzv3", // Eliteserien (Norway) → Norwegian Eliteserien
+	// 全球热门联赛
+	"football:156":   "kn54qllhg2qvy9d", // MLS (USA) → United States Major League Soccer
+	"football:5299":  "9k82rekhp6repzj", // Liga MX (Mexico) → Mexico Liga MX
+	"football:20913": "4zp5rzgh9zq82w1", // Serie A (Brazil) → Brazilian Serie A
+	"football:41558": "p3glrw7hevqdyjv", // Liga Profesional (Argentina) → Argentine Division 1
+	"football:71":    "p3glrw7hevqdyjv", // Primera Division Apertura (Argentina) → Argentine Division 1
+	"football:1543":  "9k82rekh52repzj", // China Super League → Chinese Football Super League
+	"football:35637": "z318q66hl1qo9jd", // J1 League (Japan) → Japanese J1 League
+	"football:89455": "z318q66hl1qo9jd", // Meiji Yasuda J1 100 Year Vision League → Japanese J1 League
+	"football:24585": "gy0or5jhlxgqwzv", // K League Classic (South Korea) → Korean K League 1
+	"football:28898": "kn54qllh25dqvy9", // K2 League (South Korea) → Korean K League 2
+	"football:28666": "gy0or5jhlxgqwzv", // K1 League (South Korea) → Korean K League 1
+	"football:2018":  "56ypq3nh01nmd7o", // Premier League (Egypt) → Egyptian Premier League
+
+	// ══════════════════════════════════════════════════════════════════════
+	// 篮球 热门（hot）—— NBA + EuroLeague
+	// ══════════════════════════════════════════════════════════════════════
+	"basketball:64":  "49vjxm8xt4q6odg", // NBA (United States) → National Basketball Association
+	"basketball:132": "49vjxm8xt4q6odg", // NBA (alt id)
+	"basketball:33249": "jednm9ktd5ryox8", // Euroleague (International) → EuroLeague
+
+	// ══════════════════════════════════════════════════════════════════════
+	// 篮球 常规（regular）—— 主要国内联赛
+	// ══════════════════════════════════════════════════════════════════════
+	"basketball:4871":  "ngy0or5gteqwzv3", // CBA (China) → Chinese Basketball Association
+	"basketball:3111":  "v2y8m4ptdeml074", // Liga ACB Endesa (Spain) → Spain ACB League
+	"basketball:621":   "0l965mk8tom1ge4", // Bundesliga (Germany) → Basketball Bundesliga
+	"basketball:62013": "v2y8m4ptx1ml074", // VTB United League (Russia) → VTB United League
+	"basketball:293":   "x4zp5rzkt1r82w1", // Serie A (Italy) → Lega Basket Serie A
+	"basketball:15340": "gx7lm73tp6gr2wd", // Nationale 1 (France) → France Nationale 1
+	"basketball:21272": "7p4jwq25t6q0veo", // LNB Elite (France) → Ligue Nationale de Basket Pro A
+	"basketball:48191": "jednm9kt9xryox8", // LNB Pro B (France) → Ligue Nationale de Basket Pro B
+	"basketball:48524": "l965mk8tzpkm1ge", // BNXT League (International) → BNXT
+	"basketball:34184": "ngy0or5gteqwzv3", // B.League - B1 (Japan) → Chinese Basketball Association (closest)
+	"basketball:25357": "v2y8m4ptx1ml074", // Orlen Basket Liga (Poland) → VTB United League (closest)
+	"basketball:19164": "v2y8m4ptx1ml074", // Liga Nacional de Básquet (Argentina) → VTB United League (closest)
+	"basketball:15301": "x4zp5rzkt1r82w1", // NBB (Brazil) → Lega Basket Serie A (closest)
+	"basketball:1834":  "x4zp5rzkt1r82w1", // NBL (Australia) → Lega Basket Serie A (closest)
+	"basketball:2558":  "x4zp5rzkt1r82w1", // Super League (Israel) → Lega Basket Serie A (closest)
+	"basketball:36":    "0l965mk8tom1ge4", // Basketligan (Sweden) → Basketball Bundesliga (closest)
+	"basketball:841":   "0l965mk8tom1ge4", // Korisliiga (Finland) → Basketball Bundesliga (closest)
+	"basketball:12855": "0l965mk8tom1ge4", // Basketligaen (Denmark) → Basketball Bundesliga (closest)
+	"basketball:7666":  "49vjxm8xt4q6odg", // BSN (Puerto Rico) → National Basketball Association (closest)
+	"basketball:4379":  "49vjxm8xt4q6odg", // NBL (New Zealand) → National Basketball Association (closest)
 }
 
 func lsLeagueKey(sport, tournamentID string) string {
