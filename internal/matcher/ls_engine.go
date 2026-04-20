@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"log"
 	"math"
+	"sort"
 	"time"
 
 	"github.com/gdszyy/sports-matcher/internal/db"
@@ -464,6 +465,67 @@ func matchLSLeague(lsTour *db.LSTournament, tsComps []db.TSCompetition) *LSLeagu
 		result.MatchRule = RuleLeagueNameLow
 		result.Confidence = bestScore
 	}
+	return result
+}
+
+// matchLSLeagueAlgoOnly 纯算法联赛匹配：跳过 KnownLSLeagueMap，直接使用名称相似度匹配。
+// 阈值降至 0.40 以确保能找到最优候选，并输出所有候选的得分信息。
+func matchLSLeagueAlgoOnly(lsTour *db.LSTournament, tsComps []db.TSCompetition) *LSLeagueMatch {
+	result := &LSLeagueMatch{
+		LSTournamentID: lsTour.ID,
+		LSName:         lsTour.Name,
+		LSCategory:     lsTour.CategoryName,
+		Matched:        false,
+		MatchRule:      RuleLeagueNoMatch,
+	}
+
+	type candidate struct {
+		comp  *db.TSCompetition
+		score float64
+	}
+
+	// 收集所有得分 >= 0.40 的候选，按得分降序排列
+	var candidates []candidate
+	for i := range tsComps {
+		score := lsLeagueNameScore(lsTour, &tsComps[i])
+		if score >= 0.40 {
+			candidates = append(candidates, candidate{comp: &tsComps[i], score: score})
+		}
+	}
+	// 按得分降序排序
+	sort.Slice(candidates, func(i, j int) bool {
+		return candidates[i].score > candidates[j].score
+	})
+
+	// 输出候选列表（最多 5 个）
+	topN := candidates
+	if len(topN) > 5 {
+		topN = topN[:5]
+	}
+	for _, c := range topN {
+		log.Printf("[ls/algo]   候选: %s (%s) score=%.3f", c.comp.Name, c.comp.CountryName, c.score)
+	}
+
+	if len(candidates) == 0 {
+		return result
+	}
+
+	best := candidates[0]
+	switch {
+	case best.score >= 0.85:
+		result.MatchRule = RuleLeagueNameHi
+	case best.score >= 0.70:
+		result.MatchRule = RuleLeagueNameMed
+	case best.score >= 0.55:
+		result.MatchRule = RuleLeagueNameLow
+	default:
+		result.MatchRule = RuleLeagueNameLow // 0.40~0.55 区间也尝试匹配
+	}
+	result.TSCompetitionID = best.comp.ID
+	result.TSName = best.comp.Name
+	result.TSCountry = best.comp.CountryName
+	result.Matched = true
+	result.Confidence = best.score
 	return result
 }
 

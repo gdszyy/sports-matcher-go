@@ -635,9 +635,10 @@ func (a *SRSourceAdapter) ApplyBottomUp(
 
 // LSSourceAdapter 将 LS 侧数据适配为 SourceAdapter 接口
 type LSSourceAdapter struct {
-	LS         *db.LSAdapter
-	LSPlayer   *db.LSPlayerAdapter
-	RunPlayers bool
+	LS          *db.LSAdapter
+	LSPlayer    *db.LSPlayerAdapter
+	RunPlayers  bool
+	NoKnownMap  bool // 若为 true，跳过 KnownLSLeagueMap，使用纯算法名称相似度匹配
 	// 内部状态（LoadLeague 后填充）
 	lsTour *db.LSTournament
 }
@@ -645,6 +646,11 @@ type LSSourceAdapter struct {
 // NewLSSourceAdapter 创建 LS 侧适配器
 func NewLSSourceAdapter(ls *db.LSAdapter, lsPlayer *db.LSPlayerAdapter, runPlayers bool) *LSSourceAdapter {
 	return &LSSourceAdapter{LS: ls, LSPlayer: lsPlayer, RunPlayers: runPlayers}
+}
+
+// NewLSSourceAdapterNoKnown 创建跳过 KnownLSLeagueMap 的纯算法 LS 侧适配器
+func NewLSSourceAdapterNoKnown(ls *db.LSAdapter, lsPlayer *db.LSPlayerAdapter, runPlayers bool) *LSSourceAdapter {
+	return &LSSourceAdapter{LS: ls, LSPlayer: lsPlayer, RunPlayers: runPlayers, NoKnownMap: true}
 }
 
 func (a *LSSourceAdapter) SourceSide() string { return "ls" }
@@ -663,7 +669,12 @@ func (a *LSSourceAdapter) LoadLeague(tournamentID, sport string) error {
 }
 
 func (a *LSSourceAdapter) MatchLeague(tsComps []db.TSCompetition) *LeagueMatchResult {
-	lm := matchLSLeague(a.lsTour, tsComps)
+	var lm *LSLeagueMatch
+	if a.NoKnownMap {
+		lm = matchLSLeagueAlgoOnly(a.lsTour, tsComps)
+	} else {
+		lm = matchLSLeague(a.lsTour, tsComps)
+	}
 	return &LeagueMatchResult{
 		SrcID:           lm.LSTournamentID,
 		SrcName:         lm.LSName,

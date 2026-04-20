@@ -316,6 +316,7 @@ func lsMatchCmd() *cobra.Command {
 	var sport, tier, tsCompID string
 	var noPlayers bool
 	var outputJSON bool
+	var noKnownMap bool
 
 	cmd := &cobra.Command{
 		Use:   "ls-match <tournament_id>",
@@ -336,9 +337,14 @@ func lsMatchCmd() *cobra.Command {
 			tsAdapter := db.NewTSAdapter(tunnel.TSDb)
 
 			eng := matcher.NewUniversalEngine(tsAdapter, cfg.RunPlayers)
-			srcAdapter := matcher.NewLSSourceAdapter(lsAdapter, lsPlayerAdapter, cfg.RunPlayers)
-
-			log.Printf("[UniversalEngine/LS] 开始匹配联赛: %s  sport=%s  tier=%s", tournamentID, sport, tier)
+			var srcAdapter *matcher.LSSourceAdapter
+			if noKnownMap {
+				srcAdapter = matcher.NewLSSourceAdapterNoKnown(lsAdapter, lsPlayerAdapter, cfg.RunPlayers)
+				tsCompID = "" // 纯算法模式：不预设 TS ID，让引擎拉全量 TS 联赛列表
+			} else {
+				srcAdapter = matcher.NewLSSourceAdapter(lsAdapter, lsPlayerAdapter, cfg.RunPlayers)
+			}
+			log.Printf("[UniversalEngine/LS] 开始匹配联赛: %s  sport=%s  tier=%s  no-known-map=%v", tournamentID, sport, tier, noKnownMap)
 			result, err := eng.RunLeague(srcAdapter, tournamentID, sport, tier, tsCompID)
 			if err != nil {
 				return err
@@ -360,9 +366,9 @@ func lsMatchCmd() *cobra.Command {
 	cmd.Flags().StringVar(&tsCompID, "ts-id", "", "TS competition_id（可选，跳过联赛匹配）")
 	cmd.Flags().BoolVar(&noPlayers, "no-players", false, "跳过球员匹配（加速）")
 	cmd.Flags().BoolVar(&outputJSON, "json", false, "输出完整 JSON 结果")
+	cmd.Flags().BoolVar(&noKnownMap, "no-known-map", false, "跳过 KnownLSLeagueMap，使用纯算法名称相似度匹配（验证算法效果）")
 	return cmd
 }
-
 // ── ls-batch（最新 UniversalEngine，LS 2026 热门+常规）─────────────────────────
 
 // ls2026Leagues LS 2026 年热门 + 常规联赛配置
@@ -429,6 +435,7 @@ func lsBatchCmd() *cobra.Command {
 	var noPlayers bool
 	var configFile string
 	var tierFilter string
+	var noKnownMap bool
 
 	cmd := &cobra.Command{
 		Use:   "ls-batch",
@@ -475,8 +482,15 @@ func lsBatchCmd() *cobra.Command {
 			var allStats []matcher.UniversalMatchStats
 			for _, lc := range leagues {
 				log.Printf("\n══ [UniversalEngine/LS] 匹配联赛: %s [%s/%s] ══", lc.TournamentID, lc.Sport, lc.Tier)
-				srcAdapter := matcher.NewLSSourceAdapter(lsAdapter, lsPlayerAdapter, cfg.RunPlayers)
-				result, err := eng.RunLeague(srcAdapter, lc.TournamentID, lc.Sport, lc.Tier, lc.TSCompetitionID)
+				var srcAdapter *matcher.LSSourceAdapter
+				tsCompID := lc.TSCompetitionID
+				if noKnownMap {
+					srcAdapter = matcher.NewLSSourceAdapterNoKnown(lsAdapter, lsPlayerAdapter, cfg.RunPlayers)
+					tsCompID = "" // 纯算法模式：不预设 TS ID，让引擎拉全量 TS 联赛列表
+				} else {
+					srcAdapter = matcher.NewLSSourceAdapter(lsAdapter, lsPlayerAdapter, cfg.RunPlayers)
+				}
+				result, err := eng.RunLeague(srcAdapter, lc.TournamentID, lc.Sport, lc.Tier, tsCompID)
 				if err != nil {
 					log.Printf("  ✗ 错误: %v", err)
 					continue
@@ -493,9 +507,9 @@ func lsBatchCmd() *cobra.Command {
 	cmd.Flags().BoolVar(&noPlayers, "no-players", false, "跳过球员匹配（加速）")
 	cmd.Flags().StringVar(&configFile, "config", "", "自定义联赛配置文件（JSON）")
 	cmd.Flags().StringVar(&tierFilter, "tier", "", "仅匹配指定热度的联赛: hot / regular / cold（空=全部）")
+	cmd.Flags().BoolVar(&noKnownMap, "no-known-map", false, "跳过 KnownLSLeagueMap，使用纯算法名称相似度匹配（验证算法效果）")
 	return cmd
 }
-
 func batchUniversalCmd() *cobra.Command {
 	var noPlayers bool
 	var configFile string
