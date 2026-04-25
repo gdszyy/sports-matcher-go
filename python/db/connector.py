@@ -108,6 +108,8 @@ def setup_tunnel(local_port: int = LOCAL_PORT, wait: int = 6) -> subprocess.Pope
         SSH 子进程，调用方负责在结束时调用 proc.terminate()
     """
     key = _resolve_key()
+    # Ensure SSH key has correct permissions (SSH client requires 0600)
+    os.chmod(key, 0o600)
     cmd = [
         'ssh',
         '-o', 'StrictHostKeyChecking=no',
