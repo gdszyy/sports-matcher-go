@@ -95,3 +95,14 @@ python/
 5.  **巨型函数必须标记内部节点**：当函数超过 200 行时，必须在内部按业务逻辑块添加 `// @section:{snake_case_name} - {一句话说明}` 标记，以便索引器提取内部节点。
 6.  **禁止修改五级匹配阈值而不更新文档**：L1–L4b 的时间窗口和置信度阈值是经过验证的核心参数，任何调整必须同步更新 `README.md` 和 `global.md`。
 7.  **禁止绕过 SSH 隧道直连数据库**：所有数据库连接必须通过 `internal/db/tunnel.go` 建立的 SSH 隧道，严禁直接配置外网数据库连接。
+
+
+### Evidence-First P5 闭环入口
+
+Evidence-First 是一条**可回滚、可审核、可观测**的实验路径。`internal/matcher/evidence_first_engine.go` 新增 `UniversalEngine.RunLeagueEvidenceFirst`，串联源侧加载、TS competition 候选、P3 `EvidenceEventMatcher.MatchTwoRound`、P4 `LeagueEvidenceAggregator`、KnownMap RCR 校验、审核 JSON 与可选安全写回。旧生产入口保持兼容；未显式调用 Evidence-First endpoint/CLI 时，不改变旧流程行为。
+
+| 入口 | 默认行为 | 回滚方式 |
+|------|----------|----------|
+| `match-evidence` / `batch-evidence` | 只读运行，输出 JSON/审核文件 | 改回 `match2` / `batch2` |
+| `/api/v2/match/evidence` | 显式 HTTP 实验 endpoint | 调回 `/api/v2/match/league` |
+| `--allow-write-back` / `EVIDENCE_FIRST_ALLOW_WRITE_BACK` | 默认关闭，双开才可能写入 TeamAliasStore | 关闭 flag/env 即回滚为只读 |

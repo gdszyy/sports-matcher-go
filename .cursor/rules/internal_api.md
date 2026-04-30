@@ -47,3 +47,15 @@ globs: ["internal/api/**/*"]
 ## 4. 详细设计文档索引
 
 - [README API 接口说明](../../README.md#api-接口)
+
+
+## Evidence-First 实验 API
+
+P5 新增显式 Evidence-First API，不改变既有 `/api/v1/match/*` 与 `/api/v2/match/*` 生产路径。
+
+| 接口 | 方法 | 说明 |
+|------|------|------|
+| `/api/v2/match/evidence` | GET | 单联赛 Evidence-First，只读默认，返回完整 `EvidenceFirstResult` 与审核证据。 |
+| `/api/v2/match/evidence/batch` | POST | 批量 Evidence-First，返回每个联赛的决策与统计。 |
+
+单联赛参数包括 `tournament_id`、`sport`、`tier`、`ts_competition_id`、`candidate_limit`、`allow_write_back`、`review_output_path`。服务端写回需要 `allow_write_back=true` 且 `EVIDENCE_FIRST_ALLOW_WRITE_BACK=true` 双重显式开启，否则返回只读结果或拒绝写回请求。

@@ -51,3 +51,14 @@ go build -o sports-matcher ./cmd/server/main.go
 # Docker 部署
 docker build -t sports-matcher .
 ```
+
+
+## Evidence-First 实验命令
+
+P5 新增两个显式实验命令，旧 `match`、`match2`、`batch`、`batch2`、`ls-match`、`ls-batch` 保持兼容不变。
+
+```bash
+./sports-matcher match-evidence "sr:tournament:17"   --sport football   --tier hot   --ts-id jednm9whz0ryox8   --candidate-limit 4   --review-out /tmp/epl_evidence_review.json   --json
+```
+
+`batch-evidence` 支持 `--config`、`--candidate-limit`、`--review-dir` 和 `--json`。`--allow-write-back` 默认关闭；开启后仍需通过 Evidence-First 安全门槛才会写入 `TeamAliasStore`，且不会自动覆盖 KnownMap 强映射。

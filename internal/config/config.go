@@ -27,6 +27,12 @@ type Config struct {
 
 	// 匹配配置
 	RunPlayers bool
+
+	// Evidence-First 实验配置（默认关闭，不影响旧生产路径）
+	EvidenceFirstEnabled        bool
+	EvidenceFirstAllowWriteBack bool
+	EvidenceFirstCandidateLimit int
+	EvidenceFirstReviewPath     string
 }
 
 // Default 返回默认配置（从环境变量读取，有默认值）
@@ -47,6 +53,11 @@ func Default() *Config {
 		ServerHost: getEnv("SERVER_HOST", "0.0.0.0"),
 
 		RunPlayers: getEnvBool("RUN_PLAYERS", true),
+
+		EvidenceFirstEnabled:        getEnvBool("EVIDENCE_FIRST_ENABLED", false),
+		EvidenceFirstAllowWriteBack: getEnvBool("EVIDENCE_FIRST_ALLOW_WRITE_BACK", false),
+		EvidenceFirstCandidateLimit: getEnvInt("EVIDENCE_FIRST_CANDIDATE_LIMIT", 8),
+		EvidenceFirstReviewPath:     getEnv("EVIDENCE_FIRST_REVIEW_PATH", ""),
 	}
 }
 

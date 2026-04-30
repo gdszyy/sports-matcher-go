@@ -98,3 +98,8 @@
 *   **洞察注册表**：[`.cursor/rules/process_insights/index.md`](.cursor/rules/process_insights/index.md) - 所有活跃与废弃洞察的版本索引。
 
 > **注意**：随着架构的演进，本索引应持续更新。负责重构的 Agent 需维护对应的规则文档和流程洞察。
+
+
+## Evidence-First P5 生产化入口
+
+Evidence-First 已以**显式实验入口**接入，不替换旧 `match`、`match2`、`batch2`、`ls-match`、`ls-batch` 路径。端到端入口为 `UniversalEngine.RunLeagueEvidenceFirst`，CLI 使用 `match-evidence` / `batch-evidence`，HTTP 使用 `/api/v2/match/evidence` / `/api/v2/match/evidence/batch`。默认只读运行；只有显式开启 `--allow-write-back` 或服务端 `EVIDENCE_FIRST_ALLOW_WRITE_BACK=true` 后，且通过安全门槛，才允许写入 `TeamAliasStore`。Evidence-First 不会静默覆盖 `KnownLeagueMap` 强映射资产；KnownMap 低 RCR 仅记录 suspect 证据，人工 override 仍通过 `KnownLeagueMapValidator` 保留。

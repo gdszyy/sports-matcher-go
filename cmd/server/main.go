@@ -34,7 +34,7 @@ func main() {
 		Short: "体育数据跨库匹配服务（SR → TS）",
 	}
 
-	root.AddCommand(serveCmd(), matchCmd(), matchUniversalCmd(), lsMatchCmd(), batchCmd(), batchUniversalCmd(), lsBatchCmd())
+	root.AddCommand(serveCmd(), matchCmd(), matchUniversalCmd(), matchEvidenceCmd(), lsMatchCmd(), batchCmd(), batchUniversalCmd(), batchEvidenceCmd(), lsBatchCmd())
 
 	if err := root.Execute(); err != nil {
 		os.Exit(1)
@@ -162,6 +162,75 @@ func matchUniversalCmd() *cobra.Command {
 	cmd.Flags().StringVar(&tsCompID, "ts-id", "", "TS competition_id（可选，跳过联赛匹配）")
 	cmd.Flags().BoolVar(&noPlayers, "no-players", false, "跳过球员匹配（加速）")
 	cmd.Flags().BoolVar(&outputJSON, "json", false, "输出完整 JSON 结果")
+	return cmd
+}
+
+// ── match-evidence（Evidence-First 实验入口，默认只读）──────────────────────────
+
+func matchEvidenceCmd() *cobra.Command {
+	var sport, tier, tsCompID string
+	var outputJSON bool
+	var allowWriteBack bool
+	var reviewPath string
+	var candidateLimit int
+
+	cmd := &cobra.Command{
+		Use:   "match-evidence <tournament_id>",
+		Short: "对单个 SR 联赛执行 Evidence-First 实验匹配（默认只读、可审核、可回滚）",
+		Args:  cobra.ExactArgs(1),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			tournamentID := args[0]
+
+			tunnel, err := db.NewTunnel(cfg)
+			if err != nil {
+				return err
+			}
+			defer tunnel.Close()
+
+			srAdapter := db.NewSRAdapter(tunnel.SRDb)
+			tsAdapter := db.NewTSAdapter(tunnel.TSDb)
+			eng := matcher.NewUniversalEngine(tsAdapter, false)
+			if allowWriteBack {
+				aliasStore, aliasErr := db.NewAliasStore(tunnel.TSDb)
+				if aliasErr != nil {
+					return aliasErr
+				}
+				eng.AliasStore = aliasStore
+			}
+			if validator, validatorErr := matcher.NewKnownLeagueMapValidator(tunnel.TSDb); validatorErr == nil {
+				eng.MapValidator = validator
+			}
+			srcAdapter := matcher.NewSRSourceAdapter(srAdapter, false)
+			opts := matcher.EvidenceFirstOptions{
+				CandidateLimit:   candidateLimit,
+				AllowWriteBack:   allowWriteBack,
+				ReviewOutputPath: reviewPath,
+			}
+
+			log.Printf("[EvidenceFirst] 开始匹配联赛: %s sport=%s tier=%s candidates=%d write_back=%v", tournamentID, sport, tier, candidateLimit, allowWriteBack)
+			result, err := eng.RunLeagueEvidenceFirst(srcAdapter, tournamentID, sport, tier, tsCompID, opts)
+			if err != nil {
+				return err
+			}
+
+			if outputJSON || reviewPath == "" {
+				enc := json.NewEncoder(os.Stdout)
+				enc.SetIndent("", "  ")
+				return enc.Encode(result)
+			}
+			printUniversalStats(result.Stats)
+			fmt.Printf("Evidence-First status=%s selected=%s score=%.3f review=%s\n", result.Decision.Status, result.Decision.SelectedCompetitionID, result.Decision.Score, reviewPath)
+			return nil
+		},
+	}
+
+	cmd.Flags().StringVar(&sport, "sport", "football", "运动类型: football / basketball")
+	cmd.Flags().StringVar(&tier, "tier", "unknown", "联赛热度: hot / regular / cold / unknown")
+	cmd.Flags().StringVar(&tsCompID, "ts-id", "", "TS competition_id（可选，仅作为候选池约束，不写入 KnownMap）")
+	cmd.Flags().BoolVar(&outputJSON, "json", false, "输出完整 JSON 结果")
+	cmd.Flags().BoolVar(&allowWriteBack, "allow-write-back", cfg.EvidenceFirstAllowWriteBack, "允许通过安全门槛后写入 TeamAliasStore（默认关闭）")
+	cmd.Flags().StringVar(&reviewPath, "review-out", cfg.EvidenceFirstReviewPath, "审核 JSON 输出文件路径")
+	cmd.Flags().IntVar(&candidateLimit, "candidate-limit", cfg.EvidenceFirstCandidateLimit, "TS competition 候选数量上限")
 	return cmd
 }
 
@@ -310,6 +379,100 @@ var sr2026Leagues = []LeagueConfig{
 	{"sr:tournament:390", "basketball", "regular", "kjw2r02t6xqz84o"}, // FIBA Basketball Champions League
 }
 
+// ── batch-evidence（Evidence-First 批量实验入口，默认只读）──────────────────────
+
+func batchEvidenceCmd() *cobra.Command {
+	var configFile string
+	var outputJSON bool
+	var allowWriteBack bool
+	var reviewDir string
+	var candidateLimit int
+
+	cmd := &cobra.Command{
+		Use:   "batch-evidence",
+		Short: "批量执行 Evidence-First 实验匹配（默认只读、逐联赛输出审核 JSON）",
+		RunE: func(cmd *cobra.Command, args []string) error {
+			leagues := sr2026Leagues
+			if configFile != "" {
+				f, err := os.Open(configFile)
+				if err != nil {
+					return err
+				}
+				defer f.Close()
+				if err := json.NewDecoder(f).Decode(&leagues); err != nil {
+					return err
+				}
+			}
+
+			tunnel, err := db.NewTunnel(cfg)
+			if err != nil {
+				return err
+			}
+			defer tunnel.Close()
+
+			srAdapter := db.NewSRAdapter(tunnel.SRDb)
+			tsAdapter := db.NewTSAdapter(tunnel.TSDb)
+			eng := matcher.NewUniversalEngine(tsAdapter, false)
+			if allowWriteBack {
+				aliasStore, aliasErr := db.NewAliasStore(tunnel.TSDb)
+				if aliasErr != nil {
+					return aliasErr
+				}
+				eng.AliasStore = aliasStore
+			}
+			if validator, validatorErr := matcher.NewKnownLeagueMapValidator(tunnel.TSDb); validatorErr == nil {
+				eng.MapValidator = validator
+			}
+			if reviewDir != "" {
+				if err := os.MkdirAll(reviewDir, 0o755); err != nil {
+					return err
+				}
+			}
+
+			type evidenceBatchResult struct {
+				TournamentID string                         `json:"tournament_id"`
+				Sport        string                         `json:"sport"`
+				Tier         string                         `json:"tier"`
+				Decision     matcher.LeagueEvidenceDecision `json:"decision,omitempty"`
+				Stats        matcher.UniversalMatchStats    `json:"stats,omitempty"`
+				ReviewPath   string                         `json:"review_path,omitempty"`
+				Error        string                         `json:"error,omitempty"`
+			}
+			results := make([]evidenceBatchResult, 0, len(leagues))
+			for _, lc := range leagues {
+				reviewPath := ""
+				if reviewDir != "" {
+					reviewPath = fmt.Sprintf("%s/%s_%s_review.json", reviewDir, lc.Sport, sanitizeFilePart(lc.TournamentID))
+				}
+				srcAdapter := matcher.NewSRSourceAdapter(srAdapter, false)
+				opts := matcher.EvidenceFirstOptions{CandidateLimit: candidateLimit, AllowWriteBack: allowWriteBack, ReviewOutputPath: reviewPath}
+				res, err := eng.RunLeagueEvidenceFirst(srcAdapter, lc.TournamentID, lc.Sport, lc.Tier, lc.TSCompetitionID, opts)
+				br := evidenceBatchResult{TournamentID: lc.TournamentID, Sport: lc.Sport, Tier: lc.Tier, ReviewPath: reviewPath}
+				if err != nil {
+					br.Error = err.Error()
+				} else {
+					br.Decision = res.Decision
+					br.Stats = res.Stats
+				}
+				results = append(results, br)
+			}
+			if outputJSON {
+				enc := json.NewEncoder(os.Stdout)
+				enc.SetIndent("", "  ")
+				return enc.Encode(results)
+			}
+			printEvidenceBatchTable(results)
+			return nil
+		},
+	}
+	cmd.Flags().StringVar(&configFile, "config", "", "自定义联赛配置文件（JSON）")
+	cmd.Flags().BoolVar(&outputJSON, "json", false, "输出完整 JSON 结果")
+	cmd.Flags().BoolVar(&allowWriteBack, "allow-write-back", cfg.EvidenceFirstAllowWriteBack, "允许通过安全门槛后写入 TeamAliasStore（默认关闭）")
+	cmd.Flags().StringVar(&reviewDir, "review-dir", "", "逐联赛审核 JSON 输出目录")
+	cmd.Flags().IntVar(&candidateLimit, "candidate-limit", cfg.EvidenceFirstCandidateLimit, "TS competition 候选数量上限")
+	return cmd
+}
+
 // ── ls-match（最新 UniversalEngine，LS 数据源）─────────────────────────────────
 
 func lsMatchCmd() *cobra.Command {
@@ -369,6 +532,7 @@ func lsMatchCmd() *cobra.Command {
 	cmd.Flags().BoolVar(&noKnownMap, "no-known-map", false, "跳过 KnownLSLeagueMap，使用纯算法名称相似度匹配（验证算法效果）")
 	return cmd
 }
+
 // ── ls-batch（最新 UniversalEngine，LS 2026 热门+常规）─────────────────────────
 
 // ls2026Leagues LS 2026 年热门 + 常规联赛配置
@@ -377,11 +541,11 @@ func lsMatchCmd() *cobra.Command {
 // 覆盖足球：五大联赛+UEFA+英格兰次级+主要欧洲+全球热门；篮球：NBA+EuroLeague+主要国内联赛
 var ls2026Leagues = []LeagueConfig{
 	// ── 足球热门 ──
-	{"67", "football", "hot", "jednm9whz0ryox8"},  // Premier League (England) → English Premier League
+	{"67", "football", "hot", "jednm9whz0ryox8"},    // Premier League (England) → English Premier League
 	{"8363", "football", "hot", "vl7oqdehlyr510j"},  // LaLiga (Spain) → Spanish La Liga
-	{"65", "football", "hot", "gy0or5jhg6qwzv3"},   // Bundesliga (Germany) → Bundesliga
-	{"4", "football", "hot", "4zp5rzghp5q82w1"},    // Serie A (Italy) → Italian Serie A
-	{"61", "football", "hot", "yl5ergphnzr8k0o"},   // Ligue 1 (France) → French Ligue 1
+	{"65", "football", "hot", "gy0or5jhg6qwzv3"},    // Bundesliga (Germany) → Bundesliga
+	{"4", "football", "hot", "4zp5rzghp5q82w1"},     // Serie A (Italy) → Italian Serie A
+	{"61", "football", "hot", "yl5ergphnzr8k0o"},    // Ligue 1 (France) → French Ligue 1
 	{"32644", "football", "hot", "z8yomo4h7wq0j6l"}, // UEFA Champions League
 	{"30444", "football", "hot", "56ypq3nh0xmd7oj"}, // UEFA Europa League
 	{"27738", "football", "hot", "v2y8m4zhe6ql074"}, // CONMEBOL Copa Libertadores
@@ -391,23 +555,23 @@ var ls2026Leagues = []LeagueConfig{
 	{"68", "football", "regular", "8y39mp1hjzmojxg"},    // League One (England)
 	{"70", "football", "regular", "9k82rekhygrepzj"},    // League Two (England)
 	{"8203", "football", "regular", "z318q66hv8qo9jd"},  // National League (England)
-	{"66", "football", "regular", "kn54qllhjzqvy9d"},   // 2. Bundesliga (Germany)
-	{"8", "football", "regular", "j1l4rjnhx9m7vx5"},    // Serie B (Italy)
-	{"60", "football", "regular", "kjw2r09hw8rz84o"},   // Ligue 2 (France)
+	{"66", "football", "regular", "kn54qllhjzqvy9d"},    // 2. Bundesliga (Germany)
+	{"8", "football", "regular", "j1l4rjnhx9m7vx5"},     // Serie B (Italy)
+	{"60", "football", "regular", "kjw2r09hw8rz84o"},    // Ligue 2 (France)
 	{"22263", "football", "regular", "kdj2ryohnkq1zpg"}, // LaLiga2 (Spain)
-	{"59", "football", "regular", "9vjxm8gh22r6odg"},   // Jupiler League (Belgium)
+	{"59", "football", "regular", "9vjxm8gh22r6odg"},    // Jupiler League (Belgium)
 	{"2944", "football", "regular", "vl7oqdeheyr510j"},  // Eredivisie (Netherlands)
 	{"6603", "football", "regular", "9vjxm8ghx2r6odg"},  // Primeira Liga (Portugal)
-	{"63", "football", "regular", "8y39mp1h6jmojxg"},   // Super Lig (Turkey)
+	{"63", "football", "regular", "8y39mp1h6jmojxg"},    // Super Lig (Turkey)
 	{"3799", "football", "regular", "8y39mp1hwxmojxg"},  // FNL (Russia)
 	{"32521", "football", "regular", "vl7oqdeh3lr510j"}, // Ekstraklasa (Poland)
 	{"61243", "football", "regular", "gx7lm7pho13m2wd"}, // HNL (Croatia)
 	{"30058", "football", "regular", "p4jwq2gh1gm0veo"}, // Scotland Premiership
-	{"72", "football", "regular", "e4wyrn4hoeq86pv"},   // Super League (Greece)
-	{"3", "football", "regular", "l965mkyhg0r1ge4"},    // Allsvenskan (Sweden)
-	{"38", "football", "regular", "8y39mp1hk8mojxg"},   // Superettan (Sweden)
+	{"72", "football", "regular", "e4wyrn4hoeq86pv"},    // Super League (Greece)
+	{"3", "football", "regular", "l965mkyhg0r1ge4"},     // Allsvenskan (Sweden)
+	{"38", "football", "regular", "8y39mp1hk8mojxg"},    // Superettan (Sweden)
 	{"24289", "football", "regular", "gy0or5jhj6qwzv3"}, // Eliteserien (Norway)
-	{"156", "football", "regular", "kn54qllhg2qvy9d"},  // MLS (USA)
+	{"156", "football", "regular", "kn54qllhg2qvy9d"},   // MLS (USA)
 	{"5299", "football", "regular", "9k82rekhp6repzj"},  // Liga MX (Mexico)
 	{"20913", "football", "regular", "4zp5rzgh9zq82w1"}, // Serie A (Brazil)
 	{"41558", "football", "regular", "p3glrw7hevqdyjv"}, // Liga Profesional (Argentina)
@@ -417,7 +581,7 @@ var ls2026Leagues = []LeagueConfig{
 	{"28898", "football", "regular", "kn54qllh25dqvy9"}, // K2 League (South Korea)
 	{"2018", "football", "regular", "56ypq3nh01nmd7o"},  // Premier League (Egypt)
 	// ── 篮球热门 ──
-	{"64", "basketball", "hot", "49vjxm8xt4q6odg"},   // NBA (United States)
+	{"64", "basketball", "hot", "49vjxm8xt4q6odg"},    // NBA (United States)
 	{"33249", "basketball", "hot", "jednm9ktd5ryox8"}, // Euroleague (International)
 	// ── 篮球常规 ──
 	{"4871", "basketball", "regular", "ngy0or5gteqwzv3"},  // CBA (China)
@@ -695,4 +859,20 @@ func truncate(s string, maxLen int) string {
 		return s
 	}
 	return string(runes[:maxLen-1]) + "…"
+}
+
+func sanitizeFilePart(v string) string {
+	out := []rune(v)
+	for i, r := range out {
+		if !(r == '-' || r == '_' || r == '.' || r >= '0' && r <= '9' || r >= 'a' && r <= 'z' || r >= 'A' && r <= 'Z') {
+			out[i] = '_'
+		}
+	}
+	return string(out)
+}
+
+func printEvidenceBatchTable[T interface{}](rows T) {
+	enc := json.NewEncoder(os.Stdout)
+	enc.SetIndent("", "  ")
+	_ = enc.Encode(rows)
 }

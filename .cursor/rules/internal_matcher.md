@@ -130,3 +130,12 @@ type MatchResult struct {
 - [联赛匹配评估规则](../../docs/league_match_evaluation_rule.md)
 - [LS/TS 匹配评估报告](../../docs/ls_ts_matching_assessment.md)
 - [优化测试报告](../../docs/optimization_test_report.md)
+
+
+### Evidence-First P5 端到端闭环
+
+`evidence_first_engine.go` 提供 `RunLeagueEvidenceFirst`，输入 `SourceAdapter`、联赛 ID、运动类型、候选 TS ID 与 `EvidenceFirstOptions`，输出 `EvidenceFirstResult`。该入口先选择 TS competition 候选，再加载多 competition TS 比赛池，构造 `EvidenceEventCandidate`，执行 P3 两轮比赛匹配，随后用 P4 联赛证据聚合得到 `AUTO_CONFIRMED`、`REVIEW_REQUIRED`、`REJECTED` 或 `KNOWN_SUSPECT`。
+
+安全回写由 `applyEvidenceFirstWriteBack` 单点控制。必须同时满足：决策为 `AUTO_CONFIRMED`、高置信比赛数达标、双队锚点比例达标、无 hard veto、候选分差达标，才允许写入 `TeamAliasStore`。自动流程**不得静默写入或覆盖 `KnownLeagueMap`**；`StrongMapUpserted` 只作为审计字段保持 `false`。KnownMap RCR 校验只把命中既有 KnownMap 目标 competition 的比赛计为确认，RCR `<0.30` 时标记 `KNOWN_SUSPECT` 或 validator `SUSPECT`，人工 override 仍由 `KnownLeagueMapValidator` 处理。
+
+审核输出由 `EvidenceFirstReview` 承载，必须包含 `decision.candidates`、`top_event_examples`、`resolved_matches`、`candidate_edges`、`eliminated`、`team_mappings`、KnownMap 状态、写回门槛和性能规模字段，确保人工复核无需再次查数据库。

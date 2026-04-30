@@ -6,21 +6,21 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/gin-gonic/gin"
 	"github.com/gdszyy/sports-matcher/internal/config"
 	"github.com/gdszyy/sports-matcher/internal/db"
 	"github.com/gdszyy/sports-matcher/internal/matcher"
+	"github.com/gin-gonic/gin"
 )
 
 // Server HTTP 服务
 type Server struct {
-	cfg          *config.Config
-	tunnel       *db.Tunnel
-	engine       *matcher.Engine        // SR ↔ TS 旧版引擎（向后兼容）
-	uniEngine    *matcher.UniversalEngine // SR ↔ TS 最新通用引擎（UniversalEngine）
-	srAdapter    *db.SRAdapter          // SR 数据库适配器（供 UniversalEngine 使用）
-	lsEngine     *matcher.LSEngine      // LS ↔ TS 引擎
-	router       *gin.Engine
+	cfg       *config.Config
+	tunnel    *db.Tunnel
+	engine    *matcher.Engine          // SR ↔ TS 旧版引擎（向后兼容）
+	uniEngine *matcher.UniversalEngine // SR ↔ TS 最新通用引擎（UniversalEngine）
+	srAdapter *db.SRAdapter            // SR 数据库适配器（供 UniversalEngine 使用）
+	lsEngine  *matcher.LSEngine        // LS ↔ TS 引擎
+	router    *gin.Engine
 }
 
 // NewServer 创建 HTTP 服务
@@ -77,6 +77,10 @@ func (s *Server) registerRoutes() {
 	s.router.GET("/api/v2/match/league", s.handleMatchLeagueV2)
 	s.router.POST("/api/v2/match/batch", s.handleMatchBatchV2)
 
+	// Evidence-First 实验路由：显式调用才进入，默认不影响生产路径。
+	s.router.GET("/api/v2/match/evidence", s.handleMatchEvidence)
+	s.router.POST("/api/v2/match/evidence/batch", s.handleMatchEvidenceBatch)
+
 	// LS ↔ TS 路由
 	s.router.GET("/api/v1/ls/match/league", s.handleLSMatchLeague)
 	s.router.POST("/api/v1/ls/match/batch", s.handleLSMatchBatch)
@@ -106,10 +110,10 @@ func (s *Server) handleHealth(c *gin.Context) {
 // MatchLeagueRequest 单联赛匹配请求
 type MatchLeagueRequest struct {
 	TournamentID    string `form:"tournament_id" binding:"required"` // SR tournament_id
-	Sport           string `form:"sport" binding:"required"`          // football / basketball
-	Tier            string `form:"tier"`                              // hot / regular / cold
-	TSCompetitionID string `form:"ts_competition_id"`                 // 可选：预设 TS ID
-	RunPlayers      *bool  `form:"run_players"`                       // 可选：是否匹配球员
+	Sport           string `form:"sport" binding:"required"`         // football / basketball
+	Tier            string `form:"tier"`                             // hot / regular / cold
+	TSCompetitionID string `form:"ts_competition_id"`                // 可选：预设 TS ID
+	RunPlayers      *bool  `form:"run_players"`                      // 可选：是否匹配球员
 }
 
 // handleMatchLeague 单联赛匹配（SR ↔ TS，旧版 Engine）
@@ -312,14 +316,139 @@ func (s *Server) handleMatchBatchV2(c *gin.Context) {
 	})
 }
 
+// ─── Evidence-First 实验处理器（默认只读）────────────────────────────────────
+
+type MatchEvidenceRequest struct {
+	TournamentID     string `form:"tournament_id" binding:"required"`
+	Sport            string `form:"sport" binding:"required"`
+	Tier             string `form:"tier"`
+	TSCompetitionID  string `form:"ts_competition_id"`
+	CandidateLimit   int    `form:"candidate_limit"`
+	AllowWriteBack   bool   `form:"allow_write_back"`
+	ReviewOutputPath string `form:"review_output_path"`
+}
+
+func (s *Server) handleMatchEvidence(c *gin.Context) {
+	var req MatchEvidenceRequest
+	if err := c.ShouldBindQuery(&req); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+	if req.Tier == "" {
+		req.Tier = "unknown"
+	}
+	candidateLimit := req.CandidateLimit
+	if candidateLimit <= 0 {
+		candidateLimit = s.cfg.EvidenceFirstCandidateLimit
+	}
+	allowWriteBack := req.AllowWriteBack && s.cfg.EvidenceFirstAllowWriteBack
+	if req.AllowWriteBack && !s.cfg.EvidenceFirstAllowWriteBack {
+		c.JSON(http.StatusForbidden, gin.H{"error": "server write-back gate is disabled; set EVIDENCE_FIRST_ALLOW_WRITE_BACK=true and retry explicitly"})
+		return
+	}
+	reviewPath := req.ReviewOutputPath
+	if reviewPath == "" {
+		reviewPath = s.cfg.EvidenceFirstReviewPath
+	}
+	if allowWriteBack && s.uniEngine.AliasStore == nil {
+		aliasStore, err := db.NewAliasStore(s.tunnel.TSDb)
+		if err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+			return
+		}
+		s.uniEngine.AliasStore = aliasStore
+	}
+	if s.uniEngine.MapValidator == nil {
+		if validator, err := matcher.NewKnownLeagueMapValidator(s.tunnel.TSDb); err == nil {
+			s.uniEngine.MapValidator = validator
+		}
+	}
+	srcAdapter := matcher.NewSRSourceAdapter(s.srAdapter, false)
+	result, err := s.uniEngine.RunLeagueEvidenceFirst(srcAdapter, req.TournamentID, req.Sport, req.Tier, req.TSCompetitionID, matcher.EvidenceFirstOptions{
+		CandidateLimit:   candidateLimit,
+		AllowWriteBack:   allowWriteBack,
+		ReviewOutputPath: reviewPath,
+	})
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+	c.JSON(http.StatusOK, result)
+}
+
+type EvidenceBatchRequest struct {
+	Leagues          []BatchLeagueItem `json:"leagues" binding:"required"`
+	CandidateLimit   int               `json:"candidate_limit"`
+	AllowWriteBack   bool              `json:"allow_write_back"`
+	ReviewOutputPath string            `json:"review_output_path"`
+}
+
+func (s *Server) handleMatchEvidenceBatch(c *gin.Context) {
+	var req EvidenceBatchRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+	candidateLimit := req.CandidateLimit
+	if candidateLimit <= 0 {
+		candidateLimit = s.cfg.EvidenceFirstCandidateLimit
+	}
+	allowWriteBack := req.AllowWriteBack && s.cfg.EvidenceFirstAllowWriteBack
+	if req.AllowWriteBack && !s.cfg.EvidenceFirstAllowWriteBack {
+		c.JSON(http.StatusForbidden, gin.H{"error": "server write-back gate is disabled; set EVIDENCE_FIRST_ALLOW_WRITE_BACK=true and retry explicitly"})
+		return
+	}
+	if allowWriteBack && s.uniEngine.AliasStore == nil {
+		aliasStore, err := db.NewAliasStore(s.tunnel.TSDb)
+		if err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+			return
+		}
+		s.uniEngine.AliasStore = aliasStore
+	}
+	if s.uniEngine.MapValidator == nil {
+		if validator, err := matcher.NewKnownLeagueMapValidator(s.tunnel.TSDb); err == nil {
+			s.uniEngine.MapValidator = validator
+		}
+	}
+	type leagueResult struct {
+		TournamentID string                         `json:"tournament_id"`
+		Decision     matcher.LeagueEvidenceDecision `json:"decision,omitempty"`
+		Stats        matcher.UniversalMatchStats    `json:"stats,omitempty"`
+		Error        string                         `json:"error,omitempty"`
+	}
+	results := make([]leagueResult, 0, len(req.Leagues))
+	for _, item := range req.Leagues {
+		tier := item.Tier
+		if tier == "" {
+			tier = "unknown"
+		}
+		srcAdapter := matcher.NewSRSourceAdapter(s.srAdapter, false)
+		res, err := s.uniEngine.RunLeagueEvidenceFirst(srcAdapter, item.TournamentID, item.Sport, tier, item.TSCompetitionID, matcher.EvidenceFirstOptions{
+			CandidateLimit:   candidateLimit,
+			AllowWriteBack:   allowWriteBack,
+			ReviewOutputPath: req.ReviewOutputPath,
+		})
+		lr := leagueResult{TournamentID: item.TournamentID}
+		if err != nil {
+			lr.Error = err.Error()
+		} else {
+			lr.Decision = res.Decision
+			lr.Stats = res.Stats
+		}
+		results = append(results, lr)
+	}
+	c.JSON(http.StatusOK, gin.H{"engine": "EvidenceFirst/v1", "total": len(results), "results": results})
+}
+
 // ─── LS ↔ TS 处理器 ────────────────────────────────────────────────────────
 
 // LSMatchLeagueRequest LS 单联赛匹配请求
 type LSMatchLeagueRequest struct {
 	TournamentID    string `form:"tournament_id" binding:"required"` // LS tournament_id（整数字符串）
-	Sport           string `form:"sport" binding:"required"`          // football / basketball
-	Tier            string `form:"tier"`                              // hot / regular / cold
-	TSCompetitionID string `form:"ts_competition_id"`                 // 可选：预设 TS competition_id
+	Sport           string `form:"sport" binding:"required"`         // football / basketball
+	Tier            string `form:"tier"`                             // hot / regular / cold
+	TSCompetitionID string `form:"ts_competition_id"`                // 可选：预设 TS competition_id
 }
 
 // handleLSMatchLeague LS ↔ TS 单联赛匹配

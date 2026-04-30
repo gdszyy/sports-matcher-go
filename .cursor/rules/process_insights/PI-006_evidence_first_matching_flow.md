@@ -103,3 +103,14 @@ Evidence-First P3 将 P2 输出的 **多 competition TS 比赛候选池** 转化
 |------|------|----------|------|
 | v1.1 | 2026-04-30 | 补充 Evidence-First P4 联赛证据聚合、默认权重、三段式决策、KnownMap 低 RCR 审核和 hard veto 复核规则。 | Manus AI |
 | v1.0 | 2026-04-30 | 初始记录 Evidence-First P3 比赛级候选边打分、一对一冲突消解、主客反转降权、DTW 偏移修正和两轮 L4b 兜底流程。 | Manus AI |
+
+
+## 9. P5 生产化闭环：只读默认、安全写回与审核输出
+
+P5 将 Evidence-First 接入 `UniversalEngine.RunLeagueEvidenceFirst`、`match-evidence`、`batch-evidence` 和 `/api/v2/match/evidence`。该入口默认只读，作为实验路径运行；旧入口保持不变，因此上线失败时可直接回滚到 `match2` / `/api/v2/match/league`。
+
+安全写回必须经过 `EvidenceFirstWriteBackResult` 审计。仅当联赛决策为 `AUTO_CONFIRMED`、高置信比赛数达到最小阈值、双队锚点比例达标、无 hard veto、候选分差达标时，才允许写入 `TeamAliasStore`。自动流程不得静默覆盖 KnownMap 强映射，低 RCR 的 KnownMap 只进入 `KNOWN_SUSPECT` / validator `SUSPECT` 状态；人工 override 继续通过 `KnownLeagueMapValidator` 保留。
+
+`EvidenceFirstReview` 是人工复核的闭环产物，包含候选排序、得分构成、top event examples、完整比赛匹配、候选边、冲突淘汰、球队映射、KnownMap 状态、写回门槛和性能规模字段，确保审核人员无需再次查数据库即可判断。
+
+| v1.2 | 2026-04-30 | P5 新增 `RunLeagueEvidenceFirst`、CLI/API 显式实验入口、安全写回门槛、KnownMap suspect 语义、审核 JSON 与 smoke 验证脚本。 | Manus AI |
