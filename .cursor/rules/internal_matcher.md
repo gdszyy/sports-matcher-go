@@ -16,6 +16,7 @@ globs: ["internal/matcher/**/*"]
 | `ls_engine.go` | LSports 专用匹配引擎（760 行） |
 | `event.go` | 比赛匹配（五级降级规则 L1–L4b + TeamAliasIndex，625 行） |
 | `event_dtw.go` | DTW 时间序列比赛匹配（525 行） |
+| `evidence_event_matcher.go` | Evidence-First P3 比赛候选池适配层（多 competition 候选边打分 + 一对一冲突消解） |
 | `league.go` | 联赛匹配（已知映射表 + 名称相似度 + 全局占用机制） |
 | `league_alias.go` | 联赛别名匹配（629 行） |
 | `league_features.go` | 联赛特征提取（624 行） |
@@ -72,6 +73,20 @@ type MatchResult struct {
         → L4b 球队 ID 精确对兜底
         → DeriveTeamMappings（最终）
 ```
+
+### Evidence-First P3 比赛候选池适配
+
+`EvidenceEventMatcher` 面向 P2 输出的多 competition TS 比赛候选池，输入为 `[]EvidenceEventCandidate` 而不是单一联赛内的 `[]db.TSEvent`。候选结构显式保留 `competition_id`、P2 候选先验分、主客队候选分和强约束结果；输出 `ResolvedEventMatch` 保留 `ts_match_id`、`ts_competition_id`、主客队、时间、置信度、规则、reason code 与冲突淘汰解释。
+
+| 约束 | 说明 |
+|------|------|
+| 候选边打分 | 复用 `levelConfigs`、`gaussianTimeFactor`、`TeamAliasIndex.NameSimWithAlias`、`FSModel` 和 `EventDTWMatcher`，综合时间差、主客队相似度、P2 先验、强约束、别名命中和队伍 ID 锚点。 |
+| 主客反转 | 反转候选允许保留，但必须扣除反转惩罚，并在 `reason_codes` 中输出 `SIDE_REVERSED`。 |
+| 一对一确认 | 自动确认前按候选边分数降序做冲突消解，保证一个 `ts_match_id` 最多匹配一个源侧事件。 |
+| 冲突解释 | 被淘汰候选记录 `lost_to`、`winner_score`、`loser_score`、`score_gap` 和原因（如 `CONFLICT_TS_USED` / `CONFLICT_SOURCE_USED`）。 |
+| 两轮 L4b | `MatchTwoRound` 第一轮基于名称/候选分/别名推导 `teamIDMap`，第二轮注入 `teamIDMap` 激活 `TEAM_ID_FALLBACK` / L4b 兜底。 |
+
+详见流程洞察：[PI-006 Evidence-First 比赛级匹配流程](process_insights/PI-006_evidence_first_matching_flow.md) 与计划文档：[`docs/evidence_first_matching_plan.md`](../../docs/evidence_first_matching_plan.md)。
 
 ### 名称归一化规则（name.go）
 
