@@ -11,7 +11,7 @@ status: "active"
 
 ## 流程概述
 
-Evidence-First P3 将 P2 输出的 **多 competition TS 比赛候选池** 转化为高置信、一对一的比赛匹配结果。该流程不再假设输入来自某一个 TS 联赛的全部比赛，而是把每条候选比赛作为一条可解释的证据边进行打分，并在自动确认前执行全局冲突消解，确保一个 `ts_match_id` 最多被一个源侧事件占用。
+Evidence-First P3 将 P2 输出的 **多 competition TS 比赛候选池** 转化为高置信、一对一的比赛匹配结果。该流程不再假设输入来自某一个 TS 联赛的全部比赛，而是把每条候选比赛作为一条可解释的证据边进行打分，并在自动确认前执行全局冲突消解，确保一个 `ts_match_id` 最多被一个源侧事件占用。Evidence-First P4 在此基础上按 `ts_competition_id` 聚合比赛证据，反推出最可能的 TS 联赛，并通过地区、性别、年龄、分区、赛制与层级数字强约束复核阻断同名误吸附。
 
 ## 核心防坑指南
 
@@ -65,6 +65,26 @@ Evidence-First P3 将 P2 输出的 **多 competition TS 比赛候选池** 转化
 
 **关键位置**：`internal/matcher/evidence_event_matcher.go` → `MatchTwoRound`、`hasTeamIDAnchor`。
 
+### 坑 6: P4 不能把联赛名称重新变成主入口
+
+**现象**：比赛证据已经指向多个 TS competition，但如果 P4 又优先按联赛名称相似度选候选，`Serie A`、`Ligue 1/Ligue 2`、商业冠名联赛、跨国同名联赛会重新发生误吸附。
+
+**根因**：名称是弱证据，无法解释比赛覆盖、球队覆盖和反向确认率；同名联赛在国家、层级、性别、年龄或赛制上往往有强语义差异。
+
+**正确做法**：使用 `LeagueEvidenceAggregator`，先按 `ts_competition_id` 聚合 P3 `ResolvedEventMatch`，再用默认权重 `event coverage 0.35`、`high confidence events 0.20`、`team coverage 0.20`、`two-team anchor 0.10`、`temporal overlap 0.05`、`location 0.05`、`league name keyword 0.05` 打分。联赛名称只能贡献 `league_name_keyword_score`，作为弱特征和 tie-break。
+
+**关键位置**：`internal/matcher/league_evidence.go` → `LeagueEvidenceAggregator`、`LeagueEvidenceCandidate`、`LeagueEvidenceDecision`。
+
+### 坑 7: P4 聚合后仍必须重新执行 hard veto
+
+**现象**：P3 比赛匹配可能因球队与时间证据很强而把跨国同名 competition 聚合成高分候选，例如意大利 `Serie A` 被巴西 `Serie A` 的大量比赛数量偏置挤到 Top1。
+
+**根因**：比赛证据是实体证据，不等于联赛语义完全一致；联赛层面的国家、性别、年龄、分区、赛制、层级冲突必须在最终决策前复核。
+
+**正确做法**：P4 对每个候选执行 CountryCode/地区文本、Women/Men、U19/U21/Reserve、North/South 分区、Cup/League/Friendly/Futsal/5x5、层级数字 hard veto。存在明确 hard veto 的候选聚合分置零并输出 `veto_reason` / `veto_detail`，不得自动确认。
+
+**关键位置**：`internal/matcher/league_evidence.go` → `evaluateLeagueEvidenceLocation`、`CheckLeagueVeto` 调用链。
+
 ## 关键耦合点
 
 | 耦合点 | 说明 |
@@ -74,10 +94,12 @@ Evidence-First P3 将 P2 输出的 **多 competition TS 比赛候选池** 转化
 | `FSModel` | 候选边将主队相似度、客队相似度、时间差、联赛层级、运动类型转换为 FS 比较向量，作为综合分的一部分。 |
 | `EventDTW` | 对候选池整体估计时间偏移，修正后再进入比赛边打分。 |
 | `DeriveTeamMappings` | 两轮逻辑沿用现有比赛推导球队映射能力，第二轮启用 L4b 队伍 ID 兜底。 |
-| P4 聚合 | `ResolvedEventMatch` 必须保留 `ts_competition_id`、`ts_match_id`、`reason_codes` 和冲突淘汰解释，供联赛级反向确认和人工复核使用。 |
+| `LeagueEvidenceAggregator` | P4 使用 `ResolvedEventMatch.ts_competition_id` 聚合比赛覆盖、球队覆盖、高置信比赛、两队锚点、时间重叠、地区和弱名称关键词，并输出候选排序、`candidate_gap`、hard veto 原因和最终状态。 |
+| `KnownLeagueMapValidator` / RCR | KnownMap 的反向确认率若 `< 0.30`，P4 输出 `KNOWN_SUSPECT` 并进入审核，不再因已知映射或名称高分自动放行。 |
 
 ## 版本变更日志
 
 | 版本 | 日期 | 变更内容 | 作者 |
 |------|------|----------|------|
+| v1.1 | 2026-04-30 | 补充 Evidence-First P4 联赛证据聚合、默认权重、三段式决策、KnownMap 低 RCR 审核和 hard veto 复核规则。 | Manus AI |
 | v1.0 | 2026-04-30 | 初始记录 Evidence-First P3 比赛级候选边打分、一对一冲突消解、主客反转降权、DTW 偏移修正和两轮 L4b 兜底流程。 | Manus AI |

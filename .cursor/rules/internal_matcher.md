@@ -17,6 +17,7 @@ globs: ["internal/matcher/**/*"]
 | `event.go` | 比赛匹配（五级降级规则 L1–L4b + TeamAliasIndex，625 行） |
 | `event_dtw.go` | DTW 时间序列比赛匹配（525 行） |
 | `evidence_event_matcher.go` | Evidence-First P3 比赛候选池适配层（多 competition 候选边打分 + 一对一冲突消解） |
+| `league_evidence.go` | Evidence-First P4 联赛证据聚合器（按 TS competition 聚合 P3 比赛证据 + 强约束复核 + 三段式决策） |
 | `league.go` | 联赛匹配（已知映射表 + 名称相似度 + 全局占用机制） |
 | `league_alias.go` | 联赛别名匹配（629 行） |
 | `league_features.go` | 联赛特征提取（624 行） |
@@ -85,6 +86,19 @@ type MatchResult struct {
 | 一对一确认 | 自动确认前按候选边分数降序做冲突消解，保证一个 `ts_match_id` 最多匹配一个源侧事件。 |
 | 冲突解释 | 被淘汰候选记录 `lost_to`、`winner_score`、`loser_score`、`score_gap` 和原因（如 `CONFLICT_TS_USED` / `CONFLICT_SOURCE_USED`）。 |
 | 两轮 L4b | `MatchTwoRound` 第一轮基于名称/候选分/别名推导 `teamIDMap`，第二轮注入 `teamIDMap` 激活 `TEAM_ID_FALLBACK` / L4b 兜底。 |
+
+### Evidence-First P4 联赛证据聚合
+
+`LeagueEvidenceAggregator` 接收源侧联赛特征、P3 `ResolvedEventMatch`、TS competition 元数据，并按 `ts_competition_id` 聚合 `event_coverage_score`、`high_conf_event_score`、`team_coverage_score`、`two_team_anchor_score`、`temporal_overlap_score`、`location_score`、`league_name_keyword_score` 与 `candidate_gap`。联赛名称只能作为弱特征和 tie-break，默认权重集中在 `DefaultLeagueEvidenceWeights`，禁止重新把名称相似度作为主入口。
+
+| 决策状态 | 触发条件 |
+|------|------|
+| `AUTO_CONFIRMED` | `score ≥ 0.85`、高置信比赛数 `≥ 3`、无 hard veto、Top1/Top2 分差 `≥ 0.10`。 |
+| `REVIEW_REQUIRED` | `0.60 ≤ score < 0.85`，或高置信比赛不足，或候选分差 `< 0.10`。 |
+| `REJECTED` | `score < 0.60`，或 CountryCode/地区文本、Women/Men、U19/U21/成年队、North/South 分区、Cup/League/Friendly/Futsal/5x5、层级数字等强约束明确冲突。 |
+| `KNOWN_SUSPECT` | KnownMap 反向确认率 `RCR < 0.30`，即使聚合分高也进入审核。 |
+
+审核证据行由 `LeagueEvidenceCandidate` 输出，必须包含 `competition_id`、`competition_name`、`score`、`coverage`、`matched_events`、`high_conf_events`、`team_coverage`、`location_result`、`keyword_result`、`veto_reason`、`candidate_gap` 与 `top_event_examples`。
 
 详见流程洞察：[PI-006 Evidence-First 比赛级匹配流程](process_insights/PI-006_evidence_first_matching_flow.md) 与计划文档：[`docs/evidence_first_matching_plan.md`](../../docs/evidence_first_matching_plan.md)。
 
