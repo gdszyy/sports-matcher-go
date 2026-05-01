@@ -1,0 +1,86 @@
+source,source_league_id,source_league_name,sport,tier,ts_competition_id,ts_league_name,league_rule,league_confidence,source_event_total,ts_event_total,gt_total,event_matched,event_match_rate,precision,recall,f1,tp,fp,fn,team_total,team_matched,team_match_rate,rcr,rcr_class,elapsed_ms,failure_reason,high_ambiguity,ambiguity_tags,rule_l1,rule_l2,rule_l3,rule_l4,rule_l5,rule_l4b,rule_l6
+SR,sr:tournament:17,sr:tournament:17,football,hot,jednm9whz0ryox8,jednm9whz0ryox8,LEAGUE_KNOWN,1.0,0,223,223,0,0.0,0.0,0.0,0.0,0,0,0,0,0,0.0,0.0,FAIL,0,no_source_events,False,,0,0,0,0,0,0,0
+SR,sr:tournament:8,LaLiga,football,hot,vl7oqdehlyr510j,vl7oqdehlyr510j,LEAGUE_KNOWN,1.0,191,191,191,188,0.984293,0.984043,0.968586,0.976253,185,3,6,20,20,1.0,0.989,HIGH,192,has_false_positive,False,,180,3,2,3,0,0,0
+SR,sr:tournament:35,Bundesliga,football,hot,gy0or5jhg6qwzv3,gy0or5jhg6qwzv3,LEAGUE_KNOWN,1.0,170,167,167,167,0.982353,0.952096,0.952096,0.952096,159,8,8,18,18,1.0,1.0,HIGH,164,has_false_positive,False,,167,0,0,0,0,0,0
+SR,sr:tournament:23,Serie A,football,hot,4zp5rzghp5q82w1,4zp5rzghp5q82w1,LEAGUE_KNOWN,1.0,200,196,196,196,0.98,0.994898,0.994898,0.994898,195,1,1,20,20,1.0,1.0,HIGH,147,has_false_positive,False,,190,0,2,4,0,0,0
+SR,sr:tournament:34,Ligue 1,football,hot,yl5ergphnzr8k0o,yl5ergphnzr8k0o,LEAGUE_KNOWN,1.0,146,143,143,142,0.972603,0.978873,0.972028,0.975439,139,3,4,18,18,1.0,0.993,HIGH,111,has_false_positive,False,,138,2,0,2,0,0,0
+SR,sr:tournament:7,UEFA Champions League,football,hot,z8yomo4h7wq0j6l,z8yomo4h7wq0j6l,LEAGUE_KNOWN,1.0,81,68,68,68,0.839506,1.0,1.0,1.0,68,0,0,50,36,0.72,1.0,HIGH,84,ok,True,"杯赛,国际赛事",68,0,0,0,0,0,0
+SR,sr:tournament:679,UEFA Europa League,football,hot,56ypq3nh0xmd7oj,56ypq3nh0xmd7oj,LEAGUE_KNOWN,1.0,81,63,63,62,0.765432,0.822581,0.809524,0.816,51,11,12,50,29,0.58,1.0,HIGH,71,has_false_positive,True,"杯赛,国际赛事",62,0,0,0,0,0,0
+SR,sr:tournament:18,Championship,football,regular,l965mkyh32r1ge4,l965mkyh32r1ge4,LEAGUE_KNOWN,1.0,254,244,244,243,0.956693,0.942387,0.938525,0.940452,229,14,15,24,24,1.0,0.996,HIGH,319,has_false_positive,False,,240,1,0,2,0,0,0
+SR,sr:tournament:242,MLS,football,regular,kn54qllhg2qvy9d,United States Major League Soccer,LEAGUE_KNOWN,1.0,245,510,244,243,0.991837,0.995885,0.991803,0.99384,242,1,2,30,30,1.0,0.992,HIGH,467,has_false_positive,False,,240,2,0,1,0,0,0
+SR,sr:tournament:203,Premier League,football,regular,8y39mp1hwxmojxg,8y39mp1hwxmojxg,LEAGUE_KNOWN,1.0,94,88,88,88,0.93617,0.965909,0.965909,0.965909,85,3,3,17,17,1.0,1.0,HIGH,87,has_false_positive,False,,88,0,0,0,0,0,0
+SR,sr:tournament:325,Brasileiro Serie A,football,regular,4zp5rzgh9zq82w1,Brazilian Serie A,LEAGUE_KNOWN,1.0,137,380,135,135,0.985401,0.97037,0.97037,0.97037,131,4,4,20,20,1.0,0.985,HIGH,186,has_false_positive,False,,132,0,3,0,0,0,0
+SR,sr:tournament:37,Eredivisie,football,regular,vl7oqdeheyr510j,vl7oqdeheyr510j,LEAGUE_KNOWN,1.0,143,141,141,140,0.979021,0.985714,0.978723,0.982206,138,2,3,18,18,1.0,1.0,HIGH,108,has_false_positive,False,,139,0,0,1,0,0,0
+SR,sr:tournament:52,Super Lig,football,regular,8y39mp1h6jmojxg,8y39mp1h6jmojxg,LEAGUE_KNOWN,1.0,129,127,127,127,0.984496,0.984252,0.984252,0.984252,125,2,2,18,18,1.0,1.0,HIGH,120,has_false_positive,False,,126,0,1,0,0,0,0
+SR,sr:tournament:238,sr:tournament:238,football,regular,gx7lm7phpnm2wdk,gx7lm7phpnm2wdk,LEAGUE_KNOWN,1.0,0,0,0,0,0.0,0.0,0.0,0.0,0,0,0,0,0,0.0,0.0,FAIL,0,no_source_events,False,,0,0,0,0,0,0,0
+SR,sr:tournament:11,sr:tournament:11,football,regular,9vjxm8gh22r6odg,9vjxm8gh22r6odg,LEAGUE_KNOWN,1.0,0,0,0,0,0.0,0.0,0.0,0.0,0,0,0,0,0,0.0,0.0,FAIL,0,no_source_events,False,,0,0,0,0,0,0,0
+SR,sr:tournament:955,sr:tournament:955,football,regular,z318q66hl1qo9jd,z318q66hl1qo9jd,LEAGUE_KNOWN,1.0,0,0,0,0,0.0,0.0,0.0,0.0,0,0,0,0,0,0.0,0.0,FAIL,0,no_source_events,False,,0,0,0,0,0,0,0
+SR,sr:tournament:132,NBA,basketball,hot,49vjxm8xt4q6odg,National Basketball Association,LEAGUE_KNOWN,1.0,786,777,828,763,0.970738,0.961992,0.886473,0.92269,734,29,94,36,30,0.833333,0.982,HIGH,3693,has_false_positive,False,,742,1,4,16,0,0,0
+SR,sr:tournament:138,sr:tournament:138,basketball,hot,jednm9ktd5ryox8,jednm9ktd5ryox8,LEAGUE_KNOWN,1.0,0,0,0,0,0.0,0.0,0.0,0.0,0,0,0,0,0,0.0,0.0,FAIL,0,no_source_events,False,,0,0,0,0,0,0,0
+SR,sr:tournament:176,National League North,basketball,regular,v2y8m4ptx1ml074,v2y8m4ptx1ml074,LEAGUE_KNOWN,1.0,312,0,0,0,0.0,0.0,0.0,0.0,0,0,0,24,0,0.0,0.0,FAIL,0,no_ts_events,False,,0,0,0,0,0,0,0
+SR,sr:tournament:131,sr:tournament:131,basketball,regular,v2y8m4ptdeml074,v2y8m4ptdeml074,LEAGUE_KNOWN,1.0,0,0,0,0,0.0,0.0,0.0,0.0,0,0,0,0,0,0.0,0.0,FAIL,0,no_source_events,False,,0,0,0,0,0,0,0
+SR,sr:tournament:53,sr:tournament:53,basketball,regular,x4zp5rzkt1r82w1,x4zp5rzkt1r82w1,LEAGUE_KNOWN,1.0,0,0,0,0,0.0,0.0,0.0,0.0,0,0,0,0,0,0.0,0.0,FAIL,0,no_source_events,False,,0,0,0,0,0,0,0
+SR,sr:tournament:54,sr:tournament:54,basketball,regular,0l965mk8tom1ge4,0l965mk8tom1ge4,LEAGUE_KNOWN,1.0,0,0,0,0,0.0,0.0,0.0,0.0,0,0,0,0,0,0.0,0.0,FAIL,0,no_source_events,False,,0,0,0,0,0,0,0
+SR,sr:tournament:390,Brasileiro Serie B,basketball,regular,kjw2r02t6xqz84o,kjw2r02t6xqz84o,LEAGUE_KNOWN,1.0,380,0,0,0,0.0,0.0,0.0,0.0,0,0,0,20,0,0.0,0.0,FAIL,0,no_ts_events,False,,0,0,0,0,0,0,0
+SR,sr:tournament:24702,U19 DFB Nachwuchsliga,football,ambiguous,,,UNMAPPED,0.0,332,0,0,0,0.0,0.0,0.0,0.0,0,0,0,76,0,0.0,0.0,FAIL,0,no_known_map,True,U19/青年队,0,0,0,0,0,0,0
+SR,sr:tournament:48343,U19 Division de Honor Juvenil,football,ambiguous,p4jwq2ghvdjm0ve,Spanish U19 League ,LEAGUE_KNOWN,1.0,815,562,0,521,0.639264,0.0,0.0,0.0,0,0,0,115,111,0.965217,0.927,HIGH,2504,no_ground_truth,True,"U19/青年队,二级联赛",445,43,19,14,0,0,0
+SR,sr:tournament:26,"U21 UEFA European Championship, Qualification",football,ambiguous,,,UNMAPPED,0.0,45,0,0,0,0.0,0.0,0.0,0.0,0,0,0,51,0,0.0,0.0,FAIL,0,no_known_map,True,"U19/青年队,国际赛事",0,0,0,0,0,0,0
+SR,sr:tournament:21384,"NCAA Women, Regular Season",basketball,ambiguous,kn54ql7t05rvy9d,Women's National Collegiate Athletic Association,LEAGUE_KNOWN,1.0,3365,1083,0,922,0.273997,0.0,0.0,0.0,0,0,0,375,217,0.578667,0.851,HIGH,20917,no_ground_truth,True,Women/女子,529,44,63,286,0,0,0
+SR,sr:tournament:28,AFC Asian Cup QF,football,ambiguous,,,UNMAPPED,0.0,13,0,0,0,0.0,0.0,0.0,0.0,0,0,0,24,0,0.0,0.0,FAIL,0,no_known_map,True,"杯赛,国际赛事",0,0,0,0,0,0,0
+SR,sr:tournament:47986,National 2,football,ambiguous,kdj2ryoh2kq1zpg,French Championnat National 2,LEAGUE_KNOWN,1.0,326,409,0,296,0.907975,0.0,0.0,0.0,0,0,0,49,48,0.979592,0.908,HIGH,656,no_ground_truth,True,二级联赛,292,0,2,2,0,0,0
+SR,sr:tournament:97,2. Lig,football,ambiguous,,,UNMAPPED,0.0,293,0,0,0,0.0,0.0,0.0,0.0,0,0,0,37,0,0.0,0.0,FAIL,0,no_known_map,True,二级联赛,0,0,0,0,0,0,0
+LS,67,Premier League,football,hot,jednm9whz0ryox8,jednm9whz0ryox8,LEAGUE_KNOWN,1.0,0,0,0,0,0.0,,,,,,,0,0,0.0,0.0,FAIL,0,no_source_events,False,,0,0,0,0,0,0,0
+LS,8363,LaLiga,football,hot,vl7oqdehlyr510j,vl7oqdehlyr510j,LEAGUE_KNOWN,1.0,0,0,0,0,0.0,,,,,,,0,0,0.0,0.0,FAIL,0,no_source_events,False,,0,0,0,0,0,0,0
+LS,65,Bundesliga,football,hot,gy0or5jhg6qwzv3,gy0or5jhg6qwzv3,LEAGUE_KNOWN,1.0,0,0,0,0,0.0,,,,,,,0,0,0.0,0.0,FAIL,0,no_source_events,False,,0,0,0,0,0,0,0
+LS,4,Serie A,football,hot,4zp5rzghp5q82w1,4zp5rzghp5q82w1,LEAGUE_KNOWN,1.0,0,0,0,0,0.0,,,,,,,0,0,0.0,0.0,FAIL,0,no_source_events,False,,0,0,0,0,0,0,0
+LS,61,Ligue 1,football,hot,yl5ergphnzr8k0o,yl5ergphnzr8k0o,LEAGUE_KNOWN,1.0,0,0,0,0,0.0,,,,,,,0,0,0.0,0.0,FAIL,0,no_source_events,False,,0,0,0,0,0,0,0
+LS,32644,UEFA Champions League,football,hot,z8yomo4h7wq0j6l,z8yomo4h7wq0j6l,LEAGUE_KNOWN,1.0,0,0,0,0,0.0,,,,,,,0,0,0.0,0.0,FAIL,0,no_source_events,True,"杯赛,国际赛事",0,0,0,0,0,0,0
+LS,30444,UEFA Europa League,football,hot,56ypq3nh0xmd7oj,56ypq3nh0xmd7oj,LEAGUE_KNOWN,1.0,0,0,0,0,0.0,,,,,,,0,0,0.0,0.0,FAIL,0,no_source_events,True,"杯赛,国际赛事",0,0,0,0,0,0,0
+LS,27738,CONMEBOL Copa Libertadores,football,hot,v2y8m4zhe6ql074,v2y8m4zhe6ql074,LEAGUE_KNOWN,1.0,0,0,0,0,0.0,,,,,,,0,0,0.0,0.0,FAIL,0,no_source_events,True,"杯赛,国际赛事",0,0,0,0,0,0,0
+LS,36297,Copa Sudamericana,football,hot,56ypq3nhpkmd7oj,56ypq3nhpkmd7oj,LEAGUE_KNOWN,1.0,0,0,0,0,0.0,,,,,,,0,0,0.0,0.0,FAIL,0,no_source_events,True,"杯赛,Women/女子",0,0,0,0,0,0,0
+LS,58,The Championship,football,regular,l965mkyh32r1ge4,l965mkyh32r1ge4,LEAGUE_KNOWN,1.0,0,0,0,0,0.0,,,,,,,0,0,0.0,0.0,FAIL,0,no_source_events,False,,0,0,0,0,0,0,0
+LS,68,League One,football,regular,8y39mp1hjzmojxg,8y39mp1hjzmojxg,LEAGUE_KNOWN,1.0,0,0,0,0,0.0,,,,,,,0,0,0.0,0.0,FAIL,0,no_source_events,False,,0,0,0,0,0,0,0
+LS,70,League Two,football,regular,9k82rekhygrepzj,9k82rekhygrepzj,LEAGUE_KNOWN,1.0,0,0,0,0,0.0,,,,,,,0,0,0.0,0.0,FAIL,0,no_source_events,False,,0,0,0,0,0,0,0
+LS,8203,National League,football,regular,z318q66hv8qo9jd,z318q66hv8qo9jd,LEAGUE_KNOWN,1.0,0,0,0,0,0.0,,,,,,,0,0,0.0,0.0,FAIL,0,no_source_events,False,,0,0,0,0,0,0,0
+LS,66,2.Bundesliga,football,regular,kn54qllhjzqvy9d,kn54qllhjzqvy9d,LEAGUE_KNOWN,1.0,0,0,0,0,0.0,,,,,,,0,0,0.0,0.0,FAIL,0,no_source_events,True,二级联赛,0,0,0,0,0,0,0
+LS,8,Serie B,football,regular,j1l4rjnhx9m7vx5,j1l4rjnhx9m7vx5,LEAGUE_KNOWN,1.0,0,0,0,0,0.0,,,,,,,0,0,0.0,0.0,FAIL,0,no_source_events,False,,0,0,0,0,0,0,0
+LS,60,Ligue 2,football,regular,kjw2r09hw8rz84o,kjw2r09hw8rz84o,LEAGUE_KNOWN,1.0,0,0,0,0,0.0,,,,,,,0,0,0.0,0.0,FAIL,0,no_source_events,True,二级联赛,0,0,0,0,0,0,0
+LS,22263,LaLiga2,football,regular,kdj2ryohnkq1zpg,kdj2ryohnkq1zpg,LEAGUE_KNOWN,1.0,0,0,0,0,0.0,,,,,,,0,0,0.0,0.0,FAIL,0,no_source_events,True,二级联赛,0,0,0,0,0,0,0
+LS,59,Jupiler League,football,regular,9vjxm8gh22r6odg,9vjxm8gh22r6odg,LEAGUE_KNOWN,1.0,0,0,0,0,0.0,,,,,,,0,0,0.0,0.0,FAIL,0,no_source_events,False,,0,0,0,0,0,0,0
+LS,2944,Eredivisie,football,regular,vl7oqdeheyr510j,vl7oqdeheyr510j,LEAGUE_KNOWN,1.0,0,0,0,0,0.0,,,,,,,0,0,0.0,0.0,FAIL,0,no_source_events,False,,0,0,0,0,0,0,0
+LS,6603,Primeira Liga,football,regular,9vjxm8ghx2r6odg,9vjxm8ghx2r6odg,LEAGUE_KNOWN,1.0,0,0,0,0,0.0,,,,,,,0,0,0.0,0.0,FAIL,0,no_source_events,False,,0,0,0,0,0,0,0
+LS,63,Super Lig,football,regular,8y39mp1h6jmojxg,8y39mp1h6jmojxg,LEAGUE_KNOWN,1.0,0,0,0,0,0.0,,,,,,,0,0,0.0,0.0,FAIL,0,no_source_events,False,,0,0,0,0,0,0,0
+LS,3799,FNL,football,regular,8y39mp1hwxmojxg,8y39mp1hwxmojxg,LEAGUE_KNOWN,1.0,0,0,0,0,0.0,,,,,,,0,0,0.0,0.0,FAIL,0,no_source_events,True,缩写歧义,0,0,0,0,0,0,0
+LS,32521,Ekstraklasa,football,regular,vl7oqdeh3lr510j,vl7oqdeh3lr510j,LEAGUE_KNOWN,1.0,0,0,0,0,0.0,,,,,,,0,0,0.0,0.0,FAIL,0,no_source_events,False,,0,0,0,0,0,0,0
+LS,61243,HNL,football,regular,gx7lm7pho13m2wd,gx7lm7pho13m2wd,LEAGUE_KNOWN,1.0,0,0,0,0,0.0,,,,,,,0,0,0.0,0.0,FAIL,0,no_source_events,True,缩写歧义,0,0,0,0,0,0,0
+LS,30058,Scotland Premiership,football,regular,p4jwq2gh1gm0veo,p4jwq2gh1gm0veo,LEAGUE_KNOWN,1.0,0,0,0,0,0.0,,,,,,,0,0,0.0,0.0,FAIL,0,no_source_events,False,,0,0,0,0,0,0,0
+LS,72,Super League,football,regular,e4wyrn4hoeq86pv,e4wyrn4hoeq86pv,LEAGUE_KNOWN,1.0,0,0,0,0,0.0,,,,,,,0,0,0.0,0.0,FAIL,0,no_source_events,False,,0,0,0,0,0,0,0
+LS,3,Allsvenskan,football,regular,l965mkyhg0r1ge4,l965mkyhg0r1ge4,LEAGUE_KNOWN,1.0,0,0,0,0,0.0,,,,,,,0,0,0.0,0.0,FAIL,0,no_source_events,False,,0,0,0,0,0,0,0
+LS,38,Superettan,football,regular,8y39mp1hk8mojxg,8y39mp1hk8mojxg,LEAGUE_KNOWN,1.0,0,0,0,0,0.0,,,,,,,0,0,0.0,0.0,FAIL,0,no_source_events,False,,0,0,0,0,0,0,0
+LS,24289,Eliteserien,football,regular,gy0or5jhj6qwzv3,gy0or5jhj6qwzv3,LEAGUE_KNOWN,1.0,0,0,0,0,0.0,,,,,,,0,0,0.0,0.0,FAIL,0,no_source_events,False,,0,0,0,0,0,0,0
+LS,156,Major League Soccer,football,regular,kn54qllhg2qvy9d,United States Major League Soccer,LEAGUE_KNOWN,1.0,56,510,0,56,1.0,,,,,,,30,30,1.0,1.0,HIGH,95,ok,True,"商业冠名,杯赛",56,0,0,0,0,0,0
+LS,5299,Liga MX,football,regular,9k82rekhp6repzj,9k82rekhp6repzj,LEAGUE_KNOWN,1.0,0,0,0,0,0.0,,,,,,,0,0,0.0,0.0,FAIL,0,no_source_events,False,,0,0,0,0,0,0,0
+LS,20913,Serie A Brazil,football,regular,4zp5rzgh9zq82w1,Brazilian Serie A,LEAGUE_KNOWN,1.0,0,380,0,0,0.0,,,,,,,0,0,0.0,0.0,FAIL,0,no_source_events,True,跨国同名联赛,0,0,0,0,0,0,0
+LS,41558,Liga Profesional,football,regular,p3glrw7hevqdyjv,p3glrw7hevqdyjv,LEAGUE_KNOWN,1.0,0,0,0,0,0.0,,,,,,,0,0,0.0,0.0,FAIL,0,no_source_events,False,,0,0,0,0,0,0,0
+LS,1543,China Super League,football,regular,9k82rekh52repzj,9k82rekh52repzj,LEAGUE_KNOWN,1.0,0,0,0,0,0.0,,,,,,,0,0,0.0,0.0,FAIL,0,no_source_events,False,,0,0,0,0,0,0,0
+LS,35637,J1 League,football,regular,z318q66hl1qo9jd,z318q66hl1qo9jd,LEAGUE_KNOWN,1.0,0,0,0,0,0.0,,,,,,,0,0,0.0,0.0,FAIL,0,no_source_events,True,"二级联赛,缩写歧义",0,0,0,0,0,0,0
+LS,24585,K League Classic,football,regular,gy0or5jhlxgqwzv,gy0or5jhlxgqwzv,LEAGUE_KNOWN,1.0,0,0,0,0,0.0,,,,,,,0,0,0.0,0.0,FAIL,0,no_source_events,False,,0,0,0,0,0,0,0
+LS,28898,K2 League,football,regular,kn54qllh25dqvy9,kn54qllh25dqvy9,LEAGUE_KNOWN,1.0,0,0,0,0,0.0,,,,,,,0,0,0.0,0.0,FAIL,0,no_source_events,True,"二级联赛,缩写歧义",0,0,0,0,0,0,0
+LS,2018,Premier League Egypt,football,regular,56ypq3nh01nmd7o,56ypq3nh01nmd7o,LEAGUE_KNOWN,1.0,0,0,0,0,0.0,,,,,,,0,0,0.0,0.0,FAIL,0,no_source_events,True,跨国同名联赛,0,0,0,0,0,0,0
+LS,64,NBA,basketball,hot,49vjxm8xt4q6odg,National Basketball Association,LEAGUE_KNOWN,1.0,0,777,0,0,0.0,,,,,,,0,0,0.0,0.0,FAIL,0,no_source_events,False,,0,0,0,0,0,0,0
+LS,33249,Euroleague,basketball,hot,jednm9ktd5ryox8,jednm9ktd5ryox8,LEAGUE_KNOWN,1.0,0,0,0,0,0.0,,,,,,,0,0,0.0,0.0,FAIL,0,no_source_events,False,,0,0,0,0,0,0,0
+LS,4871,CBA,basketball,regular,ngy0or5gteqwzv3,Chinese Basketball Association,LEAGUE_KNOWN,1.0,32,339,0,32,1.0,,,,,,,20,20,1.0,1.0,HIGH,109,ok,False,,32,0,0,0,0,0,0
+LS,3111,Liga ACB Endesa,basketball,regular,v2y8m4ptdeml074,v2y8m4ptdeml074,LEAGUE_KNOWN,1.0,0,0,0,0,0.0,,,,,,,0,0,0.0,0.0,FAIL,0,no_source_events,False,,0,0,0,0,0,0,0
+LS,621,Basketball Bundesliga,basketball,regular,0l965mk8tom1ge4,0l965mk8tom1ge4,LEAGUE_KNOWN,1.0,0,0,0,0,0.0,,,,,,,0,0,0.0,0.0,FAIL,0,no_source_events,False,,0,0,0,0,0,0,0
+LS,62013,VTB United League,basketball,regular,v2y8m4ptx1ml074,v2y8m4ptx1ml074,LEAGUE_KNOWN,1.0,0,0,0,0,0.0,,,,,,,0,0,0.0,0.0,FAIL,0,no_source_events,False,,0,0,0,0,0,0,0
+LS,293,Basketball Serie A,basketball,regular,x4zp5rzkt1r82w1,x4zp5rzkt1r82w1,LEAGUE_KNOWN,1.0,0,0,0,0,0.0,,,,,,,0,0,0.0,0.0,FAIL,0,no_source_events,False,,0,0,0,0,0,0,0
+LS,48524,BNXT League,basketball,regular,l965mk8tzpkm1ge,l965mk8tzpkm1ge,LEAGUE_KNOWN,1.0,0,0,0,0,0.0,,,,,,,0,0,0.0,0.0,FAIL,0,no_source_events,True,"商业冠名,缩写歧义",0,0,0,0,0,0,0
+LS,34184,B.League - B1,basketball,regular,ngy0or5gteqwzv3,Chinese Basketball Association,LEAGUE_KNOWN,1.0,0,339,0,0,0.0,,,,,,,0,0,0.0,0.0,FAIL,0,no_source_events,True,"商业冠名,缩写歧义",0,0,0,0,0,0,0
+LS,25357,Orlen Basket Liga,basketball,regular,v2y8m4ptx1ml074,v2y8m4ptx1ml074,LEAGUE_KNOWN,1.0,0,0,0,0,0.0,,,,,,,0,0,0.0,0.0,FAIL,0,no_source_events,True,商业冠名,0,0,0,0,0,0,0
+LS,1834,NBL,basketball,regular,x4zp5rzkt1r82w1,x4zp5rzkt1r82w1,LEAGUE_KNOWN,1.0,0,0,0,0,0.0,,,,,,,0,0,0.0,0.0,FAIL,0,no_source_events,True,"缩写歧义,跨国同名联赛",0,0,0,0,0,0,0
+LS,11585,Bundesliga U19,football,ambiguous,,,UNMAPPED,0.0,64,0,0,0,0.0,,,,,,,75,0,0.0,0.0,FAIL,0,no_known_map,True,U19/青年队,0,0,0,0,0,0,0
+LS,68254,IPBL. Pro Division - Women,basketball,ambiguous,,,UNMAPPED,0.0,96,0,0,0,0.0,,,,,,,32,0,0.0,0.0,FAIL,0,no_known_map,True,"Women/女子,商业冠名",0,0,0,0,0,0,0
+LS,29650,NBL 1 - Women,basketball,ambiguous,,,UNMAPPED,0.0,51,0,0,0,0.0,,,,,,,70,0,0.0,0.0,FAIL,0,no_known_map,True,"Women/女子,缩写歧义",0,0,0,0,0,0,0
+LS,59404,Bskt Cup,basketball,ambiguous,,,UNMAPPED,0.0,41,0,0,0,0.0,,,,,,,21,0,0.0,0.0,FAIL,0,no_known_map,True,"杯赛,缩写歧义",0,0,0,0,0,0,0
+LS,89462,Meiji Yasuda J2/J3 100 Year Vision League,football,ambiguous,,,UNMAPPED,0.0,50,0,0,0,0.0,,,,,,,40,0,0.0,0.0,FAIL,0,no_known_map,True,"二级联赛,商业冠名",0,0,0,0,0,0,0
+LS,44159,NBL1,basketball,ambiguous,,,UNMAPPED,0.0,89,0,0,0,0.0,,,,,,,71,0,0.0,0.0,FAIL,0,no_known_map,True,缩写歧义,0,0,0,0,0,0,0
