@@ -15,6 +15,12 @@ Evidence-First P3 将 P2 输出的 **多 competition TS 比赛候选池** 转化
 
 ## 核心防坑指南
 
+### 坑 0: P2 候选生成不能只按名称全局召回
+**现象**：同名队伍跨国家、Women/Men、U19/成年队和 Reserve/B team 在全局 TS 队伍表中经常拥有很高字面相似度，如果 P2 只按名称 TopK 召回，会把高风险候选作为普通高分候选传给 P3。
+**根因**：P3 的比赛边打分依赖 P2 的候选先验和强约束结果；若 P2 未携带地区、联赛关键词和队伍结构化 guard，P3 无法区分“高相似但应 veto”的候选与“可自动确认”的候选。
+**正确做法**：P2 使用 `EvidenceCandidateGenerator` 先合并 Alias、Name+Country、Name+RecentMatch 和 International fallback，多来源候选必须带 `reason_codes`。非国际赛事下明确国家冲突输出 `GUARD_VETO_COUNTRY`；Women/U19/Reserve 冲突输出对应 `GUARD_VETO_*`；国际赛事或地区缺失才允许 `INTERNATIONAL_FALLBACK`，并受更严格 TopK 和硬上限控制。
+**关键位置**：`internal/matcher/evidence_candidate.go` → `EvidenceCandidateGenerator`、`TeamCandidateEvidence`、`EventCandidateEvidence`。
+
 ### 坑 1: 把 P2 候选池重新退化为单联赛全量比赛
 
 **现象**：P2 已经基于联赛候选、球队候选和强约束生成跨 competition 的比赛候选池，但 P3 如果继续调用只接受 `[]db.TSEvent` 的联赛内 `MatchEvents`，会丢失 `competition_id`、P2 先验分和强约束解释，导致联赛名称歧义样本无法提升召回。
@@ -70,6 +76,7 @@ Evidence-First P3 将 P2 输出的 **多 competition TS 比赛候选池** 转化
 | 耦合点 | 说明 |
 |--------|------|
 | `MatchEvents` / L1-L4b | Evidence-First P3 复用现有 `levelConfigs`、`gaussianTimeFactor`、`RuleEventL1`~`RuleEventL4b`，避免另起孤立规则体系。 |
+| `EvidenceCandidateGenerator` | P2 负责队伍优先召回、强约束守门、reason code 输出和候选规模硬上限；P3 不应重新做全局队伍召回。 |
 | `TeamAliasIndex` | 候选边使用 `NameSimWithAlias`，未来可注入持久化别名后继续复用别名命中加分和 reason code。 |
 | `FSModel` | 候选边将主队相似度、客队相似度、时间差、联赛层级、运动类型转换为 FS 比较向量，作为综合分的一部分。 |
 | `EventDTW` | 对候选池整体估计时间偏移，修正后再进入比赛边打分。 |
@@ -81,3 +88,4 @@ Evidence-First P3 将 P2 输出的 **多 competition TS 比赛候选池** 转化
 | 版本 | 日期 | 变更内容 | 作者 |
 |------|------|----------|------|
 | v1.0 | 2026-04-30 | 初始记录 Evidence-First P3 比赛级候选边打分、一对一冲突消解、主客反转降权、DTW 偏移修正和两轮 L4b 兜底流程。 | Manus AI |
+| v1.1 | 2026-05-01 | 补充 P2 队伍优先候选生成防坑：禁止纯名称全局召回，要求 Alias/Name+Country/Name+RecentMatch/International fallback 分层合并，Women/U19/Reserve/国家冲突必须携带 guard veto reason code。 | Manus AI |

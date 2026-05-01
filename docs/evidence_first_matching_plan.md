@@ -6,7 +6,19 @@ Evidence-First 流程把联赛匹配从“先确认单个 TS competition，再�
 
 P3 的实现入口是 `internal/matcher/evidence_event_matcher.go`。该适配层复用现有 `MatchEvents` 体系中的 L1-L4b 规则、高斯时间衰减、`TeamAliasIndex`、`FSModel`、`EventDTW` 和 `DeriveTeamMappings`，避免产生与主匹配器孤立的第二套比赛算法。
 
-## 2. P3 输入与输出
+## 2. P2 队伍优先候选生成
+
+P2 使用 `EvidenceCandidateGenerator` 将源侧单联赛队伍集合转化为 TS 队伍候选和 TS 比赛候选。它优先复用已确认 `AliasStore` / `TeamAliasIndex`，其次使用同国家/地区名称相似、近期比赛窗口命中和国际赛事跨地区 fallback。每条候选必须携带来源、得分和 reason code；Women/U19/Reserve/国家冲突会进入 veto 或显著降权路径，国际赛事和地区缺失样本才允许跨地区召回。
+
+| 输出 | 说明 |
+|------|------|
+| `TeamCandidateEvidence` | 源队伍到 TS 队伍的候选证据，包含 `score`、`priority`、`source`、`vetoed`、`strong_constraint_ok` 和 `reason_codes`。 |
+| `EventCandidateEvidence` | TS 比赛候选证据，包含 P2 候选先验分、主客队候选分、强约束结果和截断解释。 |
+| `EvidenceCandidateResult.P3EventCandidates` | P3 `EvidenceEventMatcher` 可直接消费的 `[]EvidenceEventCandidate`。 |
+
+候选规模默认控制为每个源队伍 Top 8、国际赛事 Top 15，整体 TS 比赛候选 `EventCandidateLimit=300`。详细结构与 reason code 见 [`evidence_candidate_generator.md`](evidence_candidate_generator.md)。
+
+## 3. P3 输入与输出
 
 | 类型 | 结构 | 说明 |
 |------|------|------|
@@ -16,7 +28,7 @@ P3 的实现入口是 `internal/matcher/evidence_event_matcher.go`。该适配�
 | 输入 | `teamIDMap` | 第二轮可选输入，用于 L4b 队伍 ID 精确对兜底。 |
 | 输出 | `ConflictResolutionResult` | 包含最终 `ResolvedEventMatch`、所有候选边、冲突淘汰记录、推导后的 `teamIDMap` 和 DTW 偏移信息。 |
 
-## 3. 比赛候选边打分特征
+## 4. 比赛候选边打分特征
 
 每条源侧比赛到 TS 候选比赛会生成一条 `EventEvidenceEdge`。候选边评分不是单一字符串相似度，而是融合多类证据：
 
@@ -32,7 +44,7 @@ P3 的实现入口是 `internal/matcher/evidence_event_matcher.go`。该适配�
 | FS 模型 | `FSScore` | 使用 `CompareEventPair` 与 `FSModel.ScoreNormalized`，把主客名称、时间差、联赛层级、运动类型转化为概率型证据。 |
 | DTW 时间偏移 | `DTWOffsetSec` | 用 `EventDTWMatcher.TryCorrect` 估计整体偏移，输出 `DTW_OFFSET`。 |
 
-## 4. 一对一冲突消解策略
+## 5. 一对一冲突消解策略
 
 当前短期实现采用 **按分数降序贪心 + 冲突解释记录**。流程先生成全量候选边，再统一排序；每条源侧事件最多占用一条 TS 比赛，每个 `ts_match_id` 最多被一个源侧事件占用。低于自动确认阈值的候选会被淘汰并标记 `BELOW_AUTO_THRESHOLD`。
 
@@ -44,11 +56,11 @@ P3 的实现入口是 `internal/matcher/evidence_event_matcher.go`。该适配�
 
 该策略可在 P4 或后续阶段替换为 Hungarian / min-cost max-flow，但应保持 `ConflictElimination` 字段稳定，避免破坏人工复核和联赛聚合解释链。
 
-## 5. 两轮 teamIDMap 逻辑
+## 6. 两轮 teamIDMap 逻辑
 
 P3 提供 `MatchTwoRound` 兼容旧流程的两轮逻辑。第一轮不注入 `teamIDMap`，主要依赖名称、时间、别名、P2 先验、FSModel 和 DTW 证据；随后把第一轮 `ResolvedEventMatch` 转换为现有 `EventMatch`，复用 `DeriveTeamMappings` 推导 `teamIDMap`；第二轮重新执行候选边评分，并允许 `TEAM_ID_FALLBACK` / L4b 兜底极端偏移或低名称相似度样本。
 
-## 6. P4 聚合所需输出字段
+## 7. P4 聚合所需输出字段
 
 P4 聚合联赛级结果时至少需要读取以下字段：
 
@@ -65,6 +77,6 @@ P4 聚合联赛级结果时至少需要读取以下字段：
 | `conflict_info` | `ResolvedEventMatch` | 展示被当前 winner 淘汰的候选和分差。 |
 | `edges` | `ConflictResolutionResult` | 保留完整候选边，供 P4 回溯被淘汰候选和计算 competition 级证据分布。 |
 
-## 7. 已知限制
+## 8. 已知限制
 
 当前 P3 仍是轻量适配层，冲突消解采用贪心算法，不保证全局最优。`EvidenceEventCandidate` 以 SR 事件为首个源侧形态，后续若 LS 或其他数据源进入 Evidence-First 流程，应抽象为 canonical source event。FSModel 使用现有经验先验，若未来积累标注样本，应按 competition 或 sport 维度做参数校准。主客反转候选目前可被自动确认，但始终带 `SIDE_REVERSED` reason code，建议 P4 对该类结果设置更严格的聚合阈值或人工复核策略。

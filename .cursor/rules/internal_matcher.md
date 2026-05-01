@@ -16,6 +16,7 @@ globs: ["internal/matcher/**/*"]
 | `ls_engine.go` | LSports 专用匹配引擎（760 行） |
 | `event.go` | 比赛匹配（五级降级规则 L1–L4b + TeamAliasIndex，625 行） |
 | `event_dtw.go` | DTW 时间序列比赛匹配（525 行） |
+| `evidence_candidate.go` | Evidence-First P2 队伍优先候选生成器（TS 队伍候选、TS 比赛候选、reason code、强约束守门、规模控制） |
 | `evidence_event_matcher.go` | Evidence-First P3 比赛候选池适配层（多 competition 候选边打分 + 一对一冲突消解） |
 | `league.go` | 联赛匹配（已知映射表 + 名称相似度 + 全局占用机制） |
 | `league_alias.go` | 联赛别名匹配（629 行） |
@@ -73,6 +74,19 @@ type MatchResult struct {
         → L4b 球队 ID 精确对兜底
         → DeriveTeamMappings（最终）
 ```
+
+### Evidence-First P2 队伍优先候选生成
+`EvidenceCandidateGenerator` 面向源侧单联赛的小规模队伍集合，先通过 P1 TS 队伍候选查询接口召回 `EvidenceQueriedTeam`，再通过 TS 比赛候选查询接口召回 `EvidenceQueriedEvent`，最终输出 `TeamCandidateEvidence`、`EventCandidateEvidence` 和 P3 可直接消费的 `[]EvidenceEventCandidate`。P2 只负责候选召回、守门、降权和解释，不做最终 TS 联赛确认。
+
+| 约束 | 说明 |
+|------|------|
+| 优先级合并 | 候选来源按 `ALIAS_HIT`、Name+Country、Name+RecentMatch、International fallback 合并，保留最高优先级和最高分候选。 |
+| 强约束守门 | Women/Men、U19/成年队、Reserve/B team、非国际赛事国家冲突和联赛关键词冲突必须 veto 或显著降权，并输出 `GUARD_VETO_*` reason code。 |
+| 国际豁免 | `World`、`UEFA`、`FIFA`、`AFC`、`CONMEBOL` 等国际/跨洲赛事允许跨地区召回，但必须带 `INTERNATIONAL_FALLBACK` 并受国际 TopK 限制。 |
+| 规模控制 | 默认每个源队伍保留 Top 8，国际赛事保留 Top 15；整体 TS 比赛候选受 `EventCandidateLimit` 硬上限约束，并记录 `DroppedEventCandidateCount`。 |
+| P3 契约 | P2 通过 `EvidenceCandidateResult.P3EventCandidates` 保留 `competition_id`、候选先验分、主客队候选分和强约束结果，供 `EvidenceEventMatcher` 消费。 |
+
+详见文档：[`docs/evidence_candidate_generator.md`](../../docs/evidence_candidate_generator.md)。
 
 ### Evidence-First P3 比赛候选池适配
 
