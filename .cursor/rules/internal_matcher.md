@@ -17,6 +17,7 @@ globs: ["internal/matcher/**/*"]
 | `event.go` | 比赛匹配（五级降级规则 L1–L4b + TeamAliasIndex，625 行） |
 | `event_dtw.go` | DTW 时间序列比赛匹配（525 行） |
 | `candidate_pool.go` | **Evidence-First P1 候选池生成器** — 把"一组候选 TS competition + 联赛先验 + 强约束"转化为 []EvidenceEventCandidate；依赖最小 TSEventLoader 接口，单测可注入 stub（194 行） |
+| `team_prior_enricher.go` | **Evidence-First P2 球队级先验填充** — 对每条 EvidenceEventCandidate 扫描全部 SR 球队名，取最佳相似度填入 HomeTeamCandidateScore / AwayTeamCandidateScore；别名感知（aliasIdx.NameSimWithAlias）；纯函数原地修改 |
 | `evidence_event_matcher.go` | Evidence-First P3 比赛候选池适配层（多 competition 候选边打分 + 一对一冲突消解） |
 | `league.go` | 联赛匹配（已知映射表 + 名称相似度 + 全局占用机制） |
 | `league_alias.go` | 联赛别名匹配（629 行） |
@@ -97,13 +98,12 @@ type MatchResult struct {
 | `(b *CandidatePoolBuilder).Build(candidates, sport)` | 主入口 |
 | `MergeTSTeamNames(maps...)` | 工具函数，先到不被覆盖语义的 map union |
 
-### Evidence-First P3 比赛候选池适配
+### Evidence-First P2 球队级先验填充
 
-`EvidenceEventMatcher` 面向 P2 输出的多 competition TS 比赛候选池，输入为 `[]EvidenceEventCandidate` 而不是单一联赛内的 `[]db.TSEvent`。候选结构显式保留 `competition_id`、P2 候选先验分、主客队候选分和强约束结果；输出 `ResolvedEventMatch` 保留 `ts_match_id`、`ts_competition_id`、主客队、时间、置信度、规则、reason code 与冲突淘汰解释。
+`EnrichTeamPriors` 把 P1 候选池里每个 TS event 的 home/away 队，与全部 SR 球队跑相似度，取最佳值填入 `HomeTeamCandidateScore` / `AwayTeamCandidateScore`。这是 P1 与 P3 之间的桥接 —— P3 `scoreEdge` 通过 `normalizePrior` 把这两个先验 + 联赛先验做平均，按 `candidatePriorWeight=0.10` 注入最终边得分。
 
-| 约束 | 说明 |
-|------|------|
-| 候选边打分 | 复用 `levelConfigs`、`gaussianTimeFactor`、`TeamAliasIndex.NameSimWithAlias`、`FSModel` 和 `EventDTWMatcher`，综合时间差、主客队相似度、P2 先验、强约束、别名命中和队伍 ID 锚点。 |
-| 主客反转 | 反转候选允许保留，但必须扣除反转惩罚，并在 `reason_codes` 中输出 `SIDE_REVERSED`。 |
-| 一对一确认 | 自动确认前按候选边分数降序做冲突消解，保证一个 `ts_match_id` 最多匹配一个源侧事件。 |
-| 冲突解释 | 被淘�
+| 字段 / 行为 | 说明 |
+|------------|------|
+| 计算公式 | 对每个 TS team，`max over srTeams { aliasIdx.NameSimWithAlias(srID, srName, tsID, tsName) }` |
+| 别名感知 | `NameSimWithAlias` 在 `*TeamAliasIndex` 命中时直接返回 `aliasApplyScore`，未命中走 `teamNameSimilarity` (Jaccard) |
+| 原地修改 | 只动 

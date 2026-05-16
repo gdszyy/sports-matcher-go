@@ -63,7 +63,8 @@
 |------|------|------|
 | 通用引擎主体 | `internal/matcher/universal_engine.go` | UniversalEngine、SRSourceAdapter、TSSourceAdapter、RunLeague 主流程 |
 | 事件级匹配核心 | `internal/matcher/event.go` | MatchEvents、高斯时间衰减、TeamAliasIndex、L1~L6 七级策略 |
-| **Evidence-First P1 候选池生成** | `internal/matcher/candidate_pool.go` | CandidatePoolBuilder、TSCompetitionCandidate、TSEventLoader 接口；把多 competition 候选 + 联赛先验 + 强约束转为 `[]EvidenceEventCandidate`（**最新落地，2026-05-16**） |
+| **Evidence-First P1 候选池生成** | `internal/matcher/candidate_pool.go` | CandidatePoolBuilder、TSCompetitionCandidate、TSEventLoader 接口；把多 competition 候选 + 联赛先验 + 强约束转为 `[]EvidenceEventCandidate`（2026-05-16） |
+| **Evidence-First P2 球队级先验填充** | `internal/matcher/team_prior_enricher.go` | EnrichTeamPriors：扫描 SR 球队名，取最佳相似度填入 HomeTeamCandidateScore / AwayTeamCandidateScore；别名感知；纯函数原地修改（**最新落地，2026-05-16**） |
 | **Evidence-First P3 比赛级匹配** | `internal/matcher/evidence_event_matcher.go` | EvidenceEventMatcher、候选边打分（复用 levelConfigs / FSModel / DTW）、一对一冲突消解、`MatchTwoRound` 两轮 teamIDMap 推导（详见 PI-006/PI-007） |
 | 联赛特征约束 | `internal/matcher/league_features.go` | 六维强约束一票否决（性别/年龄/赛制/层级/区域/国家） |
 | 联赛别名知识图谱 | `internal/matcher/league_alias.go` | LeagueAliasIndex、AliasStore 持久化 |
@@ -82,9 +83,4 @@
 | Evidence-First P0 基线评估 | `python/evidence_first_baseline_eval.py` | 冻结旧流程基线、产出 SR↔TS 与 LS↔TS 双链路统一指标 JSON/CSV，为 P1–P5 迭代提供可复现对比（**最新**） |
 | LS↔TS 2026 测试 | `python/match_2026.py` | LS 链路测试脚本（旧版，仅供参考） |
 
-**SR 2026 测试最新结果**（2026-04-20，commit `afd4e5e`）：
-
-| 维度 | 加权 Precision | 加权 Recall | 加权 F1 | 平均置信度 |
-|------|--------------|------------|---------|----------|
-| 全量（14 GT 联赛） | 0.8927 | 0.8681 | 0.8799 | 0.9737 |
-| 热门联赛（7足球+NB
+**SR 2026 测试最新结果**（2026
