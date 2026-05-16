@@ -63,6 +63,7 @@
 |------|------|------|
 | 通用引擎主体 | `internal/matcher/universal_engine.go` | UniversalEngine、SRSourceAdapter、TSSourceAdapter、RunLeague 主流程 |
 | 事件级匹配核心 | `internal/matcher/event.go` | MatchEvents、高斯时间衰减、TeamAliasIndex、L1~L6 七级策略 |
+| **Evidence-First 联赛 Top-N 入口** | `internal/matcher/league_topn.go` | MatchLeagueTopN、LeagueMatchCandidate、ToTSCompetitionCandidate(s)；KnownMap 命中 Top-1，其余按 leagueNameScore 降序；不破坏 P0 单胜者路径（**最新落地，2026-05-16**） |
 | **Evidence-First P1 候选池生成** | `internal/matcher/candidate_pool.go` | CandidatePoolBuilder、TSCompetitionCandidate、TSEventLoader 接口；把多 competition 候选 + 联赛先验 + 强约束转为 `[]EvidenceEventCandidate`（2026-05-16） |
 | **Evidence-First P2 球队级先验填充** | `internal/matcher/team_prior_enricher.go` | EnrichTeamPriors：扫描 SR 球队名，取最佳相似度填入 HomeTeamCandidateScore / AwayTeamCandidateScore；别名感知；纯函数原地修改（**最新落地，2026-05-16**） |
 | **Evidence-First P3 比赛级匹配** | `internal/matcher/evidence_event_matcher.go` | EvidenceEventMatcher、候选边打分（复用 levelConfigs / FSModel / DTW）、一对一冲突消解、`MatchTwoRound` 两轮 teamIDMap 推导（详见 PI-006/PI-007） |
@@ -80,7 +81,4 @@
 | 脚本 | 路径 | 说明 |
 |------|------|------|
 | SR↔TS 2026 测试（最新） | `python/test_sr_2026.py` | 复现 UniversalEngine 完整逻辑，支持 GT 重建 TS 候选集，覆盖 14 个 GT 联赛 |
-| Evidence-First P0 基线评估 | `python/evidence_first_baseline_eval.py` | 冻结旧流程基线、产出 SR↔TS 与 LS↔TS 双链路统一指标 JSON/CSV，为 P1–P5 迭代提供可复现对比（**最新**） |
-| LS↔TS 2026 测试 | `python/match_2026.py` | LS 链路测试脚本（旧版，仅供参考） |
-
-**SR 2026 测试最新结果**（2026
+| Evidence-First P0 基线评估 | `python/evidence_first_baseline_eval.py` | 冻结�
