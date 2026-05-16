@@ -1,0 +1,608 @@
+[
+  {
+    "canonical": "Premier League",
+    "aliases": [
+      "Premier League",
+      "English Premier League",
+      "FA Premier League",
+      "EPL",
+      "Barclays Premier League",
+      "BPL"
+    ]
+  },
+  {
+    "canonical": "EFL Championship",
+    "aliases": [
+      "EFL Championship",
+      "Championship",
+      "English Football League Championship",
+      "Football League Championship",
+      "The Championship",
+      "Championship England",
+      "English Championship",
+      "Second Division England"
+    ]
+  },
+  {
+    "canonical": "EFL League One",
+    "aliases": [
+      "EFL League One",
+      "League One",
+      "English Football League One",
+      "Football League One",
+      "League One England",
+      "Third Division England",
+      "League 1 England",
+      "League 1"
+    ]
+  },
+  {
+    "canonical": "EFL League Two",
+    "aliases": [
+      "EFL League Two",
+      "League Two",
+      "English Football League Two",
+      "Football League Two",
+      "League Two England",
+      "Fourth Division England",
+      "League 2 England",
+      "League 2"
+    ]
+  },
+  {
+    "canonical": "National League",
+    "aliases": [
+      "National League",
+      "National League England",
+      "Conference National",
+      "Football Conference",
+      "Vanarama National League"
+    ]
+  },
+  {
+    "canonical": "FA Cup",
+    "aliases": [
+      "FA Cup",
+      "FA Challenge Cup",
+      "Football Association Challenge Cup",
+      "The FA Cup"
+    ]
+  },
+  {
+    "canonical": "EFL Cup",
+    "aliases": [
+      "EFL Cup",
+      "League Cup",
+      "Carabao Cup",
+      "Capital One Cup",
+      "Carling Cup",
+      "Football League Cup",
+      "English League Cup"
+    ]
+  },
+  {
+    "canonical": "EFL Trophy",
+    "aliases": [
+      "EFL Trophy",
+      "Football League Trophy",
+      "Johnstone's Paint Trophy",
+      "Papa John's Trophy",
+      "LDV Vans Trophy"
+    ]
+  },
+  {
+    "canonical": "Bundesliga",
+    "aliases": [
+      "Bundesliga",
+      "1. Bundesliga",
+      "German Bundesliga",
+      "Fussball-Bundesliga",
+      "German First Division"
+    ]
+  },
+  {
+    "canonical": "2. Bundesliga",
+    "aliases": [
+      "2. Bundesliga",
+      "2.Bundesliga",
+      "Bundesliga 2",
+      "German Second Division",
+      "2nd Bundesliga"
+    ]
+  },
+  {
+    "canonical": "3. Liga",
+    "aliases": [
+      "3. Liga",
+      "3.Liga",
+      "Liga 3",
+      "German Third Division",
+      "3rd Liga"
+    ]
+  },
+  {
+    "canonical": "LaLiga",
+    "aliases": [
+      "LaLiga",
+      "La Liga",
+      "Primera Division",
+      "Primera División",
+      "Spanish La Liga",
+      "Liga BBVA",
+      "Santander La Liga",
+      "LaLiga Santander"
+    ]
+  },
+  {
+    "canonical": "LaLiga2",
+    "aliases": [
+      "LaLiga2",
+      "La Liga 2",
+      "Segunda Division",
+      "Segunda División",
+      "Spanish Segunda Division",
+      "LaLiga SmartBank",
+      "Liga Adelante"
+    ]
+  },
+  {
+    "canonical": "Serie A",
+    "aliases": [
+      "Serie A",
+      "Italian Serie A",
+      "Serie A TIM",
+      "Lega Serie A"
+    ]
+  },
+  {
+    "canonical": "Serie B",
+    "aliases": [
+      "Serie B",
+      "Italian Serie B",
+      "Serie BKT"
+    ]
+  },
+  {
+    "canonical": "Ligue 1",
+    "aliases": [
+      "Ligue 1",
+      "French Ligue 1",
+      "Ligue 1 Uber Eats",
+      "Division 1 France"
+    ]
+  },
+  {
+    "canonical": "Ligue 2",
+    "aliases": [
+      "Ligue 2",
+      "French Ligue 2",
+      "Ligue 2 BKT",
+      "Division 2 France"
+    ]
+  },
+  {
+    "canonical": "UEFA Champions League",
+    "aliases": [
+      "UEFA Champions League",
+      "Champions League",
+      "UCL",
+      "European Champions Cup",
+      "European Cup"
+    ]
+  },
+  {
+    "canonical": "UEFA Europa League",
+    "aliases": [
+      "UEFA Europa League",
+      "Europa League",
+      "UEL",
+      "UEFA Cup"
+    ]
+  },
+  {
+    "canonical": "UEFA Europa Conference League",
+    "aliases": [
+      "UEFA Europa Conference League",
+      "Conference League",
+      "UECL",
+      "Europa Conference League"
+    ]
+  },
+  {
+    "canonical": "Eredivisie",
+    "aliases": [
+      "Eredivisie",
+      "Netherlands Eredivisie",
+      "Dutch Eredivisie",
+      "Dutch First Division"
+    ]
+  },
+  {
+    "canonical": "Primeira Liga",
+    "aliases": [
+      "Primeira Liga",
+      "Liga Portugal",
+      "Liga NOS",
+      "Ligabwin",
+      "Portuguese Primeira Liga",
+      "Liga Portuguesa"
+    ]
+  },
+  {
+    "canonical": "Süper Lig",
+    "aliases": [
+      "Süper Lig",
+      "Super Lig",
+      "Turkish Super League",
+      "Turkish Süper Lig"
+    ]
+  },
+  {
+    "canonical": "Russian Premier League",
+    "aliases": [
+      "Russian Premier League",
+      "RPL",
+      "RFPL",
+      "Russian Football National League"
+    ]
+  },
+  {
+    "canonical": "MLS",
+    "aliases": [
+      "MLS",
+      "Major League Soccer",
+      "United States Major League Soccer",
+      "American MLS"
+    ]
+  },
+  {
+    "canonical": "Campeonato Brasileiro Série A",
+    "aliases": [
+      "Campeonato Brasileiro Série A",
+      "Brasileiro Serie A",
+      "Brazilian Serie A",
+      "Brasileirao",
+      "Serie A Brazil"
+    ]
+  },
+  {
+    "canonical": "J1 League",
+    "aliases": [
+      "J1 League",
+      "J.League",
+      "J-League",
+      "Japanese J1 League",
+      "Meiji Yasuda J1 League"
+    ]
+  },
+  {
+    "canonical": "Chinese Super League",
+    "aliases": [
+      "Chinese Super League",
+      "CSL",
+      "China Super League",
+      "Chinese Football Super League"
+    ]
+  },
+  {
+    "canonical": "NBA",
+    "aliases": [
+      "NBA",
+      "National Basketball Association",
+      "American NBA"
+    ]
+  },
+  {
+    "canonical": "EuroLeague",
+    "aliases": [
+      "EuroLeague",
+      "EuroLeague Basketball",
+      "Turkish Airlines EuroLeague"
+    ]
+  },
+  {
+    "canonical": "Russian First League",
+    "aliases": [
+      "Russian First League",
+      "FNL",
+      "Pari Premyer Liga",
+      "Russian Football National League",
+      "First League Russia"
+    ]
+  },
+  {
+    "canonical": "Croatian Football League",
+    "aliases": [
+      "Croatian Football League",
+      "HNL",
+      "Prva HNL",
+      "Supersport HNL",
+      "Croatian First Football League",
+      "1. HNL"
+    ]
+  },
+  {
+    "canonical": "NBL Australia",
+    "aliases": [
+      "NBL Australia",
+      "NBL",
+      "National Basketball League Australia",
+      "Australian NBL"
+    ]
+  },
+  {
+    "canonical": "Belgian First Division A",
+    "aliases": [
+      "Belgian First Division A",
+      "Jupiler Pro League",
+      "Jupiler League",
+      "Belgian Pro League",
+      "First Division A Belgium",
+      "Belgian First Division"
+    ]
+  },
+  {
+    "canonical": "CBA",
+    "aliases": [
+      "CBA",
+      "Chinese Basketball Association",
+      "China Basketball Association",
+      "Chinese CBA"
+    ]
+  },
+  {
+    "canonical": "MLS All-Stars",
+    "aliases": [
+      "MLS All-Stars",
+      "MLS All Star Game",
+      "MLS ASG",
+      "MLS All Stars"
+    ]
+  },
+  {
+    "canonical": "J2 League",
+    "aliases": [
+      "J2 League",
+      "J.League 2",
+      "J-League 2",
+      "Japanese J2 League",
+      "Meiji Yasuda J2 League"
+    ]
+  },
+  {
+    "canonical": "J3 League",
+    "aliases": [
+      "J3 League",
+      "J.League 3",
+      "J-League 3",
+      "Japanese J3 League"
+    ]
+  },
+  {
+    "canonical": "K League 1",
+    "aliases": [
+      "K League 1",
+      "K1 League",
+      "Korean K League 1",
+      "K-League 1",
+      "Hana1Q K League 1"
+    ]
+  },
+  {
+    "canonical": "K League 2",
+    "aliases": [
+      "K League 2",
+      "K2 League",
+      "Korean K League 2",
+      "K-League 2"
+    ]
+  },
+  {
+    "canonical": "Scottish Premiership",
+    "aliases": [
+      "Scottish Premiership",
+      "Scottish Premier League",
+      "SPL",
+      "SPFL Premiership",
+      "Cinch Premiership"
+    ]
+  },
+  {
+    "canonical": "Scottish Championship",
+    "aliases": [
+      "Scottish Championship",
+      "SPFL Championship",
+      "Cinch Championship Scotland"
+    ]
+  },
+  {
+    "canonical": "Eerste Divisie",
+    "aliases": [
+      "Eerste Divisie",
+      "Dutch Eerste Divisie",
+      "Netherlands Eerste Divisie",
+      "Keuken Kampioen Divisie"
+    ]
+  },
+  {
+    "canonical": "Super League Greece",
+    "aliases": [
+      "Super League Greece",
+      "Greek Super League",
+      "Super League 1",
+      "Super League Greece 1"
+    ]
+  },
+  {
+    "canonical": "Austrian Bundesliga",
+    "aliases": [
+      "Austrian Bundesliga",
+      "Austria Bundesliga",
+      "Admiral Bundesliga",
+      "Austrian Football Bundesliga"
+    ]
+  },
+  {
+    "canonical": "Swiss Super League",
+    "aliases": [
+      "Swiss Super League",
+      "Switzerland Super League",
+      "Raiffeisen Super League"
+    ]
+  },
+  {
+    "canonical": "Danish Superliga",
+    "aliases": [
+      "Danish Superliga",
+      "Denmark Superliga",
+      "Superliga Denmark",
+      "3F Superliga"
+    ]
+  },
+  {
+    "canonical": "Norwegian Eliteserien",
+    "aliases": [
+      "Norwegian Eliteserien",
+      "Eliteserien",
+      "Norway Eliteserien",
+      "Tippeligaen"
+    ]
+  },
+  {
+    "canonical": "Allsvenskan",
+    "aliases": [
+      "Allsvenskan",
+      "Swedish Allsvenskan",
+      "Sweden Allsvenskan"
+    ]
+  },
+  {
+    "canonical": "Ekstraklasa",
+    "aliases": [
+      "Ekstraklasa",
+      "Polish Ekstraklasa",
+      "Poland Ekstraklasa",
+      "PKO BP Ekstraklasa"
+    ]
+  },
+  {
+    "canonical": "Czech First League",
+    "aliases": [
+      "Czech First League",
+      "Czech Republic First League",
+      "Fortuna Liga Czech",
+      "Czech Liga"
+    ]
+  },
+  {
+    "canonical": "Romanian Liga 1",
+    "aliases": [
+      "Romanian Liga 1",
+      "Liga 1 Romania",
+      "Romania Liga 1",
+      "SuperLiga Romania"
+    ]
+  },
+  {
+    "canonical": "Serbian SuperLiga",
+    "aliases": [
+      "Serbian SuperLiga",
+      "Serbia SuperLiga",
+      "Mozzart Bet SuperLiga"
+    ]
+  },
+  {
+    "canonical": "Ukrainian Premier League",
+    "aliases": [
+      "Ukrainian Premier League",
+      "Ukraine Premier League",
+      "UPL",
+      "Ukrainian Football Premier League"
+    ]
+  },
+  {
+    "canonical": "Liga MX",
+    "aliases": [
+      "Liga MX",
+      "Mexican Liga MX",
+      "Liga BBVA MX",
+      "Primera Division Mexico"
+    ]
+  },
+  {
+    "canonical": "Argentine Primera Division",
+    "aliases": [
+      "Argentine Primera Division",
+      "Primera Division Argentina",
+      "Liga Profesional Argentina",
+      "Superliga Argentina"
+    ]
+  },
+  {
+    "canonical": "Colombian Primera A",
+    "aliases": [
+      "Colombian Primera A",
+      "Liga BetPlay Colombia",
+      "Primera A Colombia",
+      "Categoria Primera A"
+    ]
+  },
+  {
+    "canonical": "Chilean Primera Division",
+    "aliases": [
+      "Chilean Primera Division",
+      "Primera Division Chile",
+      "Campeonato AFP PlanVital"
+    ]
+  },
+  {
+    "canonical": "Liga 1 Peru",
+    "aliases": [
+      "Liga 1 Peru",
+      "Peruvian Primera Division",
+      "Liga 1 Betsson"
+    ]
+  },
+  {
+    "canonical": "Saudi Pro League",
+    "aliases": [
+      "Saudi Pro League",
+      "Saudi Professional League",
+      "Saudi Arabia Pro League",
+      "Roshn Saudi League",
+      "Saudi Premier League"
+    ]
+  },
+  {
+    "canonical": "Israeli Premier League",
+    "aliases": [
+      "Israeli Premier League",
+      "Israel Premier League",
+      "Ligat ha'Al",
+      "Ligat HaAl"
+    ]
+  },
+  {
+    "canonical": "FIFA World Cup",
+    "aliases": [
+      "FIFA World Cup",
+      "World Cup",
+      "FIFA World Cup Qualification"
+    ]
+  },
+  {
+    "canonical": "UEFA Nations League",
+    "aliases": [
+      "UEFA Nations League",
+      "Nations League",
+      "UNL"
+    ]
+  },
+  {
+    "canonical": "Finalissima",
+    "aliases": [
+      "Finalissima",
+      "CONMEBOL-UEFA Cup of Champions"
+    ]
+  }
+]

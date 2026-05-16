@@ -5,6 +5,9 @@ evidence_first_strict_baseline.py — Strict 无 mapping 模式基线评估（v1
 相似度从全量 TS 候选池里找正确联赛"的真实水平。
 
 评估集来源：sr_ts_ground_truth.json 反推（带真实 ts_competition_name）。
+
+v1.20 (2026-05-16): 集成 LeagueAliasIndex（移植自 internal/matcher/league_alias.go），
+让 Python eval 算法等价于 Go 真实算法。v1.18-v1.19 数字低估了 Go 算法能力。
 """
 
 from __future__ import annotations
@@ -99,6 +102,69 @@ def name_similarity(a, b):
     return max(seq, jw) * 0.6 + min(seq, jw) * 0.4
 
 
+_ALIAS_GROUPS = None
+_ALIAS_NORM_TO_CANONICAL = None
+_ALIAS_CANONICAL_TO_ALIASES = None
+
+
+def _load_alias_index():
+    global _ALIAS_GROUPS, _ALIAS_NORM_TO_CANONICAL, _ALIAS_CANONICAL_TO_ALIASES
+    if _ALIAS_GROUPS is not None:
+        return
+    p = os.path.join(DATA_DIR, 'league_alias_groups.json')
+    with open(p, 'r', encoding='utf-8') as f:
+        _ALIAS_GROUPS = json.load(f)
+    _ALIAS_NORM_TO_CANONICAL = {}
+    _ALIAS_CANONICAL_TO_ALIASES = {}
+    for g in _ALIAS_GROUPS:
+        canonical = g['canonical']
+        aliases = g['aliases']
+        _ALIAS_CANONICAL_TO_ALIASES[canonical] = aliases
+        for alias in aliases:
+            n = normalize(alias)
+            if n:
+                _ALIAS_NORM_TO_CANONICAL[n] = canonical
+
+
+def alias_lookup(name):
+    _load_alias_index()
+    return _ALIAS_NORM_TO_CANONICAL.get(normalize(name))
+
+
+def alias_get_all_by_name(name):
+    _load_alias_index()
+    canonical = _ALIAS_NORM_TO_CANONICAL.get(normalize(name))
+    if not canonical:
+        return []
+    return _ALIAS_CANONICAL_TO_ALIASES.get(canonical, [])
+
+
+def league_name_similarity_with_alias(a, b):
+    """等价 Go leagueNameSimilarityWithAlias:
+    1) base name_similarity 作基线
+    2) 两侧映射到同 canonical → 直接 0.98
+    3) 单侧命中 → 拿 group 所有 aliases 跟对侧比，取最大值
+    """
+    base = name_similarity(a, b)
+    ca = alias_lookup(a)
+    cb = alias_lookup(b)
+    if ca and cb and ca == cb:
+        return 0.98
+    best = base
+    if ca:
+        for alias in alias_get_all_by_name(a):
+            s = name_similarity(alias, b)
+            if s > best:
+                best = s
+    if cb:
+        for alias in alias_get_all_by_name(b):
+            s = name_similarity(a, alias)
+            if s > best:
+                best = s
+    return best
+
+
+
 def is_international(s):
     if not s:
         return False
@@ -110,13 +176,20 @@ def is_international(s):
 # ─────────────────────────────────────────────────────────────────────────────
 
 def match_league_topk(src_name, src_category, src_sport, ts_pool, k=5):
+    """v1.20: 用 league_name_similarity_with_alias 等价 Go 真实算法。
+
+    Basketball 注意：Go 侧 ts_bb_competition 表无 host_country 字段（见
+    internal/db/ts_competition.go:36-39），CountryName 恒为 ""。Python eval 数据
+    fetch 时却给 basketball 填了 country_id hash（脏数据），所以这里对 basketball
+    强制忽略 country 字段，与 Go 行为等价。"""
+    is_basketball = (src_sport == 'basketball')
     scored = []
     for ts in ts_pool:
         if ts.get('sport') != src_sport:
             continue
         ts_name = ts.get('name', '')
-        ts_country = ts.get('country', '') or ''
-        base = name_similarity(src_name, ts_name)
+        ts_country = '' if is_basketball else (ts.get('country', '') or '')
+        base = league_name_similarity_with_alias(src_name, ts_name)
         if src_category and ts_country:
             loc = name_similarity(src_category, ts_country)
             if not is_international(src_category) and not is_international(ts_country):

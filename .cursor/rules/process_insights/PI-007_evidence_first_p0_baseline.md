@@ -1,6 +1,6 @@
 ---
 id: "PI-007"
-version: "v1.5"
+version: "v1.6"
 last_updated: "2026-05-16"
 author: "Manus AI, Claude Cowork"
 related_modules: ["python", "python/data", "docs", "internal/matcher"]
@@ -128,3 +128,32 @@ sports-matcher batch2 --config eval_config.json \
 ### CI 哨兵
 
 `scripts/check_no_mapping_in_eval.py` — 扫描测评脚本若直接读取 KnownLeagueMap/KnownLSLeagueMap 即 fail。修复 3 处历史 P0 评估脚本，加 `# ALLOW-KNOWNMAP-IN-EVAL` 白名单标签 + 用途注释（"P0 测事件匹配能力，给定 ts_comp_id 是设计本意"）。
+
+## v1.6 修订（2026-05-16）— Python eval 等价 Go 真实算法
+
+### 重大修订：v1.18-v1.19 数字低估了 Go 算法能力
+
+集成 LeagueAliasIndex（移植 64 条 group 到 `python/data/league_alias_groups.json`，等价 `leagueNameSimilarityWithAlias`）+ 修 basketball 数据偏差后：
+
+| 版本 | SR Top-1 | basketball Top-1 | football Top-1 |
+|------|----------|------------------|----------------|
+| v1.18 | 57.1% | 0% (NBA name_sim<0.3 丢候选) | (混合) |
+| v1.19 | 71.4% | 0% (同) | 76.9% |
+| **v1.20** | **100.0%** | **100.0%** | **100.0%** |
+
+**结论**：Go 真实算法在当前 14 个 SR GT 评估集上 strict 模式 Top-1 = **100%**。之前报告的"28.6 pp mapping 自证缺口"是 Python eval 不等价造成的假象。
+
+### 关键 fix
+
+1. **LeagueAliasIndex 移植**：`python/data/league_alias_groups.json`（64 组 alias，从 `internal/matcher/league_alias.go::staticLeagueAliasGroups` 提取）+ `league_name_similarity_with_alias` 函数。NBA → 0.98 命中 National Basketball Association（canonical match）。
+2. **Basketball country 一致性**：Go 侧 `ts_bb_competition` 表无 `host_country` 字段，`CountryName=""` 自动跳过 country veto。Python eval 的 `ts_leagues_2026.json` 里 basketball country 是脏 hash ID（`'ngy0or5gteqwzv3'`），需特殊处理 — `match_league_topk` 对 basketball 强制 `ts_country=''`，等价 Go schema。
+
+### 仍未解决的真实算法弱点
+
+Top-1 100% 不代表算法完美 —— 是评估集太小（14 个有 GT 的联赛）。**PI-006 v1.10 暴露的真实误匹配**（Zimbabwe Premier Soccer League → BPL conf=0.890）**不在当前评估集里**，因为它们没有 ground truth。
+
+**v1.21+ 必做**：扩 strict eval 评估集 — 从 `sr_ts_match_mapping_3` 拉**全量**真实 SR↔TS 匹配关系（不只是 ground_truth.json 的 14 个），评估集应该有 ≥100 个有 GT 的联赛，才能真实反映算法在跨地域同名缩写、级别歧义、女子/U19 等场景的能力。
+
+### CI 哨兵补充
+
+`scripts/check_no_mapping_in_eval.py` 在 v1.19 已就位。`python/data/league_alias_groups.json` 不进哨兵扫描范围（它是算法字典 export，不是 SR_ID→TS_ID mapping）。

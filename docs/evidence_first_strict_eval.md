@@ -126,3 +126,55 @@ python3 python/evidence_first_strict_baseline.py
 | C. token IoU 补充信号 | 所有 sport | 边缘改善（~2-5 pp） |
 
 A+B 是首选 v1.19 改进路线。
+
+---
+
+## v1.20 修订（2026-05-16）— Python eval 等价 Go 真实算法
+
+### 修了什么
+
+v1.18-v1.19 Python eval 算法**不等价**于 Go 真实算法，两个错位导致严重低估：
+
+| 错位 | v1.18-v1.19 Python eval | Go 真实算法 |
+|------|------------------------|-------------|
+| **LeagueAliasIndex** | ❌ 未集成 | ✅ `leagueNameSimilarityWithAlias` 内置 |
+| **Basketball country 字段** | ❌ 用 fetch 脚本的脏数据 (`country='ngy0or5gteqwzv3'` hash ID)，触发 GEO_VETO 一刀切丢所有候选 | ✅ DB 层 `ts_bb_competition.host_country` 不存在，`CountryName=""`，自动跳过 country veto |
+
+修复后 Python eval ↔ Go 算法字典 + 字段处理逻辑一致。
+
+### 修复后真实数字
+
+```
+[SR] 14 个有效 (basketball=1 + football=13)
+  整体 Top-1: 100.0% (14/14)
+  basketball Top-1: 100.0% (1/1)  ← NBA → National Basketball Association 0.98
+  football Top-1:   100.0% (13/13)  ← LaLiga → Spanish La Liga 0.98 (alias canonical match)
+
+[LS] 2 个有效 (basketball=1 + football=1)
+  整体 Top-1: 100.0% (2/2)
+  basketball Top-1: 100.0% (1/1)  ← CBA → Chinese Basketball Association 0.98
+  football Top-1:   100.0% (1/1)
+```
+
+### v1.18-v1.20 数字演进史
+
+| 版本 | SR 整体 Top-1 | football Top-1 | basketball Top-1 | 原因 |
+|------|---------------|----------------|------------------|------|
+| v1.18 | 57.1% | (混合) | 0% | Python eval 缺 alias + 缺 category |
+| v1.19 | 71.4% | 76.9% | 0% | 加了 category 但仍缺 alias、basketball 误用脏 country |
+| **v1.20** | **100.0%** | **100.0%** | **100.0%** | **等价 Go 真实算法** |
+
+### 修订后的结论
+
+- **Go 真实算法在 strict-no-mapping 模式下、当前 14 个 SR GT 评估集上 Top-1 = 100%**
+- 之前报告的 "28.6 pp mapping 自证缺口"是 Python eval 不等价造成的假象 — 真实差距是 0 pp
+- **PI-006 v1.10 报告的 Zimbabwe / Jordan League 等 silent 误匹配仍真实存在** — 它们不在 14 个 GT 评估集里，是更难的边缘场景
+- v1.19 提议的"v1.19 改进方向 A+B" 在当前评估集上**没有改进空间**（已 100%），改进的真实场景是：
+  - PI-006 v1.10 暴露的非 GT 联赛误匹配（Zimbabwe → BPL 0.890）— 需要扩 strict eval 评估集到生产 DB 全量
+  - team-first fallback 已经在生产里解决了这些 silent 误匹配（v1.16）
+
+### 仍然有效的发现
+
+- ✅ 算法字典（LeagueAliasGroup）是 strict 评估的核心组件 —— 没它，NBA / CBA 这类缩写联赛直接 0%
+- ✅ Basketball schema 不一致是数据层而非算法层问题（fetch 脚本对 ts_bb_competition 处理与 DB schema 不一致）
+- ⚠️ **当前评估集太小**（SR 14 / LS 2 evaluable），无法暴露真实算法弱点 —— 需要扩 ground_truth 评估集
