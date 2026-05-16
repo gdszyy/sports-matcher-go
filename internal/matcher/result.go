@@ -10,6 +10,10 @@ const (
 	RuleLeagueNameMed MatchRule = "LEAGUE_NAME_MED" // 名称中相似（≥0.70）
 	RuleLeagueNameLow MatchRule = "LEAGUE_NAME_LOW" // 名称低相似（≥0.55）
 	RuleLeagueNoMatch MatchRule = "LEAGUE_NO_MATCH" // 未匹配
+	// RuleLeagueSuspect 表示联赛名称相似度通过了，但 EF 跑完事件级匹配产生了
+	// 0 条候选边（edges=0）—— 强烈暗示联赛匹配本身就是错的。详见 PI-006 v1.12。
+	// 触发时 confidence 自动 × suspectConfidenceMultiplier 作为可观察的降级信号。
+	RuleLeagueSuspect MatchRule = "LEAGUE_SUSPECT"
 
 	RuleEventL1      MatchRule = "EVENT_L1"        // 时差≤5min + 名称
 	RuleEventL2      MatchRule = "EVENT_L2"        // 时差≤6h + 名称

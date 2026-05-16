@@ -51,6 +51,10 @@ func (a *LSSourceAdapter) MatchLeagueTopN(tsComps []db.TSCompetition, n int) []L
 // defaultRunLeagueTopN 是 RunLeague 在 EF 路径下未指定 EvidenceFirstTopN 时的默认值。
 const defaultRunLeagueTopN = 5
 
+// suspectConfidenceMultiplier 是 edges=0 时联赛 confidence 的降级系数（v1.12）。
+// 0.5 是经验值：把高 conf (0.9+) 拉到 ≤0.5 让下游聚合 / 报表能识别为 SUSPECT。
+const suspectConfidenceMultiplier = 0.5
+
 // runLeagueEvidenceFirst 是 RunLeague 的 Evidence-First 分支。
 //
 // 调用前提：
@@ -156,6 +160,22 @@ func (e *UniversalEngine) runLeagueEvidenceFirst(
 	log.Printf("%s [4/4] EF Match: %d/%d [L1=%d L2=%d L3=%d L4=%d L5=%d L4b=%d L6=%d] edges=%d eliminated=%d",
 		prefix, matched, len(eventMatches), l1, l2, l3, l4, l5, l4b, l6,
 		len(efResult.Edges), len(efResult.Eliminated))
+
+	// ── SUSPECT 降级（PI-006 v1.12）─────────────────────────────────────
+	// 若 EF 跑完产生 0 条候选边、且联赛标了 Matched=true、且不是 KnownLeagueMap
+	// 命中（人工 curated 信任），则联赛级名称匹配几乎肯定错了 —— 把 confidence
+	// 砍半并把 Rule 改成 LEAGUE_SUSPECT，让下游 / 监控能识别。
+	// 实证证据：PI-006 v1.10 Case A (Premier Soccer League Zimbabwe → BPL) 和
+	// Case C (Italy Serie B Women → Argentine Women's League) 都是这个模式。
+	// 不触发 KnownMap：KnownLeagueMap 是人工映射，edges=0 可能是 TS 数据缺失。
+	if len(efResult.Edges) == 0 && result.League != nil && result.League.Matched && result.League.MatchRule != RuleLeagueKnown {
+		originalConf := result.League.Confidence
+		result.League.Confidence *= suspectConfidenceMultiplier
+		originalRule := result.League.MatchRule
+		result.League.MatchRule = RuleLeagueSuspect
+		log.Printf("%s ⚠ league SUSPECT: edges=0 → rule %s→%s, conf %.3f→%.3f",
+			prefix, originalRule, RuleLeagueSuspect, originalConf, result.League.Confidence)
+	}
 
 	teamMappings := adapter.DeriveTeamMappings(eventMatches, srcTeamNames, pool.TSTeamNames)
 	log.Printf("%s   teamMappings: %d", prefix, len(teamMappings))
