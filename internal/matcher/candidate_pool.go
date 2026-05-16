@@ -48,6 +48,16 @@ type BatchTSEventLoader interface {
 	GetTeamNamesBatch(competitionIDs []string, sport string) (map[string]map[string]string, error)
 }
 
+// TimeRangeBatchTSEventLoader 是 BatchTSEventLoader 的可选时间窗扩展（PI-006 v1.13）。
+// 实现此接口的 Loader 能在 SQL 层用 WHERE match_time BETWEEN ... 把候选事件
+// 数据量从"2 年 LIMIT 3000"压缩到 SR events 实际时间分布的 ±N 天窗口。
+// *db.TSAdapter 实现了该接口；其他 Loader 通过 type assertion 自动降级到
+// 不带时间窗的 BatchTSEventLoader / 并行 fetch 路径。
+type TimeRangeBatchTSEventLoader interface {
+	BatchTSEventLoader
+	GetEventsBatchInRange(competitionIDs []string, sport string, timeMinUnix, timeMaxUnix int64) (map[string][]db.TSEvent, error)
+}
+
 // TSCompetitionCandidate 是 P1 候选池生成器的输入单元：
 // 一个候选 TS 联赛 + 联赛级先验分 + 联赛级强约束结果。
 //
@@ -233,6 +243,96 @@ func (b *CandidatePoolBuilder) Build(
 				CandidateScore:         cand.LeaguePriorScore,
 				HomeTeamCandidateScore: 0,
 				AwayTeamCandidateScore: 0,
+				StrongConstraintOK:     cand.StrongConstraintOK,
+				StrongConstraintReason: cand.StrongConstraintReason,
+			})
+			eventCount++
+		}
+		result.Stats.PerCompetitionEventCnt[compID] = eventCount
+		result.Stats.TotalTSEvents += eventCount
+		if eventCount > 0 {
+			result.Stats.CompetitionsKept++
+		}
+		if !cand.StrongConstraintOK {
+			result.Stats.CompetitionsVetoed++
+		}
+	}
+
+	result.Stats.Elapsed = time.Since(t0)
+	return result, nil
+}
+
+// BuildWithTimeRange 是 Build 的时间窗版（PI-006 v1.13）。
+// 当 Loader 实现 TimeRangeBatchTSEventLoader 时，使用 SQL WHERE
+// match_time BETWEEN timeMinUnix AND timeMaxUnix 限定候选事件范围；
+// 否则回退到 Build 的全量行为（warning：可能很慢）。
+// EF 路径调用方应从 SR events 派生 timeMin/timeMax（典型 ±30 天）。
+func (b *CandidatePoolBuilder) BuildWithTimeRange(
+	candidates []TSCompetitionCandidate,
+	sport string,
+	timeMinUnix, timeMaxUnix int64,
+) (*CandidatePoolResult, error) {
+	timeRange, ok := b.Loader.(TimeRangeBatchTSEventLoader)
+	if !ok || timeMinUnix <= 0 {
+		return b.Build(candidates, sport)
+	}
+	t0 := time.Now()
+	if sport != "football" && sport != "basketball" {
+		return nil, fmt.Errorf("candidate pool: unsupported sport: %s", sport)
+	}
+
+	result := &CandidatePoolResult{
+		Candidates:  []EvidenceEventCandidate{},
+		TSTeamNames: map[string]string{},
+		Stats: CandidatePoolStats{
+			PerCompetitionEventCnt: map[string]int{},
+		},
+	}
+	result.Stats.CompetitionsScanned = len(candidates)
+
+	compIDs := make([]string, 0, len(candidates))
+	for _, cand := range candidates {
+		if cand.Competition.ID != "" {
+			compIDs = append(compIDs, cand.Competition.ID)
+		}
+	}
+	if len(compIDs) == 0 {
+		result.Stats.Elapsed = time.Since(t0)
+		return result, nil
+	}
+
+	eventsMap, err := timeRange.GetEventsBatchInRange(compIDs, sport, timeMinUnix, timeMaxUnix)
+	if err != nil {
+		return nil, fmt.Errorf("candidate pool: GetEventsBatchInRange: %w", err)
+	}
+	teamNamesMap, err := timeRange.GetTeamNamesBatch(compIDs, sport)
+	if err != nil {
+		return nil, fmt.Errorf("candidate pool: GetTeamNamesBatch: %w", err)
+	}
+
+	for _, cand := range candidates {
+		compID := cand.Competition.ID
+		if compID == "" {
+			continue
+		}
+		for tsTeamID, name := range teamNamesMap[compID] {
+			if tsTeamID == "" {
+				continue
+			}
+			if _, exists := result.TSTeamNames[tsTeamID]; !exists {
+				result.TSTeamNames[tsTeamID] = name
+			}
+		}
+		eventCount := 0
+		for _, ev := range eventsMap[compID] {
+			if ev.MatchID == "" && ev.ID == "" {
+				continue
+			}
+			result.Candidates = append(result.Candidates, EvidenceEventCandidate{
+				CompetitionID:          compID,
+				CompetitionName:        cand.Competition.Name,
+				Event:                  ev,
+				CandidateScore:         cand.LeaguePriorScore,
 				StrongConstraintOK:     cand.StrongConstraintOK,
 				StrongConstraintReason: cand.StrongConstraintReason,
 			})

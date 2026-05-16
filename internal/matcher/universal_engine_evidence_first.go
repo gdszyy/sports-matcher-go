@@ -122,15 +122,10 @@ func (e *UniversalEngine) runLeagueEvidenceFirst(
 		return result, nil
 	}
 
-	candInputs := ToTSCompetitionCandidates(leagueCandidates, sport)
-	poolBuilder := NewCandidatePoolBuilder(e.TS)
-	pool, err := poolBuilder.Build(candInputs, sport)
-	if err != nil {
-		return nil, fmt.Errorf("EF P1 Build: %w", err)
-	}
-	log.Printf("%s [2/4] P1 候选池: %d 候选事件 (跨 %d competition, %d 球队)",
-		prefix, len(pool.Candidates), pool.Stats.CompetitionsKept, len(pool.TSTeamNames))
-
+	// 先 load SR events，从中派生时间窗（PI-006 v1.13）。
+	// 然后用 BuildWithTimeRange 把 P1 SQL fetch 限定到 ±30 天窗口，
+	// 数据量从"2 年 LIMIT 3000"缩到典型"60 天 LIMIT 200"，
+	// EPL 实测 P1 fetch 12s → ~3s。
 	srcEvents, err := adapter.LoadEvents(tournamentID)
 	if err != nil {
 		return nil, fmt.Errorf("LoadEvents: %w", err)
@@ -139,6 +134,27 @@ func (e *UniversalEngine) runLeagueEvidenceFirst(
 	if err != nil {
 		return nil, fmt.Errorf("LoadTeamNames: %w", err)
 	}
+	// 仅当 EvidenceFirstTimePadding>0 时才下推时间窗。
+	// 推荐 180*24*3600 (180d) 兼顾速度与 L4b 跨季召回；0 (默认) = 完全保留 v1.12 行为。
+	var timeMin, timeMax int64
+	if e.EvidenceFirstTimePadding > 0 {
+		paddingSec := int64(e.EvidenceFirstTimePadding / time.Second)
+		timeMin, timeMax = deriveTimeRangeFromSREvents(srcEvents, paddingSec)
+	}
+
+	candInputs := ToTSCompetitionCandidates(leagueCandidates, sport)
+	poolBuilder := NewCandidatePoolBuilder(e.TS)
+	var pool *CandidatePoolResult
+	if timeMin > 0 {
+		pool, err = poolBuilder.BuildWithTimeRange(candInputs, sport, timeMin, timeMax)
+	} else {
+		pool, err = poolBuilder.Build(candInputs, sport)
+	}
+	if err != nil {
+		return nil, fmt.Errorf("EF P1 Build: %w", err)
+	}
+	log.Printf("%s [2/4] P1 候选池: %d 候选事件 (跨 %d competition, %d 球队) [time window %d~%d]",
+		prefix, len(pool.Candidates), pool.Stats.CompetitionsKept, len(pool.TSTeamNames), timeMin, timeMax)
 	if e.budgetExceeded(t0) {
 		log.Printf("%s ⏱ budget exceeded before P3; emit P1 truncated result", prefix)
 		top1 := leagueCandidates[0]
@@ -205,4 +221,33 @@ func (e *UniversalEngine) runLeagueEvidenceFirst(
 
 	result.Stats = computeUniversalStats(result, sport, tier, adapter.SourceSide(), time.Since(t0))
 	return result, nil
+}
+
+// deriveTimeRangeFromSREvents 计算 SR events 的时间分布并加 paddingSec 缓冲。
+// 返回 (timeMinUnix, timeMaxUnix)；当 srcEvents 为空或全无效时返回 (0, 0)，
+// 调用方应回退到无时间窗的 fetch 路径。
+func deriveTimeRangeFromSREvents(srcEvents []db.SREvent, paddingSec int64) (int64, int64) {
+	var minT, maxT int64
+	found := false
+	for _, e := range srcEvents {
+		if e.StartUnix <= 0 {
+			continue
+		}
+		if !found {
+			minT = e.StartUnix
+			maxT = e.StartUnix
+			found = true
+			continue
+		}
+		if e.StartUnix < minT {
+			minT = e.StartUnix
+		}
+		if e.StartUnix > maxT {
+			maxT = e.StartUnix
+		}
+	}
+	if !found {
+		return 0, 0
+	}
+	return minT - paddingSec, maxT + paddingSec
 }

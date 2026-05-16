@@ -215,6 +215,11 @@ type UniversalEngine struct {
 	// 即截断后续工作并把当前为止的最佳结果包装为 *UniversalMatchResult 返回
 	// （Stats.Truncated=true）。<=0 表示不设上限（默认行为）。
 	MaxRuntime time.Duration
+	// EvidenceFirstTimePadding 控制 P1 SQL 时间窗 padding（v1.13）：>0 时
+	// 用 [min(SR)-padding, max(SR)+padding] 作为 TS 候选 fetch 范围，大幅加速；
+	// =0 表示不下推时间窗（默认行为）—— 保留完整 L4b 跨季节恢复能力。
+	// 取舍：±180d 比 0 快 50%，但 EPL 实测会丢 ~3% L4b 跨季匹配。
+	EvidenceFirstTimePadding time.Duration
 }
 
 // NewUniversalEngine 创建通用匹配引擎

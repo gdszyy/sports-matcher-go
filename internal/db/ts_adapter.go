@@ -391,3 +391,75 @@ func (a *TSAdapter) GetTeamNamesBatch(competitionIDs []string, sport string) (ma
 	}
 	return result, rows.Err()
 }
+
+// GetEventsBatchInRange 是 GetEventsBatch 的时间窗版（PI-006 v1.13）。
+// 当 timeMinUnix > 0 时使用其作为 match_time 下界（取代默认的 twoYearsAgo），
+// timeMaxUnix > 0 时使用其作为上界。
+// EF 路径通过 SR events 的时间分布派生 ±30 天窗口，把 P1 fetch 数据量从
+// "2 年 LIMIT 3000" 缩到典型 "60 天 LIMIT 200"，单步 4-8x 加速。
+func (a *TSAdapter) GetEventsBatchInRange(competitionIDs []string, sport string, timeMinUnix, timeMaxUnix int64) (map[string][]TSEvent, error) {
+	if len(competitionIDs) == 0 {
+		return map[string][]TSEvent{}, nil
+	}
+	var table string
+	switch sport {
+	case "football":
+		table = "ts_fb_match"
+	case "basketball":
+		table = "ts_bb_match"
+	default:
+		return nil, fmt.Errorf("不支持的运动类型: %s", sport)
+	}
+
+	if timeMinUnix <= 0 {
+		timeMinUnix = time.Now().AddDate(-2, 0, 0).Unix()
+	}
+
+	placeholders := ""
+	args := make([]interface{}, 0, len(competitionIDs)+2)
+	for i, id := range competitionIDs {
+		if i > 0 {
+			placeholders += ","
+		}
+		placeholders += "?"
+		args = append(args, id)
+	}
+	args = append(args, timeMinUnix)
+
+	timeMaxClause := ""
+	if timeMaxUnix > 0 {
+		timeMaxClause = " AND match_time <= ?"
+		args = append(args, timeMaxUnix)
+	}
+
+	query := fmt.Sprintf(`
+		SELECT
+			competition_id,
+			match_id,
+			COALESCE(match_time, 0) as match_time,
+			COALESCE(home_team_id, '') as home_id,
+			COALESCE(away_team_id, '') as away_id,
+			COALESCE(status_id, 0) as status_id
+		FROM %s
+		WHERE competition_id IN (%s)
+		  AND match_time >= ?%s
+		ORDER BY competition_id, match_time
+		LIMIT 15000`, table, placeholders, timeMaxClause)
+
+	rows, err := a.db.Query(query, args...)
+	if err != nil {
+		return nil, fmt.Errorf("GetEventsBatchInRange(%s): %w", sport, err)
+	}
+	defer rows.Close()
+
+	result := make(map[string][]TSEvent, len(competitionIDs))
+	for rows.Next() {
+		var compID string
+		var ev TSEvent
+		if err := rows.Scan(&compID, &ev.ID, &ev.MatchTime, &ev.HomeID, &ev.AwayID, &ev.StatusID); err != nil {
+			continue
+		}
+		result[compID] = append(result[compID], ev)
+	}
+	return result, rows.Err()
+}
