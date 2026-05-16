@@ -403,13 +403,27 @@ func (b *CandidatePoolBuilder) BuildCtx(
 		result.Stats.Elapsed = time.Since(t0)
 		return result, nil
 	}
-	eventsMap, err := ctxLoader.GetEventsBatchCtx(ctx, compIDs, sport)
-	if err != nil {
-		return nil, fmt.Errorf("candidate pool: GetEventsBatchCtx: %w", err)
+	// 并行 fetch events 和 team names（v1.15 Direction E）：
+	// 两个独立 SQL query，并行可省 ~3s（串行 ~7s → 并行 ~4s）。
+	var eventsMap map[string][]db.TSEvent
+	var teamNamesMap map[string]map[string]string
+	var evErr, tnErr error
+	var wg sync.WaitGroup
+	wg.Add(2)
+	go func() {
+		defer wg.Done()
+		eventsMap, evErr = ctxLoader.GetEventsBatchCtx(ctx, compIDs, sport)
+	}()
+	go func() {
+		defer wg.Done()
+		teamNamesMap, tnErr = ctxLoader.GetTeamNamesBatchCtx(ctx, compIDs, sport)
+	}()
+	wg.Wait()
+	if evErr != nil {
+		return nil, fmt.Errorf("candidate pool: GetEventsBatchCtx: %w", evErr)
 	}
-	teamNamesMap, err := ctxLoader.GetTeamNamesBatchCtx(ctx, compIDs, sport)
-	if err != nil {
-		return nil, fmt.Errorf("candidate pool: GetTeamNamesBatchCtx: %w", err)
+	if tnErr != nil {
+		return nil, fmt.Errorf("candidate pool: GetTeamNamesBatchCtx: %w", tnErr)
 	}
 	assembleCandidatePool(result, candidates, eventsMap, teamNamesMap)
 	result.Stats.Elapsed = time.Since(t0)
@@ -447,13 +461,25 @@ func (b *CandidatePoolBuilder) BuildWithTimeRangeCtx(
 		result.Stats.Elapsed = time.Since(t0)
 		return result, nil
 	}
-	eventsMap, err := ctxTR.GetEventsBatchInRangeCtx(ctx, compIDs, sport, timeMinUnix, timeMaxUnix)
-	if err != nil {
-		return nil, fmt.Errorf("candidate pool: GetEventsBatchInRangeCtx: %w", err)
+	var eventsMap map[string][]db.TSEvent
+	var teamNamesMap map[string]map[string]string
+	var evErr, tnErr error
+	var wg sync.WaitGroup
+	wg.Add(2)
+	go func() {
+		defer wg.Done()
+		eventsMap, evErr = ctxTR.GetEventsBatchInRangeCtx(ctx, compIDs, sport, timeMinUnix, timeMaxUnix)
+	}()
+	go func() {
+		defer wg.Done()
+		teamNamesMap, tnErr = ctxTR.GetTeamNamesBatchCtx(ctx, compIDs, sport)
+	}()
+	wg.Wait()
+	if evErr != nil {
+		return nil, fmt.Errorf("candidate pool: GetEventsBatchInRangeCtx: %w", evErr)
 	}
-	teamNamesMap, err := ctxTR.GetTeamNamesBatchCtx(ctx, compIDs, sport)
-	if err != nil {
-		return nil, fmt.Errorf("candidate pool: GetTeamNamesBatchCtx: %w", err)
+	if tnErr != nil {
+		return nil, fmt.Errorf("candidate pool: GetTeamNamesBatchCtx: %w", tnErr)
 	}
 	assembleCandidatePool(result, candidates, eventsMap, teamNamesMap)
 	result.Stats.Elapsed = time.Since(t0)

@@ -32,6 +32,7 @@ package matcher
 import (
 	"fmt"
 	"log"
+	"sync"
 	"time"
 
 	"github.com/gdszyy/sports-matcher/internal/db"
@@ -220,6 +221,52 @@ type UniversalEngine struct {
 	// =0 表示不下推时间窗（默认行为）—— 保留完整 L4b 跨季节恢复能力。
 	// 取舍：±180d 比 0 快 50%，但 EPL 实测会丢 ~3% L4b 跨季匹配。
 	EvidenceFirstTimePadding time.Duration
+
+	// tsCompCache 缓存 GetCompetitionsByFootball/Basketball 结果（v1.15）。
+	// 跨 RunLeague 复用，batch2 模式下省去重复 DB 调用。
+	// 注意：竞赛元数据更新频率很低（新赛季），缓存生命周期 = engine instance；
+	// 长期运行的 HTTP server 模式若需感知 DB 新增联赛，应重启进程或在外部
+	// 调用 InvalidateCompetitionCache()。
+	tsCompCache   map[string][]db.TSCompetition
+	tsCompCacheMu sync.Mutex
+}
+
+// getCompetitionsCached 返回缓存的 TS competition 列表（按 sport），首次访问
+// 时同步从 DB 加载并缓存。线程安全。
+func (e *UniversalEngine) getCompetitionsCached(sport string) ([]db.TSCompetition, error) {
+	e.tsCompCacheMu.Lock()
+	defer e.tsCompCacheMu.Unlock()
+	if e.tsCompCache != nil {
+		if v, ok := e.tsCompCache[sport]; ok {
+			return v, nil
+		}
+	}
+	var tsComps []db.TSCompetition
+	var err error
+	switch sport {
+	case "football":
+		tsComps, err = e.TS.GetCompetitionsByFootball()
+	case "basketball":
+		tsComps, err = e.TS.GetCompetitionsByBasketball()
+	default:
+		return nil, fmt.Errorf("不支持的运动类型: %s", sport)
+	}
+	if err != nil {
+		return nil, err
+	}
+	if e.tsCompCache == nil {
+		e.tsCompCache = make(map[string][]db.TSCompetition, 2)
+	}
+	e.tsCompCache[sport] = tsComps
+	return tsComps, nil
+}
+
+// InvalidateCompetitionCache 清空 TS competition 缓存，下次 RunLeague 会重新拉取。
+// 用于长期运行进程感知 DB 新增联赛的场景。
+func (e *UniversalEngine) InvalidateCompetitionCache() {
+	e.tsCompCacheMu.Lock()
+	defer e.tsCompCacheMu.Unlock()
+	e.tsCompCache = nil
 }
 
 // NewUniversalEngine 创建通用匹配引擎
@@ -260,14 +307,7 @@ func (e *UniversalEngine) RunLeague(
 			tsComps = []db.TSCompetition{{ID: tsCompetitionID, Sport: sport}}
 		}
 	} else {
-		switch sport {
-		case "football":
-			tsComps, err = e.TS.GetCompetitionsByFootball()
-		case "basketball":
-			tsComps, err = e.TS.GetCompetitionsByBasketball()
-		default:
-			return nil, fmt.Errorf("不支持的运动类型: %s", sport)
-		}
+		tsComps, err = e.getCompetitionsCached(sport)
 		if err != nil {
 			return nil, fmt.Errorf("GetCompetitions(TS): %w", err)
 		}
