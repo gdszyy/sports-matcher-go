@@ -19,6 +19,7 @@ globs: ["internal/matcher/**/*"]
 | `candidate_pool.go` | **Evidence-First P1 候选池生成器** — 把"一组候选 TS competition + 联赛先验 + 强约束"转化为 []EvidenceEventCandidate；依赖最小 TSEventLoader 接口，单测可注入 stub（194 行） |
 | `team_prior_enricher.go` | **Evidence-First P2 球队级先验填充** — 对每条 EvidenceEventCandidate 扫描全部 SR 球队名，取最佳相似度填入 HomeTeamCandidateScore / AwayTeamCandidateScore；别名感知（aliasIdx.NameSimWithAlias）；纯函数原地修改 |
 | `league_topn.go` | **Evidence-First 入口：联赛 Top-N 候选匹配** — MatchLeagueTopN 返回排名前 N 的 LeagueMatchCandidate（KnownMap 命中 Top-1，其余按 leagueNameScore 降序），ToTSCompetitionCandidate(s) 直接转 P1 输入 |
+| `universal_engine_evidence_first.go` | **Evidence-First wire 进 RunLeague** — TopNAdapter 可选接口 + SRSourceAdapter.MatchLeagueTopN 方法 + runLeagueEvidenceFirst 完整流水线（MatchLeagueTopN → P1 → P2 → P3 → Step 8 球员匹配）。由 `UniversalEngine.UseEvidenceFirst` 开关 opt-in，默认走 P0 |
 | `evidence_event_matcher.go` | Evidence-First P3 比赛候选池适配层（多 competition 候选边打分 + 一对一冲突消解） |
 | `league.go` | 联赛匹配（已知映射表 + 名称相似度 + 全局占用机制） |
 | `league_alias.go` | 联赛别名匹配（629 行） |
@@ -110,7 +111,4 @@ MatchLeagueTopN(srTour, tsComps, n)
 
 | 字段 / 接口 | 说明 |
 |------------|------|
-| `TSCompetitionCandidate` | P1 输入单元：`{Competition, LeaguePriorScore∈[0,1], StrongConstraintOK, StrongConstraintReason}` |
-| `TSEventLoader` | 最小依赖接口（`GetEvents` + `GetTeamNames`）；`*db.TSAdapter` 自然实现，单测可注入 stub |
-| `CandidatePoolBuilder.Build(candidates, sport)` | 主入口，输出 `CandidatePoolResult{Candidates, TSTeamNames(union), Stats}` |
-| P0 向后兼容 | 当 `candidates` 长度为 1 
+| `TSCompetitionCandidate` | P1 输入单元：`{Competition, LeaguePriorScore∈[0,1], StrongConstraintOK, StrongConstra

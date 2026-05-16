@@ -197,6 +197,15 @@ type UniversalEngine struct {
 		LoadIntoIndex(loader db.AliasIndexLoader, sourceSide string) int
 		Upsert(sourceSide, srcTeamID, tsTeamID string, confidence float64, sport, competitionID string) error
 	}
+	// UseEvidenceFirst 控制 RunLeague 是否切换到 Evidence-First 路径
+	// （MatchLeagueTopN → CandidatePoolBuilder → EnrichTeamPriors →
+	// EvidenceEventMatcher.MatchTwoRound）。仅当 adapter 实现 TopNAdapter 时生效
+	// （SR adapter 已实现，LS adapter 暂未实现）。默认 false 走原 P0 路径。
+	// 详见 PI-006 v1.4 与 universal_engine_evidence_first.go。
+	UseEvidenceFirst bool
+	// EvidenceFirstTopN 控制 Top-N 联赛候选数，<=0 时使用默认值（5）。仅当
+	// UseEvidenceFirst=true 时有效。
+	EvidenceFirstTopN int
 }
 
 // NewUniversalEngine 创建通用匹配引擎
@@ -247,6 +256,15 @@ func (e *UniversalEngine) RunLeague(
 		}
 		if err != nil {
 			return nil, fmt.Errorf("GetCompetitions(TS): %w", err)
+		}
+	}
+
+	// Evidence-First opt-in 路径（PI-006 v1.4）：当 UseEvidenceFirst=true 且
+	// adapter 实现 TopNAdapter 时，把 Step 2~7 全权委托给 runLeagueEvidenceFirst。
+	// LS adapter 暂未实现 TopNAdapter，自动降级回下面的 P0 路径。
+	if e.UseEvidenceFirst {
+		if topn, ok := adapter.(TopNAdapter); ok && len(tsComps) > 0 {
+			return e.runLeagueEvidenceFirst(adapter, topn, tournamentID, sport, tier, tsComps, t0)
 		}
 	}
 
