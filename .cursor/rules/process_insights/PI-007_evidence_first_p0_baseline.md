@@ -1,6 +1,6 @@
 ---
 id: "PI-007"
-version: "v1.3"
+version: "v1.4"
 last_updated: "2026-05-16"
 author: "Manus AI, Claude Cowork"
 related_modules: ["python", "python/data", "docs", "internal/matcher"]
@@ -85,3 +85,30 @@ sports-matcher match2 sr:tournament:23479 \
 sports-matcher batch2 --config eval_config.json \
     --use-evidence-first --use-team-first-fallback \
     --strict-no-mapping   # 
+## v1.4 新增：strict-no-mapping 真实算法基线（2026-05-16）
+
+`python/evidence_first_strict_baseline.py` — 配套 v1.18 决议的"算法真实水平"基线。
+
+**评估设计**：
+- 评估集 = `sr_ts_ground_truth.json` 反推 14 个 SR 联赛 + 真实 TS competition
+- 候选池 = `ts_leagues_2026.json` 45 个 + GT 反推 11 个 = 56 个 TS 联赛
+- 算法 = `MatchLeagueTopNWithFlags(noKnownMap=true)` Python 等价实现（jaro_winkler + sequence_matcher + country bonus）
+- 指标 = Top-1 准确率 / Top-5 召回
+
+**首次跑分（2026-05-16）**：
+- **SR Top-1 准确率 71.4% (10/14)**
+- **SR Top-5 召回 92.9% (13/14)**
+
+对照默认 KnownMap 模式（PI-007 run4 = 100% league match）：**Δ = -28.6 pp**。这 28.6 个百分点就是 mapping 自证给"算法效果"造的虚——算法在脱掉 KnownMap 后的真实差距。
+
+**3 个真实误匹配类型**：
+1. **国别加分公式太弱**：LaLiga (Spain) Top-1 误为 Poland Liga 3（"Liga" 字面命中）；当前公式 `base × 0.75 + 0.25 × loc` 加 country=1.0 后仍输给字面相似度高的干扰
+2. **缩写 vs 全称**：NBA (USA) vs `National Basketball Association` → name_sim < 0.3 阈值，被算法直接丢弃
+3. **Top-5 内排序错位**：Eredivisie (Netherlands) vs Sweden Division 2 也是同类问题
+
+**意义**：本基线是 v1.19+ 算法改进的衡量标尺。每次算法 commit 都必须重跑本评估，记录 Top-1 / Top-5 趋势。完整报告：`docs/evidence_first_strict_eval.md`。
+
+**禁止行为**（v1.18 决议延续）：
+- 不允许把这些 misclass 反向加进 KnownLeagueMap "解决问题"
+- 不允许通过 ts_competition_id GT 输入掩盖算法缺陷
+- 改进必须落到算法本身（country 强约束 / 缩写表 / token IoU 等）
