@@ -75,4 +75,66 @@
 | Fellegi-Sunter EM | `internal/matcher/fs_model.go` | 无监督参数估计 |
 | EventDTW 兜底 | `internal/matcher/event_dtw.go` | 动态时间规整兜底匹配 |
 | 已知联赛映射表 | `internal/matcher/league.go` | KnownLeagueMap（SR tournament_id → TS competition_id） |
-| 命令行入口 | `cmd/
+| 命令行入口 | `cmd/server/main.go` | `match2`（单联赛）、`batch2`（批量 SR 2026）、`ls-match`/`ls-batch`（LS 链路）子命令。**全部支持 `--use-evidence-first` + `--evidence-first-topn N` 开关**（2026-05-16） |
+| HTTP API 入口 | `internal/api/server.go` | `/api/v2/match/league`、`/api/v2/match/batch` |
+
+### 5.2 SR 2026 算法测试脚本
+
+| 脚本 | 路径 | 说明 |
+|------|------|------|
+| SR↔TS 2026 测试（最新） | `python/test_sr_2026.py` | 复现 UniversalEngine 完整逻辑，支持 GT 重建 TS 候选集，覆盖 14 个 GT 联赛 |
+| Evidence-First P0 基线评估 | `python/evidence_first_baseline_eval.py` | 冻结旧流程基线、产出 SR↔TS 与 LS↔TS 双链路统一指标 JSON/CSV，为 P1–P5 迭代提供可复现对比 |
+| **P0 vs EF 对照工具** | `python/compare_p0_ef.py` | 接受 `match2 / batch2 --json` 的两份输出（P0 vs EF），输出联赛 / 比赛 / 球队层差异对照表（新增匹配 / 失去匹配 / TS 重定向 / rule 分布 Δ / avg confidence Δ）。**2026-05-16 新增** |
+| LS↔TS 2026 测试 | `python/match_2026.py` | LS 链路测试脚本（旧版，仅供参考） |
+
+**SR 2026 测试最新结果**（2026-04-20，commit `afd4e5e`）：
+
+| 维度 | 加权 Precision | 加权 Recall | 加权 F1 | 平均置信度 |
+|------|--------------|------------|---------|----------|
+| 全量（14 GT 联赛） | 0.8927 | 0.8681 | 0.8799 | 0.9737 |
+| 热门联赛（7足球+NBA） | 0.851 | 0.815 | 0.832 | — |
+| 常规联赛（6个有GT） | 0.973 | 0.970 | 0.972 | — |
+
+详见流程洞察：[PI-004](`.cursor/rules/process_insights/PI-004_sr_2026_test_results.md`)。
+
+**P0 基线（commits run1~run4，2026-05-01 → 2026-05-16）四次复跑指纹完全一致**（除 `generated_at` 与 `elapsed_ms` 外）；正面证明 `UseEvidenceFirst=false` 默认设计保证零回退。详见 [PI-007 v1.2](`.cursor/rules/process_insights/PI-007_evidence_first_p0_baseline.md`)。
+
+### 5.3 Evidence-First 最新算法栈（2026-04-30 起，2026-05-16 全部 wire 完毕）
+
+> 这一节专门记录最新一轮算法整合。所有 Agent 在改动比赛级匹配前必须先读完整链路。
+
+完整流水线：
+
+```text
+MatchLeagueTopN  →  ToTSCompetitionCandidates  →  CandidatePoolBuilder.Build (P1)
+                 →  EnrichTeamPriors (P2)
+                 →  EvidenceEventMatcher.MatchTwoRound (P3)
+```
+
+| 组件 | 路径 | 关键能力 |
+|------|------|---------|
+| Evidence 边数据结构 | `internal/matcher/evidence_event_matcher.go` → `EventEvidenceEdge` / `ResolvedEventMatch` | 候选边携带 `reason_codes`（`TIME_WINDOW`/`ALIAS_HIT`/`TEAM_ID_FALLBACK`/`SIDE_REVERSED`/`FS_MODEL`/`DTW_OFFSET`/`P2_CANDIDATE_PRIOR`/`STRONG_CONSTRAINT`/`CONFLICT_TS_USED`/`CONFLICT_SOURCE_USED`/`BELOW_AUTO_THRESHOLD`/`GUARD_VETO`），输出可解释的赢/输边证据。 |
+| 候选边打分 | `EvidenceEventMatcher.scoreEdge` | 复用 `levelConfigs`、`gaussianTimeFactor`、`TeamAliasIndex.NameSimWithAlias`、`FSModel`、`EventDTWMatcher`；反转候选扣 `sideReversedPenalty=0.12`，队伍 ID 锚点 `+0.08`，别名命中 `+0.04`，P2 先验权重 `0.10`。 |
+| 等级路由 | `bestEvidenceLevel` | 根据 `nameScore`、`timeDiff`、`sideReversed`、`strongOK` 选择 L1~L5 规则与目标阈值。 |
+| 一对一冲突消解 | `EvidenceEventMatcher.resolveConflicts` | 按边分数降序，保证一个 `ts_match_id` 最多匹配一个源侧事件；被淘汰边写入 `lost_to` / `winner_score` / `loser_score` / `score_gap`。**契约：每个 SR event 都会输出一条 `ResolvedEventMatch`（含 NoMatch stub），判断未匹配看 `Matched=false / Rule=NoMatch`，不要看 `len(Matches)==0`。** |
+| 两轮 L4b 兜底 | `EvidenceEventMatcher.MatchTwoRound` | 第一轮基于名称/候选分/别名推导 `teamIDMap`；第二轮注入 `teamIDMap` 后激活 `TEAM_ID_FALLBACK` / L4b 兜底。 |
+| 阈值与常量 | `defaultEvidenceAutoConfirmThreshold=0.75` 等 | 自动确认阈值、各类奖惩权重在文件顶部 `const` 段集中维护。 |
+| Wire 开关 | `UniversalEngine.UseEvidenceFirst` / `EvidenceFirstTopN` 字段 + `--use-evidence-first` CLI flag | 默认 false 走原 P0 路径；true 切换到 EF 流水线。LS adapter 已实现 TopNAdapter，与 SR 对称。 |
+
+**入门文档**：[`docs/evidence_first_quickstart.md`](docs/evidence_first_quickstart.md) — 给新接手同事 / Agent 的完整 EF 入门指南（架构图 / 各阶段职责 / CLI 用法 / 跑通示例 / 排错指南 / 链路扩展教程）。
+
+**对照工具**：`python/compare_p0_ef.py` — 接受 `match2 / batch2 --json` 的两份输出（P0 vs EF），输出联赛 / 比赛 / 球队层差异对照表。
+
+**相关流程洞察**：
+- [PI-006 Evidence-First 比赛级匹配流程 v1.6](`.cursor/rules/process_insights/PI-006_evidence_first_matching_flow.md`)
+- [PI-007 Evidence-First P0 基线冻结 v1.2](`.cursor/rules/process_insights/PI-007_evidence_first_p0_baseline.md`)
+
+---
+
+## 6. 流程洞察索引 (Process Insights)
+
+流程洞察是 Agent 在完成任务后沉淀的经验文档，记录非直观的隐蔽逻辑、跨模块耦合陷阱和关键操作流程。与静态模块规范不同，流程洞察随任务持续积累，并通过版本号管理演进。
+
+*   **洞察注册表**：[`.cursor/rules/process_insights/index.md`](.cursor/rules/process_insights/index.md) - 所有活跃与废弃洞察的版本索引。
+
+> **注意**：随着架构的演进，本索引应持续更新。负责重构的 Agent 需维护对应的规则文档和流程洞察。
