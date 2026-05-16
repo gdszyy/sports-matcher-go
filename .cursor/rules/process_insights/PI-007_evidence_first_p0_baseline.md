@@ -1,6 +1,6 @@
 ---
 id: "PI-007"
-version: "v1.1"
+version: "v1.2"
 last_updated: "2026-05-16"
 author: "Manus AI, Claude Cowork"
 related_modules: ["python", "python/data", "docs", "internal/matcher"]
@@ -43,13 +43,8 @@ Evidence-First P0 的目标是冻结旧流程基线，而不是优化核心匹�
 
 **正确做法**：稳定性验收比较核心比例和计数字段，耗时只在报告中记录趋势。
 
-**关键位置**：`docs/tests/evidence_first_baseline_metrics.json`、`docs/tests/evidence_first_baseline_metrics_run2.json`、`docs/tests/evidence_first_baseline_metrics_run3.json`。
+**关键位置**：`docs/tests/evidence_first_baseline_metrics.json`、`docs/tests/evidence_first_baseline_metrics_run2.json`、`docs/tests/evidence_first_baseline_metrics_run3.json`、`docs/tests/evidence_first_baseline_metrics_run4.json`。
 
-**已验证（v1.1，2026-05-16）**：第三次复跑在两周后、新沙箱环境下，除 `generated_at` 与各级 `elapsed_ms` 外，所有 summary 字段（`league_count` / `event_matched` / `event_match_rate` / `team_match_rate` / `avg_rcr` / `weighted_precision` / `weighted_recall` / `weighted_f1` / `failure_reasons` / `rule_distribution` / `ambiguity_coverage`）与 run1 指纹完全一致。SR 总耗时从 29 053 ms 降至 17 668 ms，再次证明耗时只是沙箱性能观察值。稳定性核心结论：**Evidence-First P0 基线在 v1.0 → v1.1 期间未发生算法回退**。
+**已验证（v1.1，2026-05-16）**：第三次复跑在两周后、新沙箱环境下，除 `generated_at` 与各级 `elapsed_ms` 外，所有 summary 字段（`league_count` / `event_matched` / `event_match_rate` / `team_match_rate` / `avg_rcr` / `weighted_precision` / `weighted_recall` / `weighted_f1` / `failure_reasons` / `rule_distribution` / `ambiguity_coverage`）与 run1 指纹完全一致。SR 总耗时从 29 053 ms 降至 17 668 ms，再次证明耗时只是沙箱性能观察值。
 
-## 关键耦合点
-
-| 耦合点 | 说明 |
-|--------|------|
-| `python/test_sr_2026.py` | P0 SR 离线事件匹配复用此脚本中的 `match_events_for_league`、`evaluate`、`KNOWN_LEAGUE_MAP` 和 `SR_2026_LEAGUES`。 |
-| `python/data/` | P0 离线基线唯一数据源，禁止�
+**已验证（v1.2，2026-05-16）**：在 Evidence-First Go 侧 P1 / P2 / Top-N / Wire / CLI 五条 commit 全部落地后，第四次复跑（run4）与 run1 指纹仍然完全一致。这正面证明：**默认 `UseEvidenceFirst=false` 的设计保证 Python P0 评估脚本完全不受 Go 侧 EF 改动影响**。稳定性核�
