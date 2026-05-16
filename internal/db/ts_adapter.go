@@ -609,3 +609,120 @@ func (a *TSAdapter) GetTeamNamesBatchCtx(ctx context.Context, competitionIDs []s
 	}
 	return result, rows.Err()
 }
+
+// ─── PI-006 v1.16 candidate: 球队优先候选池基础 ─────────────────────────────
+
+// TSTeamBrief 是球队优先路径用的轻量 TS 球队记录。
+// competition_id 表示该球队归属的主 competition（在 ts_fb_team / ts_bb_team
+// 的元数据里）；该球队实际参加的事件可能跨多个 competition_id。
+type TSTeamBrief struct {
+	TeamID        string
+	Name          string
+	CompetitionID string
+}
+
+// GetAllTeamsBriefCtx 拉取全部 TS 球队（按 sport）的轻量记录。
+// ts_fb_team ~79K, ts_bb_team ~30K 行；一次性 load 到内存约几 MB，
+// 调用方应缓存到 *UniversalEngine 内复用。
+func (a *TSAdapter) GetAllTeamsBriefCtx(ctx context.Context, sport string) ([]TSTeamBrief, error) {
+	var table string
+	switch sport {
+	case "football":
+		table = "ts_fb_team"
+	case "basketball":
+		table = "ts_bb_team"
+	default:
+		return nil, fmt.Errorf("不支持的运动类型: %s", sport)
+	}
+	query := fmt.Sprintf(`SELECT team_id, COALESCE(name,''), COALESCE(competition_id,'') FROM %s LIMIT 200000`, table)
+	rows, err := a.db.QueryContext(ctx, query)
+	if err != nil {
+		return nil, fmt.Errorf("GetAllTeamsBriefCtx: %w", err)
+	}
+	defer rows.Close()
+	var out []TSTeamBrief
+	for rows.Next() {
+		var t TSTeamBrief
+		if err := rows.Scan(&t.TeamID, &t.Name, &t.CompetitionID); err != nil {
+			continue
+		}
+		if t.TeamID == "" {
+			continue
+		}
+		out = append(out, t)
+	}
+	return out, rows.Err()
+}
+
+// GetEventsByTeamIDsInRangeCtx 按 home/away team_id IN (...) 拉事件，时间窗限定。
+// 球队优先路径核心查询：当 league 匹配不准时，用球队 id 直接锚定事件。
+func (a *TSAdapter) GetEventsByTeamIDsInRangeCtx(ctx context.Context, sport string, teamIDs []string, timeMinUnix, timeMaxUnix int64) ([]TSEventWithComp, error) {
+	if len(teamIDs) == 0 {
+		return nil, nil
+	}
+	var table string
+	switch sport {
+	case "football":
+		table = "ts_fb_match"
+	case "basketball":
+		table = "ts_bb_match"
+	default:
+		return nil, fmt.Errorf("不支持的运动类型: %s", sport)
+	}
+	if timeMinUnix <= 0 {
+		timeMinUnix = time.Now().AddDate(-2, 0, 0).Unix()
+	}
+	placeholders := ""
+	args := make([]interface{}, 0, len(teamIDs)*2+2)
+	for i, id := range teamIDs {
+		if i > 0 {
+			placeholders += ","
+		}
+		placeholders += "?"
+		args = append(args, id)
+	}
+	// home OR away —— 这里把 placeholders 拼两次
+	args2 := make([]interface{}, len(args))
+	copy(args2, args)
+	allArgs := append(args, args2...)
+	allArgs = append(allArgs, timeMinUnix)
+	timeMaxClause := ""
+	if timeMaxUnix > 0 {
+		timeMaxClause = " AND match_time <= ?"
+		allArgs = append(allArgs, timeMaxUnix)
+	}
+	query := fmt.Sprintf(`
+		SELECT
+			competition_id,
+			match_id,
+			COALESCE(match_time, 0),
+			COALESCE(home_team_id, ''),
+			COALESCE(away_team_id, ''),
+			COALESCE(status_id, 0)
+		FROM %s
+		WHERE (home_team_id IN (%s) OR away_team_id IN (%s))
+		  AND match_time >= ?%s
+		ORDER BY match_time
+		LIMIT 15000`, table, placeholders, placeholders, timeMaxClause)
+	rows, err := a.db.QueryContext(ctx, query, allArgs...)
+	if err != nil {
+		return nil, fmt.Errorf("GetEventsByTeamIDsInRangeCtx: %w", err)
+	}
+	defer rows.Close()
+	var out []TSEventWithComp
+	for rows.Next() {
+		var ev TSEventWithComp
+		if err := rows.Scan(&ev.CompetitionID, &ev.Event.ID, &ev.Event.MatchTime, &ev.Event.HomeID, &ev.Event.AwayID, &ev.Event.StatusID); err != nil {
+			continue
+		}
+		ev.Event.MatchID = ev.Event.ID
+		out = append(out, ev)
+	}
+	return out, rows.Err()
+}
+
+// TSEventWithComp 是带 competition_id 的事件记录（团队优先路径输出）。
+type TSEventWithComp struct {
+	CompetitionID string
+	Event         TSEvent
+}

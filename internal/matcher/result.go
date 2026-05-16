@@ -14,6 +14,11 @@ const (
 	// 0 条候选边（edges=0）—— 强烈暗示联赛匹配本身就是错的。详见 PI-006 v1.12。
 	// 触发时 confidence 自动 × suspectConfidenceMultiplier 作为可观察的降级信号。
 	RuleLeagueSuspect MatchRule = "LEAGUE_SUSPECT"
+	// RuleLeagueTeamFirst 表示 league 是通过 team-first 路径（SR 球队名 → TS team_id
+	// → competition_id 多数表决）反推出来的，绕过了 league name matching。
+	// 适用场景：league name 不可靠（跨语言、缩写、商业冠名）但球队名稳定时。
+	// 详见 PI-006 v1.16。
+	RuleLeagueTeamFirst MatchRule = "LEAGUE_TEAM_FIRST"
 
 	RuleEventL1      MatchRule = "EVENT_L1"        // 时差≤5min + 名称
 	RuleEventL2      MatchRule = "EVENT_L2"        // 时差≤6h + 名称

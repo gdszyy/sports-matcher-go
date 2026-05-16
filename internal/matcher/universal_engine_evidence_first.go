@@ -186,6 +186,31 @@ func (e *UniversalEngine) runLeagueEvidenceFirst(
 		prefix, matched, len(eventMatches), l1, l2, l3, l4, l5, l4b, l6,
 		len(efResult.Edges), len(efResult.Eliminated))
 
+	// ── Team-First fallback (PI-006 v1.16) ─────────────────────────────
+	// 若 EF 第一遍 edges=0 且开启了 EnableTeamFirstFallback：
+	//   1. 用 SR 球队名跨 sport 查 TS team_ids
+	//   2. 按 team_id 拉事件 → 多数表决反推 TS competition_id
+	//   3. 用反推出的 competition_id 重跑 EF（一次性，避免无限循环）
+	//   4. 若 second pass edges > 0 则替换结果，league.Rule = LEAGUE_TEAM_FIRST
+	// 实证基础：PI-006 v1.16 Jordan League PoC 100% league 回灌准确。
+	tfApplied := false
+	if e.EnableTeamFirstFallback && len(efResult.Edges) == 0 &&
+		result.League != nil && result.League.Matched &&
+		result.League.MatchRule != RuleLeagueKnown {
+		newLeague, newEfResult, newEventMatches, ok := e.tryTeamFirstFallback(
+			ctx, prefix, srcEvents, srcTeamNames, sport, timeMin, timeMax,
+			result.League.TSCompetitionID,
+		)
+		if ok {
+			result.League = newLeague
+			efResult = newEfResult
+			eventMatches = newEventMatches
+			tfApplied = true
+			log.Printf("%s ✓ team-first fallback recovered: league=%s edges=%d",
+				prefix, newLeague.TSCompetitionID, len(newEfResult.Edges))
+		}
+	}
+
 	// ── SUSPECT 降级（PI-006 v1.12）─────────────────────────────────────
 	// 若 EF 跑完产生 0 条候选边、且联赛标了 Matched=true、且不是 KnownLeagueMap
 	// 命中（人工 curated 信任），则联赛级名称匹配几乎肯定错了 —— 把 confidence
@@ -193,7 +218,8 @@ func (e *UniversalEngine) runLeagueEvidenceFirst(
 	// 实证证据：PI-006 v1.10 Case A (Premier Soccer League Zimbabwe → BPL) 和
 	// Case C (Italy Serie B Women → Argentine Women's League) 都是这个模式。
 	// 不触发 KnownMap：KnownLeagueMap 是人工映射，edges=0 可能是 TS 数据缺失。
-	if len(efResult.Edges) == 0 && result.League != nil && result.League.Matched && result.League.MatchRule != RuleLeagueKnown {
+	// 不触发 team-first 已修复的：上面 tfApplied=true 时跳过此降级。
+	if !tfApplied && len(efResult.Edges) == 0 && result.League != nil && result.League.Matched && result.League.MatchRule != RuleLeagueKnown {
 		originalConf := result.League.Confidence
 		result.League.Confidence *= suspectConfidenceMultiplier
 		originalRule := result.League.MatchRule
@@ -259,4 +285,81 @@ func deriveTimeRangeFromSREvents(srcEvents []db.SREvent, paddingSec int64) (int6
 		return 0, 0
 	}
 	return minT - paddingSec, maxT + paddingSec
+}
+
+// getTeamFirstBuilder 是 e.tfBuilder 的 lazy initializer。线程安全。
+func (e *UniversalEngine) getTeamFirstBuilder() *TeamFirstPoolBuilder {
+	e.tfMu.Lock()
+	defer e.tfMu.Unlock()
+	if e.tfBuilder == nil {
+		e.tfBuilder = NewTeamFirstPoolBuilder(e.TS)
+	}
+	return e.tfBuilder
+}
+
+// tryTeamFirstFallback 用 SR 球队名直接查 TS team_ids → 拉事件 → 多数表决
+// 反推 TS competition_id，再重跑 EF P3。成功返回 (newLeague, newEfResult,
+// newEventMatches, true)；失败返回 (nil, nil, nil, false)。
+//
+// 关键限制：只跑一次，避免循环；只在 second pass edges > 0 时认定成功。
+func (e *UniversalEngine) tryTeamFirstFallback(
+	ctx context.Context,
+	prefix string,
+	srcEvents []db.SREvent,
+	srcTeamNames map[string]string,
+	sport string,
+	timeMin, timeMax int64,
+	currentTSCompetitionID string,
+) (*LeagueMatchResult, ConflictResolutionResult, []EventMatch, bool) {
+	tfBuilder := e.getTeamFirstBuilder()
+	log.Printf("%s ⤴ team-first fallback: SR teams=%d, sport=%s", prefix, len(srcTeamNames), sport)
+	// padding 默认 ±7 天（与 PoC 一致）
+	if timeMin == 0 {
+		timeMin, timeMax = deriveTimeRangeFromSREvents(srcEvents, 7*24*3600)
+	}
+	tfPool, err := tfBuilder.Build(ctx, srcTeamNames, sport, timeMin, timeMax, 3)
+	if err != nil {
+		log.Printf("%s   team-first build failed: %v", prefix, err)
+		return nil, ConflictResolutionResult{}, nil, false
+	}
+	if len(tfPool.Candidates) == 0 {
+		log.Printf("%s   team-first: 0 candidates", prefix)
+		return nil, ConflictResolutionResult{}, nil, false
+	}
+	// 多数表决：按 competition_id 计票
+	compVotes := make(map[string]int)
+	for _, c := range tfPool.Candidates {
+		compVotes[c.CompetitionID]++
+	}
+	// 找出 top competition
+	var topComp string
+	topCount := 0
+	for cid, cnt := range compVotes {
+		if cnt > topCount {
+			topCount = cnt
+			topComp = cid
+		}
+	}
+	log.Printf("%s   team-first: %d candidates, top competition=%s (%d events)",
+		prefix, len(tfPool.Candidates), topComp, topCount)
+	if topComp == "" || topComp == currentTSCompetitionID {
+		// team-first 同意第一遍的判断，不需要 fallback
+		return nil, ConflictResolutionResult{}, nil, false
+	}
+	// 用 team-first 的候选池重跑 EF P3
+	enriched := EnrichTeamPriors(tfPool.Candidates, tfPool.TSTeamNames, srcTeamNames, nil)
+	efMatcher := NewEvidenceEventMatcher(EvidenceEventMatcherConfig{})
+	newEfResult := efMatcher.MatchTwoRound(srcEvents, enriched, srcTeamNames, tfPool.TSTeamNames)
+	if len(newEfResult.Edges) == 0 {
+		log.Printf("%s   team-first P3: still 0 edges, abort fallback", prefix)
+		return nil, ConflictResolutionResult{}, nil, false
+	}
+	newLeague := &LeagueMatchResult{
+		TSCompetitionID: topComp,
+		TSName:          tfPool.TSTeamNames[topComp],
+		Matched:         true,
+		MatchRule:       RuleLeagueTeamFirst,
+		Confidence:      0.70, // 中等先验：team-first 反推非 KnownMap，标 0.70
+	}
+	return newLeague, newEfResult, resolvedToEventMatches(newEfResult.Matches), true
 }

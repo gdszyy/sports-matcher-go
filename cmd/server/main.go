@@ -124,6 +124,7 @@ func matchUniversalCmd() *cobra.Command {
 	var evidenceFirstTopN int
 	var maxRuntime time.Duration
 	var efTimePadding time.Duration
+	var useTeamFirstFallback bool
 
 	cmd := &cobra.Command{
 		Use:   "match2 <tournament_id>",
@@ -147,6 +148,7 @@ func matchUniversalCmd() *cobra.Command {
 			eng.EvidenceFirstTopN = evidenceFirstTopN
 			eng.MaxRuntime = maxRuntime
 			eng.EvidenceFirstTimePadding = efTimePadding
+			eng.EnableTeamFirstFallback = useTeamFirstFallback
 			srcAdapter := matcher.NewSRSourceAdapter(srAdapter, cfg.RunPlayers)
 
 			log.Printf("[UniversalEngine] 开始匹配联赛: %s  sport=%s  tier=%s  evidence-first=%v", tournamentID, sport, tier, useEvidenceFirst)
@@ -175,6 +177,7 @@ func matchUniversalCmd() *cobra.Command {
 	cmd.Flags().IntVar(&evidenceFirstTopN, "evidence-first-topn", 0, "Evidence-First Top-N 联赛候选数（默认 5）")
 	cmd.Flags().DurationVar(&maxRuntime, "max-runtime", 0, "EF 软超时（如 40s）：超时则截断输出当前为止的最佳结果。0=不限")
 	cmd.Flags().DurationVar(&efTimePadding, "ef-time-padding", 0, "EF P1 SQL 时间窗 padding（如 180d、4320h）：大幅加速，可能丢 ~3% L4b 跨季匹配。0=不下推")
+	cmd.Flags().BoolVar(&useTeamFirstFallback, "use-team-first-fallback", false, "EF edges=0 时启用球队优先兜底：SR 球队名→TS team_id→competition_id 多数表决（v1.16）")
 	return cmd
 }
 
@@ -334,6 +337,7 @@ func lsMatchCmd() *cobra.Command {
 	var evidenceFirstTopN int
 	var maxRuntime time.Duration
 	var efTimePadding time.Duration
+	var useTeamFirstFallback bool
 
 	cmd := &cobra.Command{
 		Use:   "ls-match <tournament_id>",
@@ -358,6 +362,7 @@ func lsMatchCmd() *cobra.Command {
 			eng.EvidenceFirstTopN = evidenceFirstTopN
 			eng.MaxRuntime = maxRuntime
 			eng.EvidenceFirstTimePadding = efTimePadding
+			eng.EnableTeamFirstFallback = useTeamFirstFallback
 			var srcAdapter *matcher.LSSourceAdapter
 			if noKnownMap {
 				srcAdapter = matcher.NewLSSourceAdapterNoKnown(lsAdapter, lsPlayerAdapter, cfg.RunPlayers)
@@ -392,6 +397,7 @@ func lsMatchCmd() *cobra.Command {
 	cmd.Flags().IntVar(&evidenceFirstTopN, "evidence-first-topn", 0, "Evidence-First Top-N 联赛候选数（默认 5）")
 	cmd.Flags().DurationVar(&maxRuntime, "max-runtime", 0, "EF 软超时（如 40s）：超时则截断输出当前为止的最佳结果。0=不限")
 	cmd.Flags().DurationVar(&efTimePadding, "ef-time-padding", 0, "EF P1 SQL 时间窗 padding（如 180d、4320h）：大幅加速，可能丢 ~3% L4b 跨季匹配。0=不下推")
+	cmd.Flags().BoolVar(&useTeamFirstFallback, "use-team-first-fallback", false, "EF edges=0 时启用球队优先兜底：SR 球队名→TS team_id→competition_id 多数表决（v1.16）")
 	return cmd
 }
 // ── ls-batch（最新 UniversalEngine，LS 2026 热门+常规）─────────────────────────
@@ -465,6 +471,7 @@ func lsBatchCmd() *cobra.Command {
 	var evidenceFirstTopN int
 	var maxRuntime time.Duration
 	var efTimePadding time.Duration
+	var useTeamFirstFallback bool
 
 	cmd := &cobra.Command{
 		Use:   "ls-batch",
@@ -509,6 +516,7 @@ func lsBatchCmd() *cobra.Command {
 			eng.EvidenceFirstTopN = evidenceFirstTopN
 			eng.MaxRuntime = maxRuntime
 			eng.EvidenceFirstTimePadding = efTimePadding
+			eng.EnableTeamFirstFallback = useTeamFirstFallback
 
 			log.Printf("[UniversalEngine/LS] 开始批量匹配 LS 2026 联赛，共 %d 个 (evidence-first=%v)", len(leagues), useEvidenceFirst)
 
@@ -545,6 +553,7 @@ func lsBatchCmd() *cobra.Command {
 	cmd.Flags().IntVar(&evidenceFirstTopN, "evidence-first-topn", 0, "Evidence-First Top-N 联赛候选数（默认 5）")
 	cmd.Flags().DurationVar(&maxRuntime, "max-runtime", 0, "EF 软超时（如 40s）：超时则截断输出当前为止的最佳结果。0=不限")
 	cmd.Flags().DurationVar(&efTimePadding, "ef-time-padding", 0, "EF P1 SQL 时间窗 padding（如 180d、4320h）：大幅加速，可能丢 ~3% L4b 跨季匹配。0=不下推")
+	cmd.Flags().BoolVar(&useTeamFirstFallback, "use-team-first-fallback", false, "EF edges=0 时启用球队优先兜底：SR 球队名→TS team_id→competition_id 多数表决（v1.16）")
 	return cmd
 }
 func batchUniversalCmd() *cobra.Command {
@@ -555,6 +564,7 @@ func batchUniversalCmd() *cobra.Command {
 	var evidenceFirstTopN int
 	var maxRuntime time.Duration
 	var efTimePadding time.Duration
+	var useTeamFirstFallback bool
 
 	cmd := &cobra.Command{
 		Use:   "batch2",
@@ -598,6 +608,7 @@ func batchUniversalCmd() *cobra.Command {
 			eng.EvidenceFirstTopN = evidenceFirstTopN
 			eng.MaxRuntime = maxRuntime
 			eng.EvidenceFirstTimePadding = efTimePadding
+			eng.EnableTeamFirstFallback = useTeamFirstFallback
 
 			log.Printf("[UniversalEngine] 开始批量匹配 SR 2026 联赛，共 %d 个 (evidence-first=%v)", len(leagues), useEvidenceFirst)
 
@@ -626,6 +637,7 @@ func batchUniversalCmd() *cobra.Command {
 	cmd.Flags().IntVar(&evidenceFirstTopN, "evidence-first-topn", 0, "Evidence-First Top-N 联赛候选数（默认 5）")
 	cmd.Flags().DurationVar(&maxRuntime, "max-runtime", 0, "EF 软超时（如 40s）：超时则截断输出当前为止的最佳结果。0=不限")
 	cmd.Flags().DurationVar(&efTimePadding, "ef-time-padding", 0, "EF P1 SQL 时间窗 padding（如 180d、4320h）：大幅加速，可能丢 ~3% L4b 跨季匹配。0=不下推")
+	cmd.Flags().BoolVar(&useTeamFirstFallback, "use-team-first-fallback", false, "EF edges=0 时启用球队优先兜底：SR 球队名→TS team_id→competition_id 多数表决（v1.16）")
 	return cmd
 }
 

@@ -222,6 +222,13 @@ type UniversalEngine struct {
 	// 取舍：±180d 比 0 快 50%，但 EPL 实测会丢 ~3% L4b 跨季匹配。
 	EvidenceFirstTimePadding time.Duration
 
+	// EnableTeamFirstFallback 控制 EF 第一遍跑 edges=0 (SUSPECT) 时是否启用
+	// team-first 兜底路径（v1.16）。team-first 用 SR 球队名直接查 TS team_id →
+	// 拉事件 → 多数表决反推 TS competition_id；适用 league name 不可靠但
+	// 球队名稳定的场景（PI-006 v1.10 Jordan League 案例）。默认 false 保持
+	// v1.15 行为。
+	EnableTeamFirstFallback bool
+
 	// tsCompCache 缓存 GetCompetitionsByFootball/Basketball 结果（v1.15）。
 	// 跨 RunLeague 复用，batch2 模式下省去重复 DB 调用。
 	// 注意：竞赛元数据更新频率很低（新赛季），缓存生命周期 = engine instance；
@@ -229,6 +236,11 @@ type UniversalEngine struct {
 	// 调用 InvalidateCompetitionCache()。
 	tsCompCache   map[string][]db.TSCompetition
 	tsCompCacheMu sync.Mutex
+
+	// tfBuilder 是 team-first 兜底路径的 lazy 实例（v1.16）。
+	// 首次需要时从 e.TS 构建，复用 in-memory team 索引。
+	tfBuilder *TeamFirstPoolBuilder
+	tfMu      sync.Mutex
 }
 
 // getCompetitionsCached 返回缓存的 TS competition 列表（按 sport），首次访问
