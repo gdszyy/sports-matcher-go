@@ -191,6 +191,20 @@ type LeagueConfig struct {
 	TSCompetitionID string `json:"ts_competition_id"`
 }
 
+// collectSports 返回 leagues 中出现过的不重复 sport 列表（v1.17，给 team-first 预加载用）。
+func collectSports(leagues []LeagueConfig) []string {
+	seen := map[string]bool{}
+	out := []string{}
+	for _, lc := range leagues {
+		if lc.Sport == "" || seen[lc.Sport] {
+			continue
+		}
+		seen[lc.Sport] = true
+		out = append(out, lc.Sport)
+	}
+	return out
+}
+
 // defaultLeagues 内置联赛配置（足球热门+常规+冷门，篮球热门+常规+冷门）
 // TS competition_id 均经过 ground truth 数据库验证（来自 ts_sr_match_mapping_3）
 var defaultLeagues = []LeagueConfig{
@@ -518,6 +532,17 @@ func lsBatchCmd() *cobra.Command {
 			eng.EvidenceFirstTimePadding = efTimePadding
 			eng.EnableTeamFirstFallback = useTeamFirstFallback
 
+
+			// v1.17: 长跑批量场景启动时预加载 team-first token 索引（按出现的 sport 各一次）
+			if useTeamFirstFallback {
+				sports := collectSports(leagues)
+				for _, sp := range sports {
+					if err := eng.PreloadTeamFirstIndex(cmd.Context(), sp); err != nil {
+						log.Printf("[UniversalEngine/LS] team-first 预加载失败 sport=%s: %v", sp, err)
+					}
+				}
+			}
+
 			log.Printf("[UniversalEngine/LS] 开始批量匹配 LS 2026 联赛，共 %d 个 (evidence-first=%v)", len(leagues), useEvidenceFirst)
 
 			var allStats []matcher.UniversalMatchStats
@@ -609,6 +634,17 @@ func batchUniversalCmd() *cobra.Command {
 			eng.MaxRuntime = maxRuntime
 			eng.EvidenceFirstTimePadding = efTimePadding
 			eng.EnableTeamFirstFallback = useTeamFirstFallback
+
+
+			// v1.17: 长跑批量场景启动时预加载 team-first token 索引（按出现的 sport 各一次）
+			if useTeamFirstFallback {
+				sports := collectSports(leagues)
+				for _, sp := range sports {
+					if err := eng.PreloadTeamFirstIndex(cmd.Context(), sp); err != nil {
+						log.Printf("[UniversalEngine] team-first 预加载失败 sport=%s: %v", sp, err)
+					}
+				}
+			}
 
 			log.Printf("[UniversalEngine] 开始批量匹配 SR 2026 联赛，共 %d 个 (evidence-first=%v)", len(leagues), useEvidenceFirst)
 

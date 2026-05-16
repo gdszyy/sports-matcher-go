@@ -297,6 +297,24 @@ func (e *UniversalEngine) getTeamFirstBuilder() *TeamFirstPoolBuilder {
 	return e.tfBuilder
 }
 
+// PreloadTeamFirstIndex 预加载某个 sport 的 TS 球队 token 索引到内存（v1.17）。
+//
+// 长跑批量场景（batch2 / ls-batch）启动时调用一次，后续 RunLeague 触发 team-first
+// fallback 时全部走 in-memory 路径（~50ms），避免每次 SQL pre-filter 4-5s 启动成本。
+//
+// 单跑 match2 / ls-match 场景不建议预加载（一次性 cold start ~4s 反而更慢）。
+//
+// 并发安全；重复调用同一 sport 直接 no-op。
+func (e *UniversalEngine) PreloadTeamFirstIndex(ctx context.Context, sport string) error {
+	tfBuilder := e.getTeamFirstBuilder()
+	if err := tfBuilder.PreloadIndex(ctx, sport); err != nil {
+		return err
+	}
+	teamCnt, tokenCnt := tfBuilder.PreloadStats(sport)
+	log.Printf("[EF] team-first index preloaded: sport=%s teams=%d tokens=%d", sport, teamCnt, tokenCnt)
+	return nil
+}
+
 // tryTeamFirstFallback 用 SR 球队名直接查 TS team_ids → 拉事件 → 多数表决
 // 反推 TS competition_id，再重跑 EF P3。成功返回 (newLeague, newEfResult,
 // newEventMatches, true)；失败返回 (nil, nil, nil, false)。

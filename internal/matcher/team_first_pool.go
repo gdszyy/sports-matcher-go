@@ -1,4 +1,4 @@
-// Package matcher — Evidence-First 球队优先候选池（PI-006 v1.16 PoC）
+// Package matcher — Evidence-First 球队优先候选池（PI-006 v1.17）
 //
 // 反向流水线：当 league name matching 不可靠时，跳过 Top-N 直接走球队 → 事件 → 联赛回灌。
 //
@@ -6,15 +6,15 @@
 //
 //	1) 调用方 LoadTeamNames 拿到 SR 球队名清单
 //	2) TeamFirstPoolBuilder.Build(srTeamNames, sport, tMin, tMax) 内部：
-//	   a. 第一次调用时 load 全量 TS teams（缓存 in-memory）
-//	   b. 对每个 SR 球队名，用 teamNameSimilarity 找 top-K TS team_ids
-//	   c. 用 GetEventsByTeamIDsInRangeCtx 一次性拉所有相关事件
-//	   d. 把事件按 competition_id 分组、装配为 EvidenceEventCandidate
+//	   a. 优先：若已 PreloadIndex(sport) → 内存 token 索引快速命中
+//	   b. 次选：若 Loader 实现 TokenSearchTeamLoader → SQL REGEXP pre-filter
+//	   c. 兜底：full-table load + 内存索引
 //	3) 输出与 CandidatePoolBuilder.BuildCtx 同形态的 *CandidatePoolResult
 //	   → 喂给 EvidenceEventMatcher.MatchTwoRound 完成 P3 评分
 //
-// 当 league.Top-1 选错时（v1.12 SUSPECT 模式），这条路径能从 SR 球队名直接
-// 找到正确的 TS 事件集合，反推真实 league。
+// v1.17 新增 PreloadIndex —— 长跑批量场景（batch2/ls-batch）在启动时一次性
+// load 全量 TS 球队 + token 索引，后续 RunLeague 全部走 in-memory 路径，
+// 省掉 SQL pre-filter 的 4-5s 启动成本。
 
 package matcher
 
@@ -22,6 +22,7 @@ import (
 	"context"
 	"fmt"
 	"sort"
+	"sync"
 	"time"
 
 	"github.com/gdszyy/sports-matcher/internal/db"
@@ -46,10 +47,11 @@ type TokenSearchTeamLoader interface {
 type TeamFirstPoolBuilder struct {
 	Loader TeamFirstLoader
 
-	// 共享 TS 球队缓存。第一次 Build 时 load，后续直接复用。
+	// 共享 TS 球队缓存。首次 Build 或 PreloadIndex 时 load，后续直接复用。
 	// 缓存 key = sport，value = []TSTeamBrief。
-	tsTeams      map[string][]db.TSTeamBrief
-	teamIndex    map[string]map[string][]int // sport -> token -> indexes (in tsTeams[sport])
+	mu        sync.Mutex
+	tsTeams   map[string][]db.TSTeamBrief
+	teamIndex map[string]map[string][]int // sport -> token -> indexes (in tsTeams[sport])
 }
 
 // NewTeamFirstPoolBuilder 创建球队优先候选池生成器。
@@ -59,42 +61,111 @@ func NewTeamFirstPoolBuilder(loader TeamFirstLoader) *TeamFirstPoolBuilder {
 	}
 }
 
-// loadAndIndexTeams 首次访问 sport 时全量 load TS 球队并建 token 索引。
-func (b *TeamFirstPoolBuilder) loadAndIndexTeams(ctx context.Context, sport string) error {
+// PreloadIndex 显式预加载某个 sport 的全量 TS 球队并建 token 倒排索引。
+//
+// 长跑批量场景（batch2/ls-batch）启动时调用一次，后续 Build 全部走内存路径，
+// 不再触发 SQL pre-filter（节省 ~4-5s 启动成本 × N 个联赛）。
+//
+// 并发安全；重复调用同一 sport 直接 no-op。
+func (b *TeamFirstPoolBuilder) PreloadIndex(ctx context.Context, sport string) error {
+	if b == nil || b.Loader == nil {
+		return fmt.Errorf("team-first: loader is nil")
+	}
+	if sport != "football" && sport != "basketball" {
+		return fmt.Errorf("team-first: unsupported sport: %s", sport)
+	}
+	return b.ensureIndexed(ctx, sport)
+}
+
+// IsPreloaded 返回某个 sport 的内存索引是否已就绪。
+func (b *TeamFirstPoolBuilder) IsPreloaded(sport string) bool {
+	if b == nil {
+		return false
+	}
+	b.mu.Lock()
+	defer b.mu.Unlock()
 	if b.tsTeams == nil {
-		b.tsTeams = make(map[string][]db.TSTeamBrief)
-		b.teamIndex = make(map[string]map[string][]int)
+		return false
 	}
-	if _, ok := b.tsTeams[sport]; ok {
-		return nil
+	_, ok := b.tsTeams[sport]
+	return ok
+}
+
+// PreloadStats 返回内存索引的简单统计（球队数 / token 数），主要给 log 用。
+func (b *TeamFirstPoolBuilder) PreloadStats(sport string) (teamCnt, tokenCnt int) {
+	if b == nil {
+		return 0, 0
 	}
+	b.mu.Lock()
+	defer b.mu.Unlock()
+	if b.tsTeams != nil {
+		teamCnt = len(b.tsTeams[sport])
+	}
+	if b.teamIndex != nil {
+		tokenCnt = len(b.teamIndex[sport])
+	}
+	return
+}
+
+// ensureIndexed 是 loadAndIndexTeams 的并发安全版本。
+// 内部加锁，并对 sport 做"已加载即跳过"判定。
+func (b *TeamFirstPoolBuilder) ensureIndexed(ctx context.Context, sport string) error {
+	b.mu.Lock()
+	if b.tsTeams != nil {
+		if _, ok := b.tsTeams[sport]; ok {
+			b.mu.Unlock()
+			return nil
+		}
+	}
+	b.mu.Unlock()
+
+	// 跨锁 load —— 慢 IO 不阻塞其他 sport 的 read
 	teams, err := b.Loader.GetAllTeamsBriefCtx(ctx, sport)
 	if err != nil {
 		return fmt.Errorf("team-first: load teams: %w", err)
 	}
-	b.tsTeams[sport] = teams
 	// 建 token 索引：每个球队名拆 token，每个 token → 多个球队 index
-	idx := make(map[string][]int)
+	idx := make(map[string][]int, len(teams))
 	for i, t := range teams {
 		for _, tok := range tokenizeForIndex(t.Name) {
 			idx[tok] = append(idx[tok], i)
 		}
 	}
-	b.teamIndex[sport] = idx
+
+	b.mu.Lock()
+	defer b.mu.Unlock()
+	if b.tsTeams == nil {
+		b.tsTeams = make(map[string][]db.TSTeamBrief)
+		b.teamIndex = make(map[string]map[string][]int)
+	}
+	// double-check：另一并发 caller 可能抢先写入
+	if _, ok := b.tsTeams[sport]; !ok {
+		b.tsTeams[sport] = teams
+		b.teamIndex[sport] = idx
+	}
 	return nil
 }
 
-// findCandidateTSTeams 对每个 SR 球队名找 top-K 候选 TS team_ids。
+// findCandidateTSTeams 对每个 SR 球队名找 top-K 候选 TS team_ids（内存路径）。
 // 算法：(1) 拆 SR 名为 token，从 teamIndex 拉候选索引集；(2) 对候选 candidate 用
 // teamNameSimilarity 精确打分；(3) 取 top-K。
+//
+// 调用前必须确保 sport 已 ensureIndexed/PreloadIndex 过。
 func (b *TeamFirstPoolBuilder) findCandidateTSTeams(sport, srName string, topK int) []db.TSTeamBrief {
 	tokens := tokenizeForIndex(srName)
 	if len(tokens) == 0 {
 		return nil
 	}
+	b.mu.Lock()
+	teams := b.tsTeams[sport]
+	idx := b.teamIndex[sport]
+	b.mu.Unlock()
+	if len(teams) == 0 || idx == nil {
+		return nil
+	}
 	candidateIdx := map[int]bool{}
 	for _, tok := range tokens {
-		for _, i := range b.teamIndex[sport][tok] {
+		for _, i := range idx[tok] {
 			candidateIdx[i] = true
 		}
 	}
@@ -106,7 +177,6 @@ func (b *TeamFirstPoolBuilder) findCandidateTSTeams(sport, srName string, topK i
 		score float64
 	}
 	scoredList := make([]scored, 0, len(candidateIdx))
-	teams := b.tsTeams[sport]
 	for i := range candidateIdx {
 		sim := teamNameSimilarity(srName, teams[i].Name)
 		if sim < 0.5 {
@@ -136,10 +206,10 @@ func (b *TeamFirstPoolBuilder) findCandidateTSTeams(sport, srName string, topK i
 //   - tMin, tMax: SR 事件时间窗（unix 秒），用作 TS 事件查询的过滤范围
 //   - topKPerSR: 每个 SR 球队保留多少候选 TS 球队（推荐 3~5）
 //
-// 行为保证：
-//   - 第一次访问 sport 时 load 全量 TS 球队 + token 索引（O(N) memory）
-//   - 后续调用 O(SR 球队数 × token × 候选打分) 快速完成
-//   - 不依赖 league name matching，可作为 league SUSPECT 的兜底入口
+// 候选 team 来源优先级（v1.17）：
+//   - 1. 已 PreloadIndex(sport) → 内存 token 倒排索引（最快，~50ms）
+//   - 2. 未 preload 且 Loader 实现 TokenSearchTeamLoader → SQL REGEXP pre-filter（沙箱 4-5s）
+//   - 3. 都没有 → 全表 load + 内存索引（适用于无 SQL 支持的 stub）
 func (b *TeamFirstPoolBuilder) Build(
 	ctx context.Context,
 	srTeamNames map[string]string,
@@ -158,12 +228,23 @@ func (b *TeamFirstPoolBuilder) Build(
 		topKPerSR = 3
 	}
 
-	// 1. 对每个 SR 球队找候选 TS team_ids
-	// 优先：SQL token pre-filter（PoC v1.16+ 推荐）
-	//       从 SR 球队名抽 token 联合 REGEXP 单次 SQL 拉 ~1500 候选，沙箱 4-5s
-	// 回退：load 全表 + 内存索引（用于无 SQL pre-filter 支持的 stub）
 	tsTeamIDs := map[string]string{} // tsTeamID -> tsTeamName
-	if tsLoader, ok := b.Loader.(TokenSearchTeamLoader); ok {
+
+	// 优先级 1：preload 命中 → 内存路径
+	if b.IsPreloaded(sport) {
+		for _, srName := range srTeamNames {
+			if srName == "" {
+				continue
+			}
+			cands := b.findCandidateTSTeams(sport, srName, topKPerSR)
+			for _, c := range cands {
+				if _, exists := tsTeamIDs[c.TeamID]; !exists {
+					tsTeamIDs[c.TeamID] = c.Name
+				}
+			}
+		}
+	} else if tsLoader, ok := b.Loader.(TokenSearchTeamLoader); ok {
+		// 优先级 2：SQL REGEXP pre-filter（v1.16+ 默认）
 		tokenSet := map[string]bool{}
 		for _, srName := range srTeamNames {
 			for _, tok := range tokenizeForIndex(srName) {
@@ -208,8 +289,8 @@ func (b *TeamFirstPoolBuilder) Build(
 			}
 		}
 	} else {
-		// 全表回退路径
-		if err := b.loadAndIndexTeams(ctx, sport); err != nil {
+		// 优先级 3：全表回退路径
+		if err := b.ensureIndexed(ctx, sport); err != nil {
 			return nil, err
 		}
 		for _, srName := range srTeamNames {
