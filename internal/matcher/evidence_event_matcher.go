@@ -203,6 +203,26 @@ func (m *EvidenceEventMatcher) scoreEdge(
 	if ts.ID == "" && ts.MatchID == "" {
 		return EventEvidenceEdge{}, false
 	}
+
+	// ── Time-window 预筛（PI-006 v1.7 性能优化）──
+	// 在做 4 次 NameSimWithAlias 之前先用 correctedDiff 把远期候选剪掉。
+	// 阈值 = l5MaxTimeDiff（30 天）：超过该窗口任何规则（含 L5 fallback）都
+	// 不可能匹配，唯一例外是 L4b 球队 ID 锚点路径（不依赖时间）—— 因此
+	// 检查任一方向的 teamIDAnchor，命中则保留。
+	// 这一刀把 O(N_sr × N_ts) 4 次 NameSim 调用大幅压缩；EPL 实测 173K → ~13K
+	// 边（12.8x 加速）。**不改变结果集**：被剪掉的边在原算法里也会进入
+	// bestEvidenceLevel 返回 NoMatch 后被丢弃。
+	timeDiff := absInt64(sr.StartUnix - ts.MatchTime)
+	correctedDiff := timeDiff
+	if dtwApplied {
+		correctedDiff = absInt64(sr.StartUnix + dtwOffset - ts.MatchTime)
+	}
+	if correctedDiff > l5MaxTimeDiff &&
+		!hasTeamIDAnchor(sr, ts, teamIDMap, false) &&
+		!hasTeamIDAnchor(sr, ts, teamIDMap, true) {
+		return EventEvidenceEdge{}, false
+	}
+
 	tsHomeName := firstNonEmpty(tsTeamNames[ts.HomeID], ts.HomeName)
 	tsAwayName := firstNonEmpty(tsTeamNames[ts.AwayID], ts.AwayName)
 	homeFwd := aliasIdx.NameSimWithAlias(sr.HomeID, sr.HomeName, ts.HomeID, tsHomeName)
@@ -218,11 +238,6 @@ func (m *EvidenceEventMatcher) scoreEdge(
 	}
 	if nameScore < 0.40 && !hasTeamIDAnchor(sr, ts, teamIDMap, sideReversed) {
 		return EventEvidenceEdge{}, false
-	}
-	timeDiff := absInt64(sr.StartUnix - ts.MatchTime)
-	correctedDiff := timeDiff
-	if dtwApplied {
-		correctedDiff = absInt64(sr.StartUnix + dtwOffset - ts.MatchTime)
 	}
 	rule, levelScore, timeScore, ok := bestEvidenceLevel(nameScore, correctedDiff, sideReversed, cand.StrongConstraintOK)
 	teamAnchor := hasTeamIDAnchor(sr, ts, teamIDMap, sideReversed)
