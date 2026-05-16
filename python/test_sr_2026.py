@@ -521,7 +521,7 @@ def run_test(tier_filter=None, league_filter=None, output_xlsx=None):
     for tournament_id, sport, tier in target_leagues:
         league_name = league_names.get(tournament_id, tournament_id)
         map_key = f"{sport}:{tournament_id}"
-        ts_comp_id = KNOWN_LEAGUE_MAP.get(map_key, '')
+        ts_comp_id = KNOWN_LEAGUE_MAP.get(map_key, '')  # ALLOW-KNOWNMAP-IN-EVAL: 给定 ts_comp_id 后专测事件匹配能力
 
         sr_events = sr_by_league.get(tournament_id, [])
         league_gt = gt_by_league.get(tournament_id, {})

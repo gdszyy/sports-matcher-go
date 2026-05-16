@@ -277,7 +277,7 @@ def match_league(ls_name, ls_category, ts_comps, sport, ls_id) -> dict:
     # 已知映射
     key = f"{sport}:{ls_id}"
     if key in KNOWN_LS_TS_MAP:
-        ts_id = KNOWN_LS_TS_MAP[key]
+        ts_id = KNOWN_LS_TS_MAP[key]  # ALLOW-KNOWNMAP-IN-EVAL: LS 历史评估，给定 ts_id 测事件匹配
         for c in ts_comps:
             if c['competition_id'] == ts_id:
                 return {'ts_id': ts_id, 'ts_name': c['name'],

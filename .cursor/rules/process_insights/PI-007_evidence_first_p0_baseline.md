@@ -1,6 +1,6 @@
 ---
 id: "PI-007"
-version: "v1.4"
+version: "v1.5"
 last_updated: "2026-05-16"
 author: "Manus AI, Claude Cowork"
 related_modules: ["python", "python/data", "docs", "internal/matcher"]
@@ -112,3 +112,19 @@ sports-matcher batch2 --config eval_config.json \
 - 不允许把这些 misclass 反向加进 KnownLeagueMap "解决问题"
 - 不允许通过 ts_competition_id GT 输入掩盖算法缺陷
 - 改进必须落到算法本身（country 强约束 / 缩写表 / token IoU 等）
+
+## v1.5 增量（2026-05-16）
+
+### 按 sport × Top-K 全光谱
+
+`evidence_first_strict_baseline.py` 升级：K_LIST=[1..7]，per_sport 聚合。
+
+**结果**：football Top-1 76.9%（13 个有效样本中错 3 个），**Top-2 直接 100%**；basketball Top-1 0%（1 个样本 NBA，缩写命中名相似度 0.18 < 0.30 阈值，候选直接被丢弃）。整体 Top-1 71.4% 是被 basketball 样本拉低的混合数。
+
+**意义**：v1.19 改进方向明确 —
+1. **缩写表** —— basketball 卡点；football 边缘
+2. **country 强约束 → Top-1 promote** —— football 主线，预期 Top-1 76.9% → 100%
+
+### CI 哨兵
+
+`scripts/check_no_mapping_in_eval.py` — 扫描测评脚本若直接读取 KnownLeagueMap/KnownLSLeagueMap 即 fail。修复 3 处历史 P0 评估脚本，加 `# ALLOW-KNOWNMAP-IN-EVAL` 白名单标签 + 用途注释（"P0 测事件匹配能力，给定 ts_comp_id 是设计本意"）。

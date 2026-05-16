@@ -134,10 +134,27 @@ def match_league_topk(src_name, src_category, src_sport, ts_pool, k=5):
              'score': round(s, 4)} for s, ts in scored[:k]]
 
 
-def eval_side(side, src_leagues, gt_map, ts_pool):
+K_LIST = [1, 2, 3, 4, 5, 6, 7]
+
+
+def _aggregate_topk(rows, evaluable):
+    """从 per-league rows 聚合 Top-K 命中数。"""
+    out = {}
+    for k in K_LIST:
+        hits = sum(1 for r in rows
+                   if r['gt_ts_id']
+                   and r['gt_in_pool']
+                   and r['gt_ts_id'] in r['topk_ids'][:k])
+        out[f'top{k}_hits'] = hits
+        out[f'top{k}_accuracy'] = round(hits / evaluable, 4) if evaluable else 0.0
+    return out
+
+
+def eval_side(side, src_leagues, gt_map, ts_pool, topk_k=7):
     rows = []
-    top1_hits = top5_hits = no_gt = gt_not_in_pool = 0
+    no_gt = gt_not_in_pool = 0
     misclass = []
+    pool_ids_set = {t['id'] for t in ts_pool}
     for sl in src_leagues:
         if side == 'SR':
             src_id = sl['tournament_id']
@@ -151,49 +168,56 @@ def eval_side(side, src_leagues, gt_map, ts_pool):
             src_sport = sl.get('sport', 'football')
         gt_key = f"{src_sport}:{src_id}"
         gt_ts = gt_map.get(gt_key, '')
-        topk = match_league_topk(src_name, src_cat, src_sport, ts_pool, k=5)
+        topk = match_league_topk(src_name, src_cat, src_sport, ts_pool, k=topk_k)
         topk_ids = [c['ts_id'] for c in topk]
+        gt_in_pool = bool(gt_ts) and gt_ts in pool_ids_set
         if not gt_ts:
             no_gt += 1
             row_status = 'NO_GT'
+        elif not gt_in_pool:
+            gt_not_in_pool += 1
+            row_status = 'GT_NOT_IN_POOL'
         else:
-            in_pool = any(t['id'] == gt_ts for t in ts_pool)
-            if not in_pool:
-                gt_not_in_pool += 1
-                row_status = 'GT_NOT_IN_POOL'
+            if topk and topk[0]['ts_id'] == gt_ts:
+                row_status = 'TOP1_HIT'
+            elif gt_ts in topk_ids:
+                row_status = 'TOPN_HIT'
             else:
-                t1 = bool(topk and topk[0]['ts_id'] == gt_ts)
-                tk = gt_ts in topk_ids
-                if t1:
-                    top1_hits += 1
-                if tk:
-                    top5_hits += 1
-                row_status = 'TOP1_HIT' if t1 else ('TOPN_HIT' if tk else 'MISS')
-                if not t1:
-                    misclass.append({
-                        'src_id': src_id, 'src_name': src_name, 'src_cat': src_cat,
-                        'gt_ts_id': gt_ts,
-                        'top1_ts_id': topk[0]['ts_id'] if topk else '',
-                        'top1_ts_name': topk[0]['ts_name'] if topk else '',
-                        'top1_score': topk[0]['score'] if topk else 0.0,
-                        'topk_ids': topk_ids, 'status': row_status,
-                    })
+                row_status = 'MISS'
+            if row_status != 'TOP1_HIT':
+                misclass.append({
+                    'src_id': src_id, 'src_name': src_name, 'src_cat': src_cat, 'sport': src_sport,
+                    'gt_ts_id': gt_ts,
+                    'top1_ts_id': topk[0]['ts_id'] if topk else '',
+                    'top1_ts_name': topk[0]['ts_name'] if topk else '',
+                    'top1_score': topk[0]['score'] if topk else 0.0,
+                    'topk_ids': topk_ids, 'status': row_status,
+                })
         rows.append({
             'src_id': src_id, 'src_name': src_name, 'src_category': src_cat, 'sport': src_sport,
-            'gt_ts_id': gt_ts,
+            'gt_ts_id': gt_ts, 'gt_in_pool': gt_in_pool,
             'top1_ts_id': topk[0]['ts_id'] if topk else '',
             'top1_ts_name': topk[0]['ts_name'] if topk else '',
             'top1_score': topk[0]['score'] if topk else 0.0,
-            'top5': topk, 'status': row_status,
+            'topk': topk, 'topk_ids': topk_ids, 'status': row_status,
         })
     total = len(src_leagues)
     evaluable = total - no_gt - gt_not_in_pool
+    agg_all = _aggregate_topk(rows, evaluable)
+    # 按 sport 聚合
+    by_sport = {}
+    for sp in {r['sport'] for r in rows}:
+        sub = [r for r in rows if r['sport'] == sp]
+        sub_eval = sum(1 for r in sub if r['gt_ts_id'] and r['gt_in_pool'])
+        sub_agg = _aggregate_topk(sub, sub_eval)
+        sub_agg['evaluable'] = sub_eval
+        sub_agg['total_leagues'] = len(sub)
+        by_sport[sp] = sub_agg
     return {
         'side': side, 'total_leagues': total,
         'no_gt': no_gt, 'gt_not_in_pool': gt_not_in_pool, 'evaluable': evaluable,
-        'top1_hits': top1_hits, 'top5_hits': top5_hits,
-        'top1_accuracy': round(top1_hits / evaluable, 4) if evaluable else 0.0,
-        'top5_recall': round(top5_hits / evaluable, 4) if evaluable else 0.0,
+        'overall': agg_all,
+        'by_sport': by_sport,
         'misclassified': misclass, 'per_league': rows,
     }
 
@@ -274,16 +298,16 @@ def main():
 
     out = {
         'generated_at': datetime.now(timezone.utc).isoformat(),
-        'mode': 'strict-no-mapping (v1.18)',
+        'mode': 'strict-no-mapping (v1.19)',
         'description': '只靠 league 名+国别相似度，不使用任何 KnownLeagueMap',
         'ts_pool_size': len(ts_pool),
         'eval_set_source': 'sr_ts_ground_truth.json (反推真实匹配集)',
         'sr': sr_result, 'ls': ls_result,
         'summary': {
-            'sr_top1_accuracy': sr_result['top1_accuracy'],
-            'sr_top5_recall': sr_result['top5_recall'],
-            'ls_top1_accuracy': ls_result['top1_accuracy'],
-            'ls_top5_recall': ls_result['top5_recall'],
+            'sr_overall': sr_result['overall'],
+            'sr_by_sport': sr_result['by_sport'],
+            'ls_overall': ls_result['overall'],
+            'ls_by_sport': ls_result['by_sport'],
         },
     }
     out_path = os.path.join(REPO_ROOT, args.output_json)
@@ -291,17 +315,25 @@ def main():
     with open(out_path, 'w', encoding='utf-8') as f:
         json.dump(out, f, ensure_ascii=False, indent=2)
 
-    print(f"\n=== Strict-No-Mapping 基线（v1.18）===")
+    print(f"\n=== Strict-No-Mapping 基线（v1.19）===")
     print(f"TS 候选池: {len(ts_pool)} 联赛 (base={len(ts_pool_base)}, +GT 反推 {len(ts_pool) - len(ts_pool_base)})")
-    for sr in (sr_result, ls_result):
-        print(f"\n[{sr['side']}]")
-        print(f"  总联赛数: {sr['total_leagues']}")
-        print(f"  评估有效: {sr['evaluable']} (no_gt={sr['no_gt']}, gt_not_in_pool={sr['gt_not_in_pool']})")
-        print(f"  Top-1 准确率: {sr['top1_accuracy']:.1%} ({sr['top1_hits']}/{sr['evaluable']})")
-        print(f"  Top-5 召回: {sr['top5_recall']:.1%} ({sr['top5_hits']}/{sr['evaluable']})")
-        print(f"  Top-1 误匹配数: {len(sr['misclassified'])}")
-        for m in sr['misclassified'][:8]:
-            print(f"    ✗ {m['src_id']} {m['src_name']!r} ({m['src_cat']}) → Top1={m['top1_ts_name']!r} (score={m['top1_score']:.3f}) GT={m['gt_ts_id']}")
+    for res in (sr_result, ls_result):
+        side = res['side']
+        print(f"\n[{side}] 总联赛 {res['total_leagues']}, 评估有效 {res['evaluable']} (no_gt={res['no_gt']}, gt_not_in_pool={res['gt_not_in_pool']})")
+        print(f"  整体 Top-K 准确率:")
+        header = '  K=' + '  '.join(f'{k}' for k in K_LIST)
+        print(header)
+        row = '  '.join(f"{res['overall'][f'top{k}_accuracy']:.1%}" for k in K_LIST)
+        print('  ' + row)
+        for sp, agg in sorted(res['by_sport'].items()):
+            print(f"\n  [sport={sp}] 总{agg['total_leagues']} 有效{agg['evaluable']}")
+            row = '  '.join(f"{agg[f'top{k}_accuracy']:.1%}" for k in K_LIST)
+            print('  K:  ' + '  '.join(f'{k}' for k in K_LIST))
+            print('  '  + row)
+        if res['misclassified']:
+            print(f"\n  Top-1 误匹配 ({len(res['misclassified'])} 条):")
+            for m in res['misclassified'][:10]:
+                print(f"    ✗ [{m['sport']}] {m['src_id']} {m['src_name']!r} ({m['src_cat']}) → Top1={m['top1_ts_name']!r} (score={m['top1_score']:.3f}) GT={m['gt_ts_id']}")
     print(f"\n→ JSON 输出: {out_path}")
 
 

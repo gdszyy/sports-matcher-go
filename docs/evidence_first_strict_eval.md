@@ -91,3 +91,38 @@ LS 评估集: 45 个联赛 (no_gt=43, gt_not_in_pool=0)
 python3 python/evidence_first_strict_baseline.py
 # → docs/tests/evidence_first_strict_baseline.json
 ```
+
+## v1.19 增量更新（2026-05-16）
+
+### 按 sport × Top-K 全光谱
+
+```
+[SR] 总联赛 14, 评估有效 14
+  整体 Top-K 准确率：
+  K=1     2      3      4      5      6      7
+  71.4%   92.9%  92.9%  92.9%  92.9%  92.9%  92.9%
+
+  [sport=football] 总 13, 有效 13
+  K=1     2       3       4       5       6       7
+  76.9%   100.0%  100.0%  100.0%  100.0%  100.0%  100.0%
+
+  [sport=basketball] 总 1, 有效 1   ← 只有 NBA 一条样本
+  K=1   2   3   4   5   6   7
+  0.0%  0.0%  0.0%  0.0%  0.0%  0.0%  0.0%
+```
+
+**关键发现**：
+
+1. **Football 算法效果强** — Top-1 76.9%，Top-2 即 100%。算法实际能力比"71.4% 整体"更高，被 1 个 basketball 样本拉低
+2. **Basketball 完全失效** — NBA / CBA 的 name_similarity("NBA", "National Basketball Association") = 0.18，低于 0.30 阈值直接被丢弃。**缩写问题是 basketball 算法的卡点，与 sport 类型强相关**
+3. **football Top-2 = 100%** 说明：football 算法**已经看见正确答案**，只是 LaLiga (Spain) 在 Top-1 被 Poland Liga 3 字面相似度压制 → 排到 Top-2。v1.19 改进只需把 country 加分公式调强（让 Spain↔Spain match 时直接 promote Top-1）就能拿到 100%
+
+### 改进方向优先级（基于 v1.19 全光谱数据）
+
+| 改进点 | 影响范围 | 预期收益 |
+|--------|---------|---------|
+| **A. 缩写表 + 首字母 token 匹配** | basketball NBA/CBA + football 缩写联赛 | basketball Top-1: 0% → 100% (1/1)，football 几个边缘场景 |
+| **B. country 强约束 → Top-1 promote** | football LaLiga / Eredivisie 类型 | football Top-1: 76.9% → 100% (13/13)，整体 Top-1: 71.4% → ~93% |
+| C. token IoU 补充信号 | 所有 sport | 边缘改善（~2-5 pp） |
+
+A+B 是首选 v1.19 改进路线。

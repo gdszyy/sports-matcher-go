@@ -10,6 +10,18 @@ import (
 // KnownLeagueMap SR tournament_id → TS competition_id 已知映射
 // key 格式: "<sport>:<tournament_id>"，避免不同运动类型的 ID 冲突
 // 所有 TS ID 均经过数据库实际查询验证
+//
+// ⚠️ v1.18 决议：本表仅作为**生产链路的运营 override 层**，**严禁参与算法测评循环**。
+//
+//   - 算法测评必须用 `--strict-no-mapping` flag（main.go）或 Python 侧 evidence_first_strict_baseline.py
+//     强制走纯算法路径，本表不会被查询。
+//   - 任何"把推断结果回写本表"的便利化想法（v1.18 KnownMap writeback 提议已否决）都是禁止的，
+//     mapping 会让算法效果失真（参见 PI-007 v1.4: strict 模式 SR Top-1 71.4% vs 默认 100%，
+//     mapping 自证给算法效果造的虚是 28.6 pp）。
+//   - 本表可在生产 API 中作为人工 override 使用；本表变更不算"算法改进"。
+//
+// 关联 CI 检查：`scripts/check_no_mapping_in_eval.sh` — 测评代码引用 KnownLeagueMap
+// 直接命中路径会 fail（白名单需加 `// ALLOW-KNOWNMAP-IN-EVAL` 行尾注释）。
 var KnownLeagueMap = map[string]string{
 	// ── 足球热门 ──────────────────────────────────────────────────────────
 	"football:sr:tournament:17":  "jednm9whz0ryox8", // Premier League (English Premier League)

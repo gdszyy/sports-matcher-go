@@ -277,7 +277,7 @@ def run_sr() -> List[Dict[str, Any]]:
 
     sr_targets = list(SR_2026_LEAGUES) + SR_SUPPLEMENTAL_LEAGUES
     for tournament_id, sport, tier, *explicit_ts in sr_targets:
-        ts_comp_id = explicit_ts[0] if explicit_ts else SR_KNOWN_LEAGUE_MAP.get(f"{sport}:{tournament_id}", "")
+            ts_comp_id = explicit_ts[0] if explicit_ts else SR_KNOWN_LEAGUE_MAP.get(f"{sport}:{tournament_id}", "")  # ALLOW-KNOWNMAP-IN-EVAL: P0 评估给定 ts_comp_id 测事件层而非联赛层
         source_events = sr_by_league.get(tournament_id, [])
         league_gt = gt_by_league.get(tournament_id, {})
         ts_events = ts_by_comp_file.get(ts_comp_id, []) if ts_comp_id else []

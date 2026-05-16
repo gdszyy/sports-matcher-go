@@ -312,6 +312,16 @@ func (e *LSEngine) RunLeague(lsTournamentID, sport, tier, tsCompetitionID string
 // key 格式: "sport:ls_tournament_id"，如 "football:8363"
 // 更新日期: 2026-04，覆盖 2026 年所有热门 + 常规联赛（足球 + 篮球）
 // LS tournament_id 来自 test-xp-lsports.ls_tournament_en，TS competition_id 来自 test-thesports-db
+//
+// ⚠️ v1.18 决议：本表仅作为**生产链路的运营 override 层**，**严禁参与算法测评循环**。
+//
+//   - 算法测评必须用 `--strict-no-mapping` flag 或 Python 侧 strict baseline 脚本，
+//     强制走纯算法路径，本表不会被查询。
+//   - 任何"把推断结果回写本表"的便利化想法都是禁止的 — mapping 会让算法效果失真。
+//   - 本表可在生产 API 中作为人工 override 使用；本表变更不算"算法改进"。
+//
+// 关联 CI 检查：`scripts/check_no_mapping_in_eval.sh` — 测评代码引用本表
+// 直接命中路径会 fail（白名单需加 `// ALLOW-KNOWNMAP-IN-EVAL` 行尾注释）。
 var KnownLSLeagueMap = map[string]string{
 	// ══════════════════════════════════════════════════════════════════════
 	// 足球 热门（hot）—— 五大联赛 + UEFA + 南美杯
