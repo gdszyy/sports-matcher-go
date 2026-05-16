@@ -377,7 +377,7 @@ func lsMatchCmd() *cobra.Command {
 	cmd.Flags().BoolVar(&noPlayers, "no-players", false, "跳过球员匹配（加速）")
 	cmd.Flags().BoolVar(&outputJSON, "json", false, "输出完整 JSON 结果")
 	cmd.Flags().BoolVar(&noKnownMap, "no-known-map", false, "跳过 KnownLSLeagueMap，使用纯算法名称相似度匹配（验证算法效果）")
-	cmd.Flags().BoolVar(&useEvidenceFirst, "use-evidence-first", false, "启用 Evidence-First 流水线（LS adapter 自动降级回 P0；预留供 LS 镜像后启用）")
+	cmd.Flags().BoolVar(&useEvidenceFirst, "use-evidence-first", false, "启用 Evidence-First 流水线 (Top-N → P1 → P2 → P3)")
 	cmd.Flags().IntVar(&evidenceFirstTopN, "evidence-first-topn", 0, "Evidence-First Top-N 联赛候选数（默认 5）")
 	return cmd
 }
@@ -524,7 +524,7 @@ func lsBatchCmd() *cobra.Command {
 	cmd.Flags().StringVar(&configFile, "config", "", "自定义联赛配置文件（JSON）")
 	cmd.Flags().StringVar(&tierFilter, "tier", "", "仅匹配指定热度的联赛: hot / regular / cold（空=全部）")
 	cmd.Flags().BoolVar(&noKnownMap, "no-known-map", false, "跳过 KnownLSLeagueMap，使用纯算法名称相似度匹配（验证算法效果）")
-	cmd.Flags().BoolVar(&useEvidenceFirst, "use-evidence-first", false, "启用 Evidence-First 流水线（LS adapter 自动降级回 P0；预留供 LS 镜像后启用）")
+	cmd.Flags().BoolVar(&useEvidenceFirst, "use-evidence-first", false, "启用 Evidence-First 流水线 (Top-N → P1 → P2 → P3)")
 	cmd.Flags().IntVar(&evidenceFirstTopN, "evidence-first-topn", 0, "Evidence-First Top-N 联赛候选数（默认 5）")
 	return cmd
 }

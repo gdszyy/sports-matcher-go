@@ -38,11 +38,8 @@ CLI 模式执行单联赛匹配，结果输出到 stdout。
 ### Evidence-First 开关（match2 / batch2 / ls-match / ls-batch 均支持）
 
 ```bash
-./sports-matcher match2 "sr:tournament:17" --use-evidence-first --evidence-first-topn 5
-./sports-matcher batch2 --use-evidence-first
-./sports-matcher ls-match  <id> --use-evidence-first   # LS adapter 自动降级回 P0
-./sports-matcher ls-batch       --use-evidence-first   # 同上
-```
-
-| Flag | 默认 | 含义 |
-|------
+./sports-matcher match2  "sr:tournament:17" --use-evidence-first --evidence-first-topn 5
+./sports-matcher batch2                     --use-evidence-first
+./sports-matcher ls-match <id>              --use-evidence-first
+./sports-matcher ls-match <id>              --use-evidence-first --no-known-map  # 纯算法 EF
+./sports-ma

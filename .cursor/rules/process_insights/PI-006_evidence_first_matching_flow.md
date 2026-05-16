@@ -1,6 +1,6 @@
 ---
 id: "PI-006"
-version: "v1.5"
+version: "v1.6"
 last_updated: "2026-05-16"
 author: "Manus AI, Claude Cowork"
 related_modules: ["internal/matcher", "docs"]

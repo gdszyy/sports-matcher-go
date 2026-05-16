@@ -64,7 +64,8 @@
 | 通用引擎主体 | `internal/matcher/universal_engine.go` | UniversalEngine、SRSourceAdapter、TSSourceAdapter、RunLeague 主流程 |
 | 事件级匹配核心 | `internal/matcher/event.go` | MatchEvents、高斯时间衰减、TeamAliasIndex、L1~L6 七级策略 |
 | **Evidence-First 联赛 Top-N 入口** | `internal/matcher/league_topn.go` | MatchLeagueTopN、LeagueMatchCandidate、ToTSCompetitionCandidate(s)；KnownMap 命中 Top-1，其余按 leagueNameScore 降序；不破坏 P0 单胜者路径（2026-05-16） |
-| **Evidence-First Wire 进 RunLeague** | `internal/matcher/universal_engine_evidence_first.go` | TopNAdapter 可选接口 + `SRSourceAdapter.MatchLeagueTopN` + `runLeagueEvidenceFirst` 完整流水线；由 `UniversalEngine.UseEvidenceFirst` opt-in 切换；LS adapter 自动降级（**最新落地，2026-05-16**） |
+| **Evidence-First Wire 进 RunLeague** | `internal/matcher/universal_engine_evidence_first.go` | TopNAdapter 可选接口 + `SRSourceAdapter.MatchLeagueTopN` + `LSSourceAdapter.MatchLeagueTopN`（v1.6 起）+ `runLeagueEvidenceFirst` 完整流水线；由 `UniversalEngine.UseEvidenceFirst` opt-in 切换 |
+| **Evidence-First LS 入口** | `internal/matcher/league_topn_ls.go` | LSMatchLeagueTopN：SR 版的 LS 镜像（KnownLSLeagueMap / lsLeagueNameScore / lsLocationVeto / 支持 NoKnownMap），让 LS 链路也跑完整 EF 流水线（**最新落地，2026-05-16**） |
 | **Evidence-First P1 候选池生成** | `internal/matcher/candidate_pool.go` | CandidatePoolBuilder、TSCompetitionCandidate、TSEventLoader 接口；把多 competition 候选 + 联赛先验 + 强约束转为 `[]EvidenceEventCandidate`（2026-05-16） |
 | **Evidence-First P2 球队级先验填充** | `internal/matcher/team_prior_enricher.go` | EnrichTeamPriors：扫描 SR 球队名，取最佳相似度填入 HomeTeamCandidateScore / AwayTeamCandidateScore；别名感知；纯函数原地修改（**最新落地，2026-05-16**） |
 | **Evidence-First P3 比赛级匹配** | `internal/matcher/evidence_event_matcher.go` | EvidenceEventMatcher、候选边打分（复用 levelConfigs / FSModel / DTW）、一对一冲突消解、`MatchTwoRound` 两轮 teamIDMap 推导（详见 PI-006/PI-007） |
@@ -74,5 +75,4 @@
 | Fellegi-Sunter EM | `internal/matcher/fs_model.go` | 无监督参数估计 |
 | EventDTW 兜底 | `internal/matcher/event_dtw.go` | 动态时间规整兜底匹配 |
 | 已知联赛映射表 | `internal/matcher/league.go` | KnownLeagueMap（SR tournament_id → TS competition_id） |
-| 命令行入口 | `cmd/server/main.go` | `match2`（单联赛）、`batch2`（批量 SR 2026）、`ls-match`/`ls-batch`（LS 链路）子命令。**全部支持 `--use-evidence-first` + `--evidence-first-topn N` 开关**（2026-05-16） |
-| HTTP API 入口 | `internal/api/server.
+| 命令行入口 | `cmd/
