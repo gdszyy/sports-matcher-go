@@ -35,19 +35,14 @@ globs: ["cmd/**/*"]
 
 CLI 模式执行单联赛匹配，结果输出到 stdout。
 
-## 3. 状态流转 / 业务规则
-
-- 服务启动时自动建立 SSH 隧道（通过 `internal/db/tunnel.go`）
-- 配置优先级：命令行参数 > 环境变量 > 默认值
-- `--no-players` 跳过球员匹配以提升速度
-
-## 4. 编译与部署
+### Evidence-First 开关（match2 / batch2 / ls-match / ls-batch 均支持）
 
 ```bash
-# 编译
-export PATH=$PATH:/usr/local/go/bin
-go build -o sports-matcher ./cmd/server/main.go
-
-# Docker 部署
-docker build -t sports-matcher .
+./sports-matcher match2 "sr:tournament:17" --use-evidence-first --evidence-first-topn 5
+./sports-matcher batch2 --use-evidence-first
+./sports-matcher ls-match  <id> --use-evidence-first   # LS adapter 自动降级回 P0
+./sports-matcher ls-batch       --use-evidence-first   # 同上
 ```
+
+| Flag | 默认 | 含义 |
+|------

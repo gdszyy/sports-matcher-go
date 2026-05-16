@@ -74,7 +74,5 @@
 | Fellegi-Sunter EM | `internal/matcher/fs_model.go` | 无监督参数估计 |
 | EventDTW 兜底 | `internal/matcher/event_dtw.go` | 动态时间规整兜底匹配 |
 | 已知联赛映射表 | `internal/matcher/league.go` | KnownLeagueMap（SR tournament_id → TS competition_id） |
-| 命令行入口 | `cmd/server/main.go` | `match2`（单联赛）、`batch2`（批量 SR 2026）、`ls-match`/`ls-batch`（LS 链路）子命令 |
-| HTTP API 入口 | `internal/api/server.go` | `/api/v2/match/league`、`/api/v2/match/batch` |
-
-### 5.2 SR 2026 算法测试脚本
+| 命令行入口 | `cmd/server/main.go` | `match2`（单联赛）、`batch2`（批量 SR 2026）、`ls-match`/`ls-batch`（LS 链路）子命令。**全部支持 `--use-evidence-first` + `--evidence-first-topn N` 开关**（2026-05-16） |
+| HTTP API 入口 | `internal/api/server.
