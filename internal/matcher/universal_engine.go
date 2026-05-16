@@ -596,6 +596,10 @@ func computeUniversalStats(
 type SRSourceAdapter struct {
 	SR         *db.SRAdapter
 	RunPlayers bool
+	// NoKnownMap (v1.18) — true 时跳过 KnownLeagueMap，走纯算法相似度路径。
+	// 用于"严格无 mapping 测评模式"（--strict-no-mapping），防止人工 mapping
+	// 表自证算法有效性。生产链路默认 false，测评链路必须 true。
+	NoKnownMap bool
 	// 内部状态（LoadLeague 后填充）
 	srTour *db.SRTournament
 }
@@ -603,6 +607,12 @@ type SRSourceAdapter struct {
 // NewSRSourceAdapter 创建 SR 侧适配器
 func NewSRSourceAdapter(sr *db.SRAdapter, runPlayers bool) *SRSourceAdapter {
 	return &SRSourceAdapter{SR: sr, RunPlayers: runPlayers}
+}
+
+// NewSRSourceAdapterNoKnown 创建跳过 KnownLeagueMap 的纯算法 SR 侧适配器（v1.18）。
+// 测评链路必须使用此构造器，避免人工映射表干扰算法效果评估。
+func NewSRSourceAdapterNoKnown(sr *db.SRAdapter, runPlayers bool) *SRSourceAdapter {
+	return &SRSourceAdapter{SR: sr, RunPlayers: runPlayers, NoKnownMap: true}
 }
 
 func (a *SRSourceAdapter) SourceSide() string { return "sr" }
@@ -621,7 +631,7 @@ func (a *SRSourceAdapter) LoadLeague(tournamentID, sport string) error {
 }
 
 func (a *SRSourceAdapter) MatchLeague(tsComps []db.TSCompetition) *LeagueMatchResult {
-	lm := MatchLeague(a.srTour, tsComps)
+	lm := MatchLeagueWithFlags(a.srTour, tsComps, a.NoKnownMap)
 	return &LeagueMatchResult{
 		SrcID:           lm.SRTournamentID,
 		SrcName:         lm.SRName,

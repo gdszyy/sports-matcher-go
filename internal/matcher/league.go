@@ -186,3 +186,57 @@ func leagueNameScore(sr *db.SRTournament, ts *db.TSCompetition) float64 {
 
 	return base
 }
+
+// MatchLeagueWithFlags 是 MatchLeague 的扩展版本（v1.18）：
+//
+//   - noKnownMap=true 时跳过 KnownLeagueMap，强制走名称相似度路径。
+//     用于"严格无 mapping 测评模式"（--strict-no-mapping），目的是
+//     测算法本身的能力，避免人工 mapping 表自证有效性。
+//
+//   - noKnownMap=false 时行为与 MatchLeague 完全一致。
+//
+// 设计要点：本算法明确杜绝把推断结果回写 KnownLeagueMap（v1.18 决议）；
+// 这个表只保留作为生产侧"运营 override 层"，不参与算法测评循环。
+func MatchLeagueWithFlags(srTour *db.SRTournament, tsComps []db.TSCompetition, noKnownMap bool) *LeagueMatch {
+	if noKnownMap {
+		return matchLeagueByName(srTour, tsComps)
+	}
+	return MatchLeague(srTour, tsComps)
+}
+
+// matchLeagueByName 是 MatchLeague 跳过 KnownLeagueMap 的内部版本。
+// 直接走名称相似度（与 MatchLeague 中 step 2 起的逻辑等价）。
+func matchLeagueByName(srTour *db.SRTournament, tsComps []db.TSCompetition) *LeagueMatch {
+	result := &LeagueMatch{
+		SRTournamentID: srTour.ID,
+		SRName:         srTour.Name,
+		SRCategory:     srTour.CategoryName,
+		Matched:        false,
+		MatchRule:      RuleLeagueNoMatch,
+	}
+	bestScore := 0.0
+	var bestComp *db.TSCompetition
+	for i := range tsComps {
+		score := leagueNameScore(srTour, &tsComps[i])
+		if score > bestScore {
+			bestScore = score
+			bestComp = &tsComps[i]
+		}
+	}
+	if bestComp == nil || bestScore < 0.55 {
+		return result
+	}
+	result.TSCompetitionID = bestComp.ID
+	result.TSName = bestComp.Name
+	result.TSCountry = bestComp.CountryName
+	result.Matched = true
+	result.Confidence = bestScore
+	if bestScore >= 0.85 {
+		result.MatchRule = RuleLeagueNameHi
+	} else if bestScore >= 0.70 {
+		result.MatchRule = RuleLeagueNameMed
+	} else {
+		result.MatchRule = RuleLeagueNameLow
+	}
+	return result
+}

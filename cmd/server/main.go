@@ -125,6 +125,7 @@ func matchUniversalCmd() *cobra.Command {
 	var maxRuntime time.Duration
 	var efTimePadding time.Duration
 	var useTeamFirstFallback bool
+	var strictNoMapping bool
 
 	cmd := &cobra.Command{
 		Use:   "match2 <tournament_id>",
@@ -149,9 +150,16 @@ func matchUniversalCmd() *cobra.Command {
 			eng.MaxRuntime = maxRuntime
 			eng.EvidenceFirstTimePadding = efTimePadding
 			eng.EnableTeamFirstFallback = useTeamFirstFallback
-			srcAdapter := matcher.NewSRSourceAdapter(srAdapter, cfg.RunPlayers)
+			var srcAdapter *matcher.SRSourceAdapter
+			if strictNoMapping {
+				srcAdapter = matcher.NewSRSourceAdapterNoKnown(srAdapter, cfg.RunPlayers)
+				tsCompID = ""
+				log.Printf("[UniversalEngine] 严格无 mapping 测评模式 (v1.18)：禁用 KnownLeagueMap，清空 ts-id")
+			} else {
+				srcAdapter = matcher.NewSRSourceAdapter(srAdapter, cfg.RunPlayers)
+			}
 
-			log.Printf("[UniversalEngine] 开始匹配联赛: %s  sport=%s  tier=%s  evidence-first=%v", tournamentID, sport, tier, useEvidenceFirst)
+			log.Printf("[UniversalEngine] 开始匹配联赛: %s  sport=%s  tier=%s  evidence-first=%v  strict-no-mapping=%v", tournamentID, sport, tier, useEvidenceFirst, strictNoMapping)
 			result, err := eng.RunLeague(srcAdapter, tournamentID, sport, tier, tsCompID)
 			if err != nil {
 				return err
@@ -178,6 +186,7 @@ func matchUniversalCmd() *cobra.Command {
 	cmd.Flags().DurationVar(&maxRuntime, "max-runtime", 0, "EF 软超时（如 40s）：超时则截断输出当前为止的最佳结果。0=不限")
 	cmd.Flags().DurationVar(&efTimePadding, "ef-time-padding", 0, "EF P1 SQL 时间窗 padding（如 180d、4320h）：大幅加速，可能丢 ~3% L4b 跨季匹配。0=不下推")
 	cmd.Flags().BoolVar(&useTeamFirstFallback, "use-team-first-fallback", false, "EF edges=0 时启用球队优先兜底：SR 球队名→TS team_id→competition_id 多数表决（v1.16）")
+	cmd.Flags().BoolVar(&strictNoMapping, "strict-no-mapping", false, "严格无 mapping 测评模式（v1.18）：禁用 KnownLeagueMap、清空 --ts-id、强制走纯算法路径。所有测评必须开此 flag")
 	return cmd
 }
 
@@ -352,6 +361,7 @@ func lsMatchCmd() *cobra.Command {
 	var maxRuntime time.Duration
 	var efTimePadding time.Duration
 	var useTeamFirstFallback bool
+	var strictNoMapping bool
 
 	cmd := &cobra.Command{
 		Use:   "ls-match <tournament_id>",
@@ -377,14 +387,19 @@ func lsMatchCmd() *cobra.Command {
 			eng.MaxRuntime = maxRuntime
 			eng.EvidenceFirstTimePadding = efTimePadding
 			eng.EnableTeamFirstFallback = useTeamFirstFallback
+			if strictNoMapping {
+				noKnownMap = true
+				tsCompID = ""
+				log.Printf("[UniversalEngine/LS] 严格无 mapping 测评模式 (v1.18)：禁用 KnownLSLeagueMap，清空 ts-id")
+			}
 			var srcAdapter *matcher.LSSourceAdapter
 			if noKnownMap {
 				srcAdapter = matcher.NewLSSourceAdapterNoKnown(lsAdapter, lsPlayerAdapter, cfg.RunPlayers)
-				tsCompID = "" // 纯算法模式：不预设 TS ID，让引擎拉全量 TS 联赛列表
+				tsCompID = ""
 			} else {
 				srcAdapter = matcher.NewLSSourceAdapter(lsAdapter, lsPlayerAdapter, cfg.RunPlayers)
 			}
-			log.Printf("[UniversalEngine/LS] 开始匹配联赛: %s  sport=%s  tier=%s  no-known-map=%v", tournamentID, sport, tier, noKnownMap)
+			log.Printf("[UniversalEngine/LS] 开始匹配联赛: %s  sport=%s  tier=%s  no-known-map=%v  strict-no-mapping=%v", tournamentID, sport, tier, noKnownMap, strictNoMapping)
 			result, err := eng.RunLeague(srcAdapter, tournamentID, sport, tier, tsCompID)
 			if err != nil {
 				return err
@@ -412,6 +427,7 @@ func lsMatchCmd() *cobra.Command {
 	cmd.Flags().DurationVar(&maxRuntime, "max-runtime", 0, "EF 软超时（如 40s）：超时则截断输出当前为止的最佳结果。0=不限")
 	cmd.Flags().DurationVar(&efTimePadding, "ef-time-padding", 0, "EF P1 SQL 时间窗 padding（如 180d、4320h）：大幅加速，可能丢 ~3% L4b 跨季匹配。0=不下推")
 	cmd.Flags().BoolVar(&useTeamFirstFallback, "use-team-first-fallback", false, "EF edges=0 时启用球队优先兜底：SR 球队名→TS team_id→competition_id 多数表决（v1.16）")
+	cmd.Flags().BoolVar(&strictNoMapping, "strict-no-mapping", false, "严格无 mapping 测评模式（v1.18）：禁用 KnownLeagueMap、清空 --ts-id、强制走纯算法路径。所有测评必须开此 flag")
 	return cmd
 }
 // ── ls-batch（最新 UniversalEngine，LS 2026 热门+常规）─────────────────────────
@@ -486,6 +502,7 @@ func lsBatchCmd() *cobra.Command {
 	var maxRuntime time.Duration
 	var efTimePadding time.Duration
 	var useTeamFirstFallback bool
+	var strictNoMapping bool
 
 	cmd := &cobra.Command{
 		Use:   "ls-batch",
@@ -532,6 +549,13 @@ func lsBatchCmd() *cobra.Command {
 			eng.EvidenceFirstTimePadding = efTimePadding
 			eng.EnableTeamFirstFallback = useTeamFirstFallback
 
+			if strictNoMapping {
+				noKnownMap = true
+				log.Printf("[UniversalEngine/LS] 严格无 mapping 测评模式 (v1.18)：禁用 KnownLSLeagueMap，清空所有 ts_competition_id")
+				for i := range leagues {
+					leagues[i].TSCompetitionID = ""
+				}
+			}
 
 			// v1.17: 长跑批量场景启动时预加载 team-first token 索引（按出现的 sport 各一次）
 			if useTeamFirstFallback {
@@ -543,7 +567,7 @@ func lsBatchCmd() *cobra.Command {
 				}
 			}
 
-			log.Printf("[UniversalEngine/LS] 开始批量匹配 LS 2026 联赛，共 %d 个 (evidence-first=%v)", len(leagues), useEvidenceFirst)
+			log.Printf("[UniversalEngine/LS] 开始批量匹配 LS 2026 联赛，共 %d 个 (evidence-first=%v strict-no-mapping=%v)", len(leagues), useEvidenceFirst, strictNoMapping)
 
 			var allStats []matcher.UniversalMatchStats
 			for _, lc := range leagues {
@@ -579,6 +603,7 @@ func lsBatchCmd() *cobra.Command {
 	cmd.Flags().DurationVar(&maxRuntime, "max-runtime", 0, "EF 软超时（如 40s）：超时则截断输出当前为止的最佳结果。0=不限")
 	cmd.Flags().DurationVar(&efTimePadding, "ef-time-padding", 0, "EF P1 SQL 时间窗 padding（如 180d、4320h）：大幅加速，可能丢 ~3% L4b 跨季匹配。0=不下推")
 	cmd.Flags().BoolVar(&useTeamFirstFallback, "use-team-first-fallback", false, "EF edges=0 时启用球队优先兜底：SR 球队名→TS team_id→competition_id 多数表决（v1.16）")
+	cmd.Flags().BoolVar(&strictNoMapping, "strict-no-mapping", false, "严格无 mapping 测评模式（v1.18）：禁用 KnownLeagueMap、清空 --ts-id、强制走纯算法路径。所有测评必须开此 flag")
 	return cmd
 }
 func batchUniversalCmd() *cobra.Command {
@@ -590,6 +615,7 @@ func batchUniversalCmd() *cobra.Command {
 	var maxRuntime time.Duration
 	var efTimePadding time.Duration
 	var useTeamFirstFallback bool
+	var strictNoMapping bool
 
 	cmd := &cobra.Command{
 		Use:   "batch2",
@@ -635,6 +661,12 @@ func batchUniversalCmd() *cobra.Command {
 			eng.EvidenceFirstTimePadding = efTimePadding
 			eng.EnableTeamFirstFallback = useTeamFirstFallback
 
+			if strictNoMapping {
+				log.Printf("[UniversalEngine] 严格无 mapping 测评模式 (v1.18)：禁用 KnownLeagueMap，清空所有 ts_competition_id")
+				for i := range leagues {
+					leagues[i].TSCompetitionID = ""
+				}
+			}
 
 			// v1.17: 长跑批量场景启动时预加载 team-first token 索引（按出现的 sport 各一次）
 			if useTeamFirstFallback {
@@ -646,12 +678,17 @@ func batchUniversalCmd() *cobra.Command {
 				}
 			}
 
-			log.Printf("[UniversalEngine] 开始批量匹配 SR 2026 联赛，共 %d 个 (evidence-first=%v)", len(leagues), useEvidenceFirst)
+			log.Printf("[UniversalEngine] 开始批量匹配 SR 2026 联赛，共 %d 个 (evidence-first=%v strict-no-mapping=%v)", len(leagues), useEvidenceFirst, strictNoMapping)
 
 			var allStats []matcher.UniversalMatchStats
 			for _, lc := range leagues {
 				log.Printf("\n══ [UniversalEngine] 匹配联赛: %s [%s/%s] ══", lc.TournamentID, lc.Sport, lc.Tier)
-				srcAdapter := matcher.NewSRSourceAdapter(srAdapter, cfg.RunPlayers)
+				var srcAdapter *matcher.SRSourceAdapter
+				if strictNoMapping {
+					srcAdapter = matcher.NewSRSourceAdapterNoKnown(srAdapter, cfg.RunPlayers)
+				} else {
+					srcAdapter = matcher.NewSRSourceAdapter(srAdapter, cfg.RunPlayers)
+				}
 				result, err := eng.RunLeague(srcAdapter, lc.TournamentID, lc.Sport, lc.Tier, lc.TSCompetitionID)
 				if err != nil {
 					log.Printf("  ✗ 错误: %v", err)
@@ -674,6 +711,7 @@ func batchUniversalCmd() *cobra.Command {
 	cmd.Flags().DurationVar(&maxRuntime, "max-runtime", 0, "EF 软超时（如 40s）：超时则截断输出当前为止的最佳结果。0=不限")
 	cmd.Flags().DurationVar(&efTimePadding, "ef-time-padding", 0, "EF P1 SQL 时间窗 padding（如 180d、4320h）：大幅加速，可能丢 ~3% L4b 跨季匹配。0=不下推")
 	cmd.Flags().BoolVar(&useTeamFirstFallback, "use-team-first-fallback", false, "EF edges=0 时启用球队优先兜底：SR 球队名→TS team_id→competition_id 多数表决（v1.16）")
+	cmd.Flags().BoolVar(&strictNoMapping, "strict-no-mapping", false, "严格无 mapping 测评模式（v1.18）：禁用 KnownLeagueMap、清空 --ts-id、强制走纯算法路径。所有测评必须开此 flag")
 	return cmd
 }
 

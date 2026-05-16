@@ -1,6 +1,6 @@
 ---
 id: "PI-007"
-version: "v1.2"
+version: "v1.3"
 last_updated: "2026-05-16"
 author: "Manus AI, Claude Cowork"
 related_modules: ["python", "python/data", "docs", "internal/matcher"]
@@ -47,4 +47,41 @@ Evidence-First P0 的目标是冻结旧流程基线，而不是优化核心匹�
 
 **已验证（v1.1，2026-05-16）**：第三次复跑在两周后、新沙箱环境下，除 `generated_at` 与各级 `elapsed_ms` 外，所有 summary 字段（`league_count` / `event_matched` / `event_match_rate` / `team_match_rate` / `avg_rcr` / `weighted_precision` / `weighted_recall` / `weighted_f1` / `failure_reasons` / `rule_distribution` / `ambiguity_coverage`）与 run1 指纹完全一致。SR 总耗时从 29 053 ms 降至 17 668 ms，再次证明耗时只是沙箱性能观察值。
 
-**已验证（v1.2，2026-05-16）**：在 Evidence-First Go 侧 P1 / P2 / Top-N / Wire / CLI 五条 commit 全部落地后，第四次复跑（run4）与 run1 指纹仍然完全一致。这正面证明：**默认 `UseEvidenceFirst=false` 的设计保证 Python P0 评估脚本完全不受 Go 侧 EF 改动影响**。稳定性核�
+**已验证（v1.2，2026-05-16）**：在 Evidence-First Go 侧 P1 / P2 / Top-N / Wire / CLI 五条 commit 全部落地后，第四次复跑（run4）与 run1 指纹仍然完全一致。这正面证明：**默认 `UseEvidenceFirst=false` 的设计保证 Python P0 评估脚本完全不受 Go 侧 EF 改动影响**。稳定性核心结论持续成立。
+
+## 关键耦合点
+
+| 耦合点 | 说明 |
+|--------|------|
+| `python/test_sr_2026.py` | P0 SR 离线事件匹配复用此脚本中的 `match_events_for_league`、`evaluate`、`KNOWN_LEAGUE_MAP` 和 `SR_2026_LEAGUES`。 |
+| `python/data/` | P0 离线基线唯一数据源，禁止在评估脚本中直连数据库。 |
+| `cmd/server/main.go` | Go 在线入口和 SR/LS 标准批量样本来源；P0 文档需记录但不改动。 |
+| `docs/ls_ts_algo_vs_known_2026.md` | LS 纯算法误匹配案例与高歧义类型的重要来源。 |
+| `docs/evidence_first_failure_cases.md` | P1–P5 失败案例回归清单，需与指标 JSON 中的 failure_reason 和 ambiguity_tags 对齐。 |
+
+## 版本变更日志
+
+| 版本 | 日期 | 变更内容 | 作者 |
+|------|------|----------|------|
+| v1.0 | 2026-05-01 | 初始记录 Evidence-First P0 离线基线脚本、评估集边界、高歧义样本与稳定性验收防坑指南。 | Manus AI |
+| v1.1 | 2026-05-16 | 新增 run3 复跑证据（`evidence_first_baseline_metrics_run3.json` 等），所有核心字段指纹与 run1/run2 一致；坑 3 章节补充三次复跑稳定性结论。 | Claude Cowork |
+| v1.2 | 2026-05-16 | 在 Evidence-First Go 侧 P1/P2/Top-N/Wire/CLI 五条 commit 全部落地后，run4 复跑指纹与 run1 完全一致。正面证明 `UseEvidenceFirst=false` 默认零回退设计有效：Python P0 评估脚本完全不受 Go 侧 EF 改动影响。 | Claude Cowork |
+
+## 测评 SOP（v1.18 新增）
+
+**核心原则**：本算法明确**杜绝**把推断结果回写 KnownLeagueMap 或任何 mapping 表 — 任何 mapping 都会让算法效果失真（v1.18 决议）。`internal/matcher/known_league_map.go` 与 `known_ls_league_map.go` 仅保留作为生产侧"运营 override 层"，**不参与任何算法测评**。
+
+### 必备 CLI flag
+
+Go 侧 `match2` / `batch2` / `ls-match` / `ls-batch` 4 个测评命令一律带 `--strict-no-mapping`：
+
+```bash
+# SR 单跑
+sports-matcher match2 sr:tournament:23479 \
+    --use-evidence-first --use-team-first-fallback \
+    --strict-no-mapping   # ← 必带
+
+# SR 批量
+sports-matcher batch2 --config eval_config.json \
+    --use-evidence-first --use-team-first-fallback \
+    --strict-no-mapping   # 

@@ -19,8 +19,8 @@
 | PI-003 | SR/LS/TS 2026 年算法测试数据集使用指南 | v1.0 | python, python/data | 2026-04-20 | [PI-003](PI-003_2026_dataset_usage.md) |
 | PI-004 | SR 2026 算法测试结果与最佳实践 | v1.0 | python, python/data, internal/matcher, cmd, internal/api | 2026-04-20 | [PI-004](PI-004_sr_2026_test_results.md) |
 | PI-005 | LS→TS 联赛匹配高频算法误匹配修复指南 | v1.0 | internal/matcher, docs | 2026-04-21 | [PI-005](PI-005_ls_ts_league_match_algo_fix.md) |
-| PI-006 | Evidence-First 比赛级匹配流程 | v1.17 | internal/matcher, internal/db, cmd, docs | 2026-05-16 | [PI-006](PI-006_evidence_first_matching_flow.md) |
-| PI-007 | Evidence-First P0 基线冻结与评估集流程 | v1.2 | python, python/data, docs, internal/matcher | 2026-05-16 | [PI-007](PI-007_evidence_first_p0_baseline.md) |
+| PI-006 | Evidence-First 比赛级匹配流程 | v1.18 | internal/matcher, internal/db, cmd, docs | 2026-05-16 | [PI-006](PI-006_evidence_first_matching_flow.md) |
+| PI-007 | Evidence-First P0 基线冻结与评估集流程 | v1.3 | python, python/data, docs, internal/matcher | 2026-05-16 | [PI-007](PI-007_evidence_first_p0_baseline.md) |
 
 ---
 

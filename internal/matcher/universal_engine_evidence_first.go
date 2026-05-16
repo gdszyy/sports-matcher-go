@@ -39,7 +39,7 @@ type TopNAdapter interface {
 // MatchLeagueTopN 是 SRSourceAdapter 上的 Top-N 联赛匹配实现，
 // 直接转发到包级函数 matcher.MatchLeagueTopN。
 func (a *SRSourceAdapter) MatchLeagueTopN(tsComps []db.TSCompetition, n int) []LeagueMatchCandidate {
-	return MatchLeagueTopN(a.srTour, tsComps, n)
+	return MatchLeagueTopNWithFlags(a.srTour, tsComps, n, a.NoKnownMap)
 }
 
 // MatchLeagueTopN 是 LSSourceAdapter 上的 Top-N 联赛匹配实现，

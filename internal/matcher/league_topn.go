@@ -160,3 +160,73 @@ func ToTSCompetitionCandidates(cands []LeagueMatchCandidate, sport string) []TSC
 	}
 	return out
 }
+
+// MatchLeagueTopNWithFlags 是 MatchLeagueTopN 的扩展版本（v1.18）：
+//
+//   - noKnownMap=true 时跳过 KnownLeagueMap，候选全部来自名称相似度。
+//     用于严格无 mapping 测评模式 —— 让 EF 拿到不被 KnownMap 短路的候选集。
+//
+//   - noKnownMap=false 时行为与 MatchLeagueTopN 完全一致（包括 KnownMap Top-1）。
+//
+// 与 MatchLeagueWithFlags 配套，构成 SR 链路的"严格测评"开关。
+func MatchLeagueTopNWithFlags(srTour *db.SRTournament, tsComps []db.TSCompetition, n int, noKnownMap bool) []LeagueMatchCandidate {
+	if !noKnownMap {
+		return MatchLeagueTopN(srTour, tsComps, n)
+	}
+	if srTour == nil {
+		return nil
+	}
+	if n <= 0 {
+		n = defaultLeagueTopN
+	}
+	type scored struct {
+		comp  db.TSCompetition
+		score float64
+		veto  LeagueVetoResult
+	}
+	var pool []scored
+	srFeatures := ExtractLeagueFeatures(srTour.Name)
+	for i := range tsComps {
+		score := leagueNameScore(srTour, &tsComps[i])
+		if score < defaultLeagueTopNMinScore {
+			continue
+		}
+		tsFeatures := ExtractLeagueFeatures(tsComps[i].Name)
+		confLevel := "low"
+		if score >= 0.85 {
+			confLevel = "hi"
+		} else if score >= 0.70 {
+			confLevel = "med"
+		}
+		veto := CheckLeagueVeto(srFeatures, tsFeatures, confLevel)
+		pool = append(pool, scored{comp: tsComps[i], score: score, veto: veto})
+	}
+	sort.SliceStable(pool, func(i, j int) bool {
+		if pool[i].score == pool[j].score {
+			return pool[i].comp.ID < pool[j].comp.ID
+		}
+		return pool[i].score > pool[j].score
+	})
+	candidates := make([]LeagueMatchCandidate, 0, len(pool))
+	for _, p := range pool {
+		rule := RuleLeagueNameLow
+		if p.score >= 0.85 {
+			rule = RuleLeagueNameHi
+		} else if p.score >= 0.70 {
+			rule = RuleLeagueNameMed
+		}
+		candidates = append(candidates, LeagueMatchCandidate{
+			TSCompetitionID:        p.comp.ID,
+			TSName:                 p.comp.Name,
+			TSCountry:              p.comp.CountryName,
+			Score:                  p.score,
+			Rule:                   rule,
+			StrongConstraintOK:     !p.veto.Vetoed,
+			StrongConstraintReason: string(p.veto.Reason),
+		})
+	}
+	if len(candidates) > n {
+		candidates = candidates[:n]
+	}
+	return candidates
+}
