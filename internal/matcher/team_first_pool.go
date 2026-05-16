@@ -34,6 +34,14 @@ type TeamFirstLoader interface {
 	GetEventsByTeamIDsInRangeCtx(ctx context.Context, sport string, teamIDs []string, timeMinUnix, timeMaxUnix int64) ([]db.TSEventWithComp, error)
 }
 
+// TokenSearchTeamLoader 是 TeamFirstLoader 的可选 SQL pre-filter 扩展。
+// 用 token REGEXP 在 SQL 层把候选 TS 球队从 79K 全表压到 ~1500，避免内存
+// load 全表的 cold start 成本（PoC 实测 4.4s）。
+type TokenSearchTeamLoader interface {
+	TeamFirstLoader
+	SearchTeamsByTokensCtx(ctx context.Context, sport string, tokens []string, limit int) ([]db.TSTeamBrief, error)
+}
+
 // TeamFirstPoolBuilder 构建球队优先候选池。
 type TeamFirstPoolBuilder struct {
 	Loader TeamFirstLoader
@@ -150,22 +158,69 @@ func (b *TeamFirstPoolBuilder) Build(
 		topKPerSR = 3
 	}
 
-	if err := b.loadAndIndexTeams(ctx, sport); err != nil {
-		return nil, err
-	}
-
 	// 1. 对每个 SR 球队找候选 TS team_ids
+	// 优先：SQL token pre-filter（PoC v1.16+ 推荐）
+	//       从 SR 球队名抽 token 联合 REGEXP 单次 SQL 拉 ~1500 候选，沙箱 4-5s
+	// 回退：load 全表 + 内存索引（用于无 SQL pre-filter 支持的 stub）
 	tsTeamIDs := map[string]string{} // tsTeamID -> tsTeamName
-	matchedTeamPairs := []string{}   // 用于日志
-	for srID, srName := range srTeamNames {
-		if srName == "" {
-			continue
+	if tsLoader, ok := b.Loader.(TokenSearchTeamLoader); ok {
+		tokenSet := map[string]bool{}
+		for _, srName := range srTeamNames {
+			for _, tok := range tokenizeForIndex(srName) {
+				tokenSet[tok] = true
+			}
 		}
-		cands := b.findCandidateTSTeams(sport, srName, topKPerSR)
-		for _, c := range cands {
-			if _, exists := tsTeamIDs[c.TeamID]; !exists {
-				tsTeamIDs[c.TeamID] = c.Name
-				matchedTeamPairs = append(matchedTeamPairs, fmt.Sprintf("%s→%s", srID, c.TeamID))
+		tokens := make([]string, 0, len(tokenSet))
+		for t := range tokenSet {
+			tokens = append(tokens, t)
+		}
+		candidates, err := tsLoader.SearchTeamsByTokensCtx(ctx, sport, tokens, 5000)
+		if err != nil {
+			return nil, fmt.Errorf("team-first: SearchTeamsByTokensCtx: %w", err)
+		}
+		// 对每个 SR 球队找 top-K
+		for _, srName := range srTeamNames {
+			if srName == "" {
+				continue
+			}
+			type scoredT struct {
+				id, name string
+				score    float64
+			}
+			scored := []scoredT{}
+			for _, c := range candidates {
+				sim := teamNameSimilarity(srName, c.Name)
+				if sim < 0.5 {
+					continue
+				}
+				scored = append(scored, scoredT{id: c.TeamID, name: c.Name, score: sim})
+			}
+			sort.SliceStable(scored, func(i, j int) bool {
+				return scored[i].score > scored[j].score
+			})
+			if len(scored) > topKPerSR {
+				scored = scored[:topKPerSR]
+			}
+			for _, s := range scored {
+				if _, exists := tsTeamIDs[s.id]; !exists {
+					tsTeamIDs[s.id] = s.name
+				}
+			}
+		}
+	} else {
+		// 全表回退路径
+		if err := b.loadAndIndexTeams(ctx, sport); err != nil {
+			return nil, err
+		}
+		for _, srName := range srTeamNames {
+			if srName == "" {
+				continue
+			}
+			cands := b.findCandidateTSTeams(sport, srName, topKPerSR)
+			for _, c := range cands {
+				if _, exists := tsTeamIDs[c.TeamID]; !exists {
+					tsTeamIDs[c.TeamID] = c.Name
+				}
 			}
 		}
 	}

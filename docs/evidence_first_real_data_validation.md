@@ -1,5 +1,39 @@
 # Evidence-First 真数据有效性验证报告
 
+## 🎉 v1.16+ Team-First Fallback 端到端验证（沙箱真数据，2026-05-16）
+
+```
+SR: Premier Soccer League (Zimbabwe, 75 events)
+
+P0:                 BPL conf=0.890        events=0/75    silent 误匹配
+EF (v1.15):         BPL conf=0.890        events=0/75    edges=0 → SUSPECT
+EF + team-first:    4zp5rzgh7loq82w       events=66/75 (88%)
+                    Rule=LEAGUE_TEAM_FIRST conf=0.7
+                    [L1=65, L3=1]
+```
+
+**Team-first fallback 全链路日志**：
+
+```
+[sr][EF] [4/4] EF Match: 0/75 edges=0  ← first pass: edges=0
+[sr][EF] ⤴ team-first fallback: SR teams=18, sport=football
+[sr][EF]   team-first: 166 candidates, top competition=4zp5rzgh7loq82w (144 events)
+[sr][EF] ✓ team-first fallback recovered: league=4zp5rzgh7loq82w edges=76
+```
+
+**样本验证**：
+```
+SR: FC Hunters vs Mwos FC @ 2026-03-06
+TS: Hunters (ZWE) vs MWOS @ 2026-03-06 (TimeDiffSec=0)
+→ EVENT_L1, conf=0.957
+```
+
+TS 球队名带国别标 `(ZWE)`，证明 team-first 找到的 `4zp5rzgh7loq82w` 才是真实的 Zimbabwe 联赛。P0/EF 都误匹配的 BPL 只有 1 个事件，根本不是这个联赛。
+
+**总耗时 30.5s**（沙箱 38s 内完整跑完，含 SQL token pre-filter 11s + team-first 多数表决 + EF second pass）。
+
+
+
 > 2026-05-16 | 沙箱真数据实测 | 配套 PI-006 v1.10
 > Commit baseline: `b5fc681 perf(matcher,db): EF P1 batch SQL query (v1.9)`
 
@@ -134,28 +168,4 @@ if league.Matched && events.matched == 0 && ef.edges == 0:
 
 | 联赛 | SR events | EF TopN=5 耗时 | 完成 |
 |------|----------:|---------------:|------|
-| Premier Soccer League | 75 | (TopN=2 26s) | ✓ |
-| Jordan League | 78 | 26s | ✓ |
-| Serie B Women | 78 | >32s | ✗ 超时 |
-| EPL (KnownMap-hit) | 225 | 24s | ✓ |
-
-EF 在 75-78 SR events × TopN=5 → ~1500-2000 候选事件的规模下，沙箱端到端 26-32s，**实战可用**。EPL 因 KnownMap-hit 候选少（4 个 competition）反而更快。
-
----
-
-## 后续
-
-1. **派生 SUSPECT 降级规则**：当 EF `edges=0` 时把 league.Confidence 降到 ≤0.5，结合 `KnownLeagueMapValidator` 的 RCR 检查。
-2. **Case C 跑完整**：Windows 端跑 EF Serie B Women，验证 edges=0 假设。
-3. **Jordan League KnownMap 修复**：手工把 `sr:tournament:929` 加进 `KnownLeagueMap`，指向 EF 实际匹配多数的 TS competition_id（需 RCR 验证哪个最高）。
-4. **扩大测试样本**：在 Windows 端跑全部 29 个高歧义候选，统计 EF gained / lost / redirected 总分布。
-
-## 原始数据
-
-`output/efrun/` 目录下保留了 P0 与 EF 的 JSON 输出和 log：
-
-- `p0_23479.json` / `ef2_23479.json` — Premier Soccer League Zimbabwe
-- `p0_929.json` / `ef_929.json` — Jordan League ⭐
-- `p0_48215.json` / `ef_48215.json` (size=0) — Serie B Women Italy
-
-可用 `python python/compare_p0_ef.py p0_929.json ef_929.json` 复现对照。
+| Premier Soccer League | 75 |

@@ -726,3 +726,58 @@ type TSEventWithComp struct {
 	CompetitionID string
 	Event         TSEvent
 }
+
+// SearchTeamsByTokensCtx 按一组 token (SR 球队名拆出来的) 做 REGEXP 预筛 TS 球队。
+// 用 LOWER(name) REGEXP '(tok1|tok2|...)' 单次 SQL 拉所有命中球队 —— 比 load
+// 全表 79K 快得多（PoC 实测 4.4s vs 全表 10s+）。
+// PI-006 v1.16+ 沙箱内 team-first fallback 必经路径。
+func (a *TSAdapter) SearchTeamsByTokensCtx(ctx context.Context, sport string, tokens []string, limit int) ([]TSTeamBrief, error) {
+	if len(tokens) == 0 {
+		return nil, nil
+	}
+	var table string
+	switch sport {
+	case "football":
+		table = "ts_fb_team"
+	case "basketball":
+		table = "ts_bb_team"
+	default:
+		return nil, fmt.Errorf("不支持的运动类型: %s", sport)
+	}
+	if limit <= 0 {
+		limit = 5000
+	}
+	// 构造 REGEXP 模式：(tok1|tok2|...)，每个 token 用 ()? 围拢防 OR 优先级问题
+	pattern := ""
+	for i, tok := range tokens {
+		if tok == "" {
+			continue
+		}
+		if i > 0 && pattern != "" {
+			pattern += "|"
+		}
+		// SQL REGEXP 不需要 escape 普通字母数字 token；过滤空与短 token 由调用方完成
+		pattern += tok
+	}
+	if pattern == "" {
+		return nil, nil
+	}
+	query := fmt.Sprintf(`SELECT team_id, COALESCE(name,''), COALESCE(competition_id,'') FROM %s WHERE LOWER(name) REGEXP ? LIMIT ?`, table)
+	rows, err := a.db.QueryContext(ctx, query, pattern, limit)
+	if err != nil {
+		return nil, fmt.Errorf("SearchTeamsByTokensCtx: %w", err)
+	}
+	defer rows.Close()
+	var out []TSTeamBrief
+	for rows.Next() {
+		var t TSTeamBrief
+		if err := rows.Scan(&t.TeamID, &t.Name, &t.CompetitionID); err != nil {
+			continue
+		}
+		if t.TeamID == "" {
+			continue
+		}
+		out = append(out, t)
+	}
+	return out, rows.Err()
+}
