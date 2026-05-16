@@ -61,6 +61,21 @@ const defaultRunLeagueTopN = 5
 //
 // 输出与原 RunLeague 同形态的 *UniversalMatchResult，调用方（即 RunLeague）
 // 拿到结果直接返回即可，不需要再跑 P0 路径。
+// budgetExceeded 用 e.MaxRuntime 检查 elapsed 是否超时（PI-006 v1.11）。
+// MaxRuntime<=0 表示不设上限，永远返回 false。
+func (e *UniversalEngine) budgetExceeded(t0 time.Time) bool {
+	if e.MaxRuntime <= 0 {
+		return false
+	}
+	return time.Since(t0) > e.MaxRuntime
+}
+
+// markTruncated 把当前结果标记为截断并填上当前阶段。返回 result 以便链式 return。
+func markTruncated(result *UniversalMatchResult, stage string) {
+	result.Stats.Truncated = true
+	result.Stats.TruncatedStage = stage
+}
+
 func (e *UniversalEngine) runLeagueEvidenceFirst(
 	adapter SourceAdapter,
 	topn TopNAdapter,
@@ -94,6 +109,15 @@ func (e *UniversalEngine) runLeagueEvidenceFirst(
 	log.Printf("%s   Top-1: %s rule=%s score=%.3f (共 %d 候选)",
 		prefix, top1.TSCompetitionID, top1.Rule, top1.Score, len(leagueCandidates))
 
+	if e.budgetExceeded(t0) {
+		log.Printf("%s ⏱ budget exceeded before P1; emit league-only result", prefix)
+		markTruncated(result, "topn")
+		result.Stats = computeUniversalStats(result, sport, tier, adapter.SourceSide(), time.Since(t0))
+		result.Stats.Truncated = true
+		result.Stats.TruncatedStage = "topn"
+		return result, nil
+	}
+
 	candInputs := ToTSCompetitionCandidates(leagueCandidates, sport)
 	poolBuilder := NewCandidatePoolBuilder(e.TS)
 	pool, err := poolBuilder.Build(candInputs, sport)
@@ -111,6 +135,16 @@ func (e *UniversalEngine) runLeagueEvidenceFirst(
 	if err != nil {
 		return nil, fmt.Errorf("LoadTeamNames: %w", err)
 	}
+	if e.budgetExceeded(t0) {
+		log.Printf("%s ⏱ budget exceeded before P3; emit P1 truncated result", prefix)
+		top1 := leagueCandidates[0]
+		_ = top1
+		result.Stats = computeUniversalStats(result, sport, tier, adapter.SourceSide(), time.Since(t0))
+		result.Stats.Truncated = true
+		result.Stats.TruncatedStage = "p2"
+		return result, nil
+	}
+
 	enriched := EnrichTeamPriors(pool.Candidates, pool.TSTeamNames, srcTeamNames, nil)
 	log.Printf("%s [3/4] 源侧: %d events, %d teams; P2 priors filled",
 		prefix, len(srcEvents), len(srcTeamNames))

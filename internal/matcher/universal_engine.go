@@ -142,6 +142,11 @@ type UniversalMatchStats struct {
 	PlayerAvgConf  float64
 	ReverseConfirmRate float64
 	ElapsedMs      int64
+	// Truncated 表示 EF 路径因 MaxRuntime 超时被提前截断（v1.11）。
+	// 调用方可据此判断结果是否完整。
+	Truncated bool `json:",omitempty"`
+	// TruncatedStage 描述被截断时位于哪个阶段（"topn"/"p1"/"p2"/"p3"），便于排查。
+	TruncatedStage string `json:",omitempty"`
 }
 
 // SourceAdapter 数据源侧适配器接口，屏蔽 SR/LS 侧的数据差异。
@@ -206,6 +211,10 @@ type UniversalEngine struct {
 	// EvidenceFirstTopN 控制 Top-N 联赛候选数，<=0 时使用默认值（5）。仅当
 	// UseEvidenceFirst=true 时有效。
 	EvidenceFirstTopN int
+	// MaxRuntime 软超时（v1.11）：>0 时在 EF 路径各阶段检查 elapsed，超过
+	// 即截断后续工作并把当前为止的最佳结果包装为 *UniversalMatchResult 返回
+	// （Stats.Truncated=true）。<=0 表示不设上限（默认行为）。
+	MaxRuntime time.Duration
 }
 
 // NewUniversalEngine 创建通用匹配引擎

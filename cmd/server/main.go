@@ -12,6 +12,7 @@
 package main
 
 import (
+	"time"
 	"encoding/json"
 	"fmt"
 	"log"
@@ -121,6 +122,7 @@ func matchUniversalCmd() *cobra.Command {
 	var outputJSON bool
 	var useEvidenceFirst bool
 	var evidenceFirstTopN int
+	var maxRuntime time.Duration
 
 	cmd := &cobra.Command{
 		Use:   "match2 <tournament_id>",
@@ -142,6 +144,7 @@ func matchUniversalCmd() *cobra.Command {
 			eng := matcher.NewUniversalEngine(tsAdapter, cfg.RunPlayers)
 			eng.UseEvidenceFirst = useEvidenceFirst
 			eng.EvidenceFirstTopN = evidenceFirstTopN
+			eng.MaxRuntime = maxRuntime
 			srcAdapter := matcher.NewSRSourceAdapter(srAdapter, cfg.RunPlayers)
 
 			log.Printf("[UniversalEngine] 开始匹配联赛: %s  sport=%s  tier=%s  evidence-first=%v", tournamentID, sport, tier, useEvidenceFirst)
@@ -168,6 +171,7 @@ func matchUniversalCmd() *cobra.Command {
 	cmd.Flags().BoolVar(&outputJSON, "json", false, "输出完整 JSON 结果")
 	cmd.Flags().BoolVar(&useEvidenceFirst, "use-evidence-first", false, "启用 Evidence-First 流水线 (Top-N → P1 → P2 → P3)；LS adapter 自动降级回 P0")
 	cmd.Flags().IntVar(&evidenceFirstTopN, "evidence-first-topn", 0, "Evidence-First Top-N 联赛候选数（默认 5）")
+	cmd.Flags().DurationVar(&maxRuntime, "max-runtime", 0, "EF 软超时（如 40s）：超时则截断输出当前为止的最佳结果。0=不限")
 	return cmd
 }
 
@@ -325,6 +329,7 @@ func lsMatchCmd() *cobra.Command {
 	var noKnownMap bool
 	var useEvidenceFirst bool
 	var evidenceFirstTopN int
+	var maxRuntime time.Duration
 
 	cmd := &cobra.Command{
 		Use:   "ls-match <tournament_id>",
@@ -347,6 +352,7 @@ func lsMatchCmd() *cobra.Command {
 			eng := matcher.NewUniversalEngine(tsAdapter, cfg.RunPlayers)
 			eng.UseEvidenceFirst = useEvidenceFirst
 			eng.EvidenceFirstTopN = evidenceFirstTopN
+			eng.MaxRuntime = maxRuntime
 			var srcAdapter *matcher.LSSourceAdapter
 			if noKnownMap {
 				srcAdapter = matcher.NewLSSourceAdapterNoKnown(lsAdapter, lsPlayerAdapter, cfg.RunPlayers)
@@ -379,6 +385,7 @@ func lsMatchCmd() *cobra.Command {
 	cmd.Flags().BoolVar(&noKnownMap, "no-known-map", false, "跳过 KnownLSLeagueMap，使用纯算法名称相似度匹配（验证算法效果）")
 	cmd.Flags().BoolVar(&useEvidenceFirst, "use-evidence-first", false, "启用 Evidence-First 流水线 (Top-N → P1 → P2 → P3)")
 	cmd.Flags().IntVar(&evidenceFirstTopN, "evidence-first-topn", 0, "Evidence-First Top-N 联赛候选数（默认 5）")
+	cmd.Flags().DurationVar(&maxRuntime, "max-runtime", 0, "EF 软超时（如 40s）：超时则截断输出当前为止的最佳结果。0=不限")
 	return cmd
 }
 // ── ls-batch（最新 UniversalEngine，LS 2026 热门+常规）─────────────────────────
@@ -450,6 +457,7 @@ func lsBatchCmd() *cobra.Command {
 	var noKnownMap bool
 	var useEvidenceFirst bool
 	var evidenceFirstTopN int
+	var maxRuntime time.Duration
 
 	cmd := &cobra.Command{
 		Use:   "ls-batch",
@@ -492,6 +500,7 @@ func lsBatchCmd() *cobra.Command {
 			eng := matcher.NewUniversalEngine(tsAdapter, cfg.RunPlayers)
 			eng.UseEvidenceFirst = useEvidenceFirst
 			eng.EvidenceFirstTopN = evidenceFirstTopN
+			eng.MaxRuntime = maxRuntime
 
 			log.Printf("[UniversalEngine/LS] 开始批量匹配 LS 2026 联赛，共 %d 个 (evidence-first=%v)", len(leagues), useEvidenceFirst)
 
@@ -526,6 +535,7 @@ func lsBatchCmd() *cobra.Command {
 	cmd.Flags().BoolVar(&noKnownMap, "no-known-map", false, "跳过 KnownLSLeagueMap，使用纯算法名称相似度匹配（验证算法效果）")
 	cmd.Flags().BoolVar(&useEvidenceFirst, "use-evidence-first", false, "启用 Evidence-First 流水线 (Top-N → P1 → P2 → P3)")
 	cmd.Flags().IntVar(&evidenceFirstTopN, "evidence-first-topn", 0, "Evidence-First Top-N 联赛候选数（默认 5）")
+	cmd.Flags().DurationVar(&maxRuntime, "max-runtime", 0, "EF 软超时（如 40s）：超时则截断输出当前为止的最佳结果。0=不限")
 	return cmd
 }
 func batchUniversalCmd() *cobra.Command {
@@ -534,6 +544,7 @@ func batchUniversalCmd() *cobra.Command {
 	var tierFilter string
 	var useEvidenceFirst bool
 	var evidenceFirstTopN int
+	var maxRuntime time.Duration
 
 	cmd := &cobra.Command{
 		Use:   "batch2",
@@ -575,6 +586,7 @@ func batchUniversalCmd() *cobra.Command {
 			eng := matcher.NewUniversalEngine(tsAdapter, cfg.RunPlayers)
 			eng.UseEvidenceFirst = useEvidenceFirst
 			eng.EvidenceFirstTopN = evidenceFirstTopN
+			eng.MaxRuntime = maxRuntime
 
 			log.Printf("[UniversalEngine] 开始批量匹配 SR 2026 联赛，共 %d 个 (evidence-first=%v)", len(leagues), useEvidenceFirst)
 
@@ -601,6 +613,7 @@ func batchUniversalCmd() *cobra.Command {
 	cmd.Flags().StringVar(&tierFilter, "tier", "", "仅匹配指定热度的联赛: hot / regular / cold（空=全部）")
 	cmd.Flags().BoolVar(&useEvidenceFirst, "use-evidence-first", false, "启用 Evidence-First 流水线 (Top-N → P1 → P2 → P3)；LS adapter 自动降级回 P0")
 	cmd.Flags().IntVar(&evidenceFirstTopN, "evidence-first-topn", 0, "Evidence-First Top-N 联赛候选数（默认 5）")
+	cmd.Flags().DurationVar(&maxRuntime, "max-runtime", 0, "EF 软超时（如 40s）：超时则截断输出当前为止的最佳结果。0=不限")
 	return cmd
 }
 
