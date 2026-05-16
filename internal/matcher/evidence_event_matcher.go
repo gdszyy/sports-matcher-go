@@ -171,6 +171,7 @@ func (m *EvidenceEventMatcher) Match(
 		m = NewEvidenceEventMatcher(EvidenceEventMatcherConfig{})
 	}
 	aliasIdx := newTeamAliasIndex()
+	simCache := buildNameSimCache(srEvents, candidates, srTeamNames, tsTeamNames, aliasIdx)
 	dtwOffset, dtwApplied := m.estimateDTWOffset(srEvents, candidates)
 	edges := make([]EventEvidenceEdge, 0, len(srEvents)*maxInt(1, len(candidates)/maxInt(1, len(srEvents))))
 	for _, sr := range srEvents {
@@ -178,7 +179,7 @@ func (m *EvidenceEventMatcher) Match(
 			if !cand.StrongConstraintOK && cand.StrongConstraintReason != "" {
 				continue
 			}
-			if edge, ok := m.scoreEdge(sr, cand, srTeamNames, tsTeamNames, teamIDMap, aliasIdx, dtwOffset, dtwApplied); ok {
+			if edge, ok := m.scoreEdge(sr, cand, srTeamNames, tsTeamNames, teamIDMap, aliasIdx, simCache, dtwOffset, dtwApplied); ok {
 				edges = append(edges, edge)
 			}
 		}
@@ -196,6 +197,7 @@ func (m *EvidenceEventMatcher) scoreEdge(
 	srTeamNames, tsTeamNames map[string]string,
 	teamIDMap map[string]string,
 	aliasIdx *TeamAliasIndex,
+	simCache nameSimCache,
 	dtwOffset int64,
 	dtwApplied bool,
 ) (EventEvidenceEdge, bool) {
@@ -225,10 +227,10 @@ func (m *EvidenceEventMatcher) scoreEdge(
 
 	tsHomeName := firstNonEmpty(tsTeamNames[ts.HomeID], ts.HomeName)
 	tsAwayName := firstNonEmpty(tsTeamNames[ts.AwayID], ts.AwayName)
-	homeFwd := aliasIdx.NameSimWithAlias(sr.HomeID, sr.HomeName, ts.HomeID, tsHomeName)
-	awayFwd := aliasIdx.NameSimWithAlias(sr.AwayID, sr.AwayName, ts.AwayID, tsAwayName)
-	homeRev := aliasIdx.NameSimWithAlias(sr.HomeID, sr.HomeName, ts.AwayID, tsAwayName)
-	awayRev := aliasIdx.NameSimWithAlias(sr.AwayID, sr.AwayName, ts.HomeID, tsHomeName)
+	homeFwd := simCache.get(aliasIdx, sr.HomeID, sr.HomeName, ts.HomeID, tsHomeName)
+	awayFwd := simCache.get(aliasIdx, sr.AwayID, sr.AwayName, ts.AwayID, tsAwayName)
+	homeRev := simCache.get(aliasIdx, sr.HomeID, sr.HomeName, ts.AwayID, tsAwayName)
+	awayRev := simCache.get(aliasIdx, sr.AwayID, sr.AwayName, ts.HomeID, tsHomeName)
 	fwdName := (homeFwd + awayFwd) / 2.0
 	revName := (homeRev + awayRev) / 2.0
 	sideReversed := revName > fwdName
@@ -504,4 +506,76 @@ func dedupReasonCodes(in []string) []string {
 		out = append(out, r)
 	}
 	return out
+}
+
+// ─── NameSim 缓存（PI-006 v1.8 性能优化）─────────────────────────────────────
+//
+// 观察：scoreEdge 内部 4 次 NameSimWithAlias 调用的开销，几乎全部花在
+// teamNameSimilarity (Jaccard) 上；而 unique (srTeamID, tsTeamID) 对的数量
+// 远小于 (SR_event × TS_event × 4) 的总调用次数。
+//
+// 实测 EPL：225 SR × 770 TS × 4 = 692 000 次 NameSim 调用，但 unique 球队对
+// 约 20 × 49 = 980 个。预计算一次填进 map，scoreEdge 改为 O(1) 查表。
+// 加速比理论上 ~700x（实际还有 DTW、scoreEdge 其它步骤的常数因子）。
+//
+// 注意：本缓存只在一次 Match() 内有效。MatchTwoRound 调 Match 两次会构两次缓存，
+// 但每次构建只走 unique 球队对一次，开销可忽略。aliasIdx 在 Match() 起始处
+// 创建为新实例且无后续 mutate，缓存语义安全。
+
+type nameSimCache map[string]map[string]float64
+
+// buildNameSimCache 扫描所有 SR 和候选 TS 球队 ID/名，预计算 NameSimWithAlias
+// 的结果矩阵。返回的 cache 在 Match() 范围内复用。
+//
+// 复杂度：O(|unique_SR_teams| × |unique_TS_teams|)，对 EPL ≈ 20 × 49 = 980。
+func buildNameSimCache(
+	srEvents []db.SREvent,
+	candidates []EvidenceEventCandidate,
+	srTeamNames, tsTeamNames map[string]string,
+	aliasIdx *TeamAliasIndex,
+) nameSimCache {
+	srTeams := make(map[string]string, len(srEvents)*2)
+	for _, sr := range srEvents {
+		if sr.HomeID != "" {
+			srTeams[sr.HomeID] = sr.HomeName
+		}
+		if sr.AwayID != "" {
+			srTeams[sr.AwayID] = sr.AwayName
+		}
+	}
+	tsTeams := make(map[string]string, len(candidates)*2)
+	for _, c := range candidates {
+		if c.Event.HomeID != "" {
+			tsTeams[c.Event.HomeID] = firstNonEmpty(tsTeamNames[c.Event.HomeID], c.Event.HomeName)
+		}
+		if c.Event.AwayID != "" {
+			tsTeams[c.Event.AwayID] = firstNonEmpty(tsTeamNames[c.Event.AwayID], c.Event.AwayName)
+		}
+	}
+	cache := make(nameSimCache, len(srTeams))
+	for srID, srName := range srTeams {
+		row := make(map[string]float64, len(tsTeams))
+		for tsID, tsName := range tsTeams {
+			row[tsID] = aliasIdx.NameSimWithAlias(srID, srName, tsID, tsName)
+		}
+		cache[srID] = row
+	}
+	return cache
+}
+
+// get 从缓存读 (srID, tsID) 的相似度；命中则 O(1)，未命中（如 srID 或 tsID
+// 为空，或调用方传了 cache 未覆盖的 ID）回落到 aliasIdx.NameSimWithAlias。
+func (c nameSimCache) get(
+	aliasIdx *TeamAliasIndex,
+	srID, srName, tsID, tsName string,
+) float64 {
+	if srID == "" || tsID == "" {
+		return aliasIdx.NameSimWithAlias(srID, srName, tsID, tsName)
+	}
+	if row, ok := c[srID]; ok {
+		if v, ok := row[tsID]; ok {
+			return v
+		}
+	}
+	return aliasIdx.NameSimWithAlias(srID, srName, tsID, tsName)
 }

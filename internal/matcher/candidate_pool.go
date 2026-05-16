@@ -23,6 +23,7 @@ package matcher
 
 import (
 	"fmt"
+	"sync"
 	"time"
 
 	"github.com/gdszyy/sports-matcher/internal/db"
@@ -117,24 +118,56 @@ func (b *CandidatePoolBuilder) Build(
 	}
 	result.Stats.CompetitionsScanned = len(candidates)
 
-	for _, cand := range candidates {
-		compID := cand.Competition.ID
-		if compID == "" {
-			// 没有 ID 的 candidate 直接跳过（防御性，正常调用方不应该这样）
+	// ── 并行 fetch (PI-006 v1.8 性能优化) ────────────────────────────────────
+	// 旧版串行：N 个 competition × 单次 latency 累加；EPL TopN=5 实测 ~30s。
+	// 新版并行 goroutine：单次 latency + 少量 channel 同步开销。
+	// 保持输出顺序 deterministic（按 candidates 输入顺序），错误首次出现立即返回。
+	type perCandResult struct {
+		idx       int
+		events    []db.TSEvent
+		teamNames map[string]string
+		err       error
+	}
+	results := make([]perCandResult, len(candidates))
+	var wg sync.WaitGroup
+	for i, cand := range candidates {
+		if cand.Competition.ID == "" {
+			results[i] = perCandResult{idx: i}
 			continue
 		}
+		wg.Add(1)
+		go func(idx int, compID string) {
+			defer wg.Done()
+			events, err := b.Loader.GetEvents(compID, sport)
+			if err != nil {
+				results[idx] = perCandResult{idx: idx, err: fmt.Errorf("candidate pool: GetEvents(%s, %s): %w", compID, sport, err)}
+				return
+			}
+			teamNames, err := b.Loader.GetTeamNames(compID, sport)
+			if err != nil {
+				results[idx] = perCandResult{idx: idx, err: fmt.Errorf("candidate pool: GetTeamNames(%s, %s): %w", compID, sport, err)}
+				return
+			}
+			results[idx] = perCandResult{idx: idx, events: events, teamNames: teamNames}
+		}(i, cand.Competition.ID)
+	}
+	wg.Wait()
 
-		events, err := b.Loader.GetEvents(compID, sport)
-		if err != nil {
-			return nil, fmt.Errorf("candidate pool: GetEvents(%s, %s): %w", compID, sport, err)
+	// 错误整体回滚（同旧版语义）：任一 candidate 报错就丢弃整批，不部分写回
+	for _, r := range results {
+		if r.err != nil {
+			return nil, r.err
 		}
-		teamNames, err := b.Loader.GetTeamNames(compID, sport)
-		if err != nil {
-			return nil, fmt.Errorf("candidate pool: GetTeamNames(%s, %s): %w", compID, sport, err)
-		}
+	}
 
-		// 合并 TS 球队名（union；不同 competition 的同 ID 极少冲突，后到覆盖前到即可）
-		for tsTeamID, name := range teamNames {
+	// 按输入顺序合并（保持 TSTeamNames 的 first-write-wins 语义）
+	for i, cand := range candidates {
+		compID := cand.Competition.ID
+		if compID == "" {
+			continue
+		}
+		r := results[i]
+		for tsTeamID, name := range r.teamNames {
 			if tsTeamID == "" {
 				continue
 			}
@@ -142,11 +175,8 @@ func (b *CandidatePoolBuilder) Build(
 				result.TSTeamNames[tsTeamID] = name
 			}
 		}
-
-		// 把该 competition 的每个事件包装为 EvidenceEventCandidate
-		// HomeTeamCandidateScore / AwayTeamCandidateScore 在 P1 暂留 0，P2 阶段再填充。
 		eventCount := 0
-		for _, ev := range events {
+		for _, ev := range r.events {
 			if ev.MatchID == "" && ev.ID == "" {
 				continue
 			}
