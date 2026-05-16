@@ -1,0 +1,41 @@
+# sports-matcher-go .gitattributes
+# 统一行尾：所有文本文件在仓库中以 LF 存储，避免 Windows CRLF / Linux LF 的"假修改"噪音
+# 工作目录的行尾由 core.autocrlf 决定，但仓库内永远是 LF
+
+# 默认：让 git 自动判定是文本还是二进制；判定为文本的，归一化为 LF
+* text=auto eol=lf
+
+# ---- 明确文本 ----
+*.go        text eol=lf
+*.py        text eol=lf
+*.md        text eol=lf
+*.json      text eol=lf
+*.csv       text eol=lf
+*.log       text eol=lf
+*.mod       text eol=lf
+*.sum       text eol=lf
+*.html      text eol=lf
+*.yml       text eol=lf
+*.yaml      text eol=lf
+*.toml      text eol=lf
+*.sh        text eol=lf
+Dockerfile  text eol=lf
+.gitignore  text eol=lf
+.cursorrules text eol=lf
+
+# ---- 二进制 ----
+*.png       binary
+*.jpg       binary
+*.jpeg      binary
+*.gif       binary
+*.ico       binary
+*.pdf       binary
+*.xlsx      binary
+*.xls       binary
+*.zip       binary
+*.gz        binary
+*.tar       binary
+
+# ---- 自动索引产物（机器生成，diff 时折叠）----
+.cursor/rules/auto_index/*_index.md  text eol=lf linguist-generated=true
+.cursor/rules/auto_index/INDEX.md    text eol=lf linguist-generated=true
