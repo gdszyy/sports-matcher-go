@@ -264,3 +264,130 @@ func (a *TSAdapter) FindEventsByTeamPair(competitionID, homeID, awayID, sport st
 	}
 	return events, rows.Err()
 }
+
+// ─── PI-006 v1.9: Batch query 优化 ──────────────────────────────────────────
+// 单次 SQL IN(...) 拉取多个 competition 的事件 / 球队名，避免 P1 候选池构建
+// 时的 N 次 round-trip。
+
+// GetEventsBatch 批量查询多个 competition 的事件，单次 SQL 查询。
+// 返回 map[competition_id][]TSEvent。空切片 / 不存在的 competition_id 不会出现在结果中。
+func (a *TSAdapter) GetEventsBatch(competitionIDs []string, sport string) (map[string][]TSEvent, error) {
+	if len(competitionIDs) == 0 {
+		return map[string][]TSEvent{}, nil
+	}
+	var table string
+	switch sport {
+	case "football":
+		table = "ts_fb_match"
+	case "basketball":
+		table = "ts_bb_match"
+	default:
+		return nil, fmt.Errorf("不支持的运动类型: %s", sport)
+	}
+
+	twoYearsAgo := time.Now().AddDate(-2, 0, 0).Unix()
+
+	// 构造 placeholders + args
+	placeholders := ""
+	args := make([]interface{}, 0, len(competitionIDs)+1)
+	for i, id := range competitionIDs {
+		if i > 0 {
+			placeholders += ","
+		}
+		placeholders += "?"
+		args = append(args, id)
+	}
+	args = append(args, twoYearsAgo)
+
+	query := fmt.Sprintf(`
+		SELECT
+			competition_id,
+			match_id,
+			COALESCE(match_time, 0) as match_time,
+			COALESCE(home_team_id, '') as home_id,
+			COALESCE(away_team_id, '') as away_id,
+			COALESCE(status_id, 0) as status_id
+		FROM %s
+		WHERE competition_id IN (%s)
+		  AND match_time >= ?
+		ORDER BY competition_id, match_time
+		LIMIT 15000`, table, placeholders)
+
+	rows, err := a.db.Query(query, args...)
+	if err != nil {
+		return nil, fmt.Errorf("GetEventsBatch(%s): %w", sport, err)
+	}
+	defer rows.Close()
+
+	result := make(map[string][]TSEvent, len(competitionIDs))
+	for rows.Next() {
+		var compID string
+		var ev TSEvent
+		if err := rows.Scan(&compID, &ev.ID, &ev.MatchTime, &ev.HomeID, &ev.AwayID, &ev.StatusID); err != nil {
+			continue
+		}
+		result[compID] = append(result[compID], ev)
+	}
+	return result, rows.Err()
+}
+
+// GetTeamNamesBatch 批量查询多个 competition 的球队名映射，单次 SQL 查询。
+// 返回 map[competition_id]map[team_id]name。
+func (a *TSAdapter) GetTeamNamesBatch(competitionIDs []string, sport string) (map[string]map[string]string, error) {
+	if len(competitionIDs) == 0 {
+		return map[string]map[string]string{}, nil
+	}
+	var matchTable, teamTable string
+	switch sport {
+	case "football":
+		matchTable = "ts_fb_match"
+		teamTable = "ts_fb_team"
+	case "basketball":
+		matchTable = "ts_bb_match"
+		teamTable = "ts_bb_team"
+	default:
+		return nil, fmt.Errorf("不支持的运动类型: %s", sport)
+	}
+
+	placeholders := ""
+	args := make([]interface{}, 0, len(competitionIDs))
+	for i, id := range competitionIDs {
+		if i > 0 {
+			placeholders += ","
+		}
+		placeholders += "?"
+		args = append(args, id)
+	}
+
+	query := fmt.Sprintf(`
+		SELECT DISTINCT
+			m.competition_id,
+			t.team_id,
+			COALESCE(t.name,'')
+		FROM %s m
+		JOIN %s t ON (m.home_team_id = t.team_id OR m.away_team_id = t.team_id)
+		WHERE m.competition_id IN (%s)
+		LIMIT 1000`, matchTable, teamTable, placeholders)
+
+	rows, err := a.db.Query(query, args...)
+	if err != nil {
+		return nil, fmt.Errorf("GetTeamNamesBatch: %w", err)
+	}
+	defer rows.Close()
+
+	result := make(map[string]map[string]string, len(competitionIDs))
+	for rows.Next() {
+		var compID, tid, name string
+		if err := rows.Scan(&compID, &tid, &name); err != nil {
+			continue
+		}
+		if tid == "" {
+			continue
+		}
+		if _, ok := result[compID]; !ok {
+			result[compID] = make(map[string]string)
+		}
+		result[compID][tid] = name
+	}
+	return result, rows.Err()
+}

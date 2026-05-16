@@ -36,6 +36,18 @@ type TSEventLoader interface {
 	GetTeamNames(competitionID, sport string) (map[string]string, error)
 }
 
+// BatchTSEventLoader 是 TSEventLoader 的可选超集（PI-006 v1.9）。
+// 实现此接口的 Loader 能用单次 SQL IN(...) 同时拉多个 competition 的事件 /
+// 球队名，把 P1 候选池构建的 N 次 DB round-trip 压缩成 1 次。
+// *db.TSAdapter 实现了 BatchTSEventLoader；stub Loader 通常只实现单 comp 版本。
+// CandidatePoolBuilder.Build 在内部用 type assertion 检测：有则用 batch，否则
+// 回退到 N 个 goroutine 并行的 parallel-fetch 路径。
+type BatchTSEventLoader interface {
+	TSEventLoader
+	GetEventsBatch(competitionIDs []string, sport string) (map[string][]db.TSEvent, error)
+	GetTeamNamesBatch(competitionIDs []string, sport string) (map[string]map[string]string, error)
+}
+
 // TSCompetitionCandidate 是 P1 候选池生成器的输入单元：
 // 一个候选 TS 联赛 + 联赛级先验分 + 联赛级强约束结果。
 //
@@ -118,9 +130,10 @@ func (b *CandidatePoolBuilder) Build(
 	}
 	result.Stats.CompetitionsScanned = len(candidates)
 
-	// ── 并行 fetch (PI-006 v1.8 性能优化) ────────────────────────────────────
-	// 旧版串行：N 个 competition × 单次 latency 累加；EPL TopN=5 实测 ~30s。
-	// 新版并行 goroutine：单次 latency + 少量 channel 同步开销。
+	// ── Fetch 候选 competition 数据 ──────────────────────────────────────
+	// 优先级：
+	//   1) Loader 实现 BatchTSEventLoader → 单次 SQL IN(...) 批量拉（v1.9 新增）；
+	//   2) 否则并行 goroutine fetch（v1.8 路径）。
 	// 保持输出顺序 deterministic（按 candidates 输入顺序），错误首次出现立即返回。
 	type perCandResult struct {
 		idx       int
@@ -129,29 +142,62 @@ func (b *CandidatePoolBuilder) Build(
 		err       error
 	}
 	results := make([]perCandResult, len(candidates))
-	var wg sync.WaitGroup
-	for i, cand := range candidates {
-		if cand.Competition.ID == "" {
-			results[i] = perCandResult{idx: i}
-			continue
+
+	if batch, ok := b.Loader.(BatchTSEventLoader); ok {
+		// ── batch 路径 ──
+		compIDs := make([]string, 0, len(candidates))
+		for _, cand := range candidates {
+			if cand.Competition.ID != "" {
+				compIDs = append(compIDs, cand.Competition.ID)
+			}
 		}
-		wg.Add(1)
-		go func(idx int, compID string) {
-			defer wg.Done()
-			events, err := b.Loader.GetEvents(compID, sport)
+		if len(compIDs) > 0 {
+			eventsMap, err := batch.GetEventsBatch(compIDs, sport)
 			if err != nil {
-				results[idx] = perCandResult{idx: idx, err: fmt.Errorf("candidate pool: GetEvents(%s, %s): %w", compID, sport, err)}
-				return
+				return nil, fmt.Errorf("candidate pool: GetEventsBatch: %w", err)
 			}
-			teamNames, err := b.Loader.GetTeamNames(compID, sport)
+			teamNamesMap, err := batch.GetTeamNamesBatch(compIDs, sport)
 			if err != nil {
-				results[idx] = perCandResult{idx: idx, err: fmt.Errorf("candidate pool: GetTeamNames(%s, %s): %w", compID, sport, err)}
-				return
+				return nil, fmt.Errorf("candidate pool: GetTeamNamesBatch: %w", err)
 			}
-			results[idx] = perCandResult{idx: idx, events: events, teamNames: teamNames}
-		}(i, cand.Competition.ID)
+			for i, cand := range candidates {
+				if cand.Competition.ID == "" {
+					results[i] = perCandResult{idx: i}
+					continue
+				}
+				results[i] = perCandResult{
+					idx:       i,
+					events:    eventsMap[cand.Competition.ID],
+					teamNames: teamNamesMap[cand.Competition.ID],
+				}
+			}
+		}
+	} else {
+		// ── parallel-goroutine 回退路径 (v1.8) ──
+		var wg sync.WaitGroup
+		for i, cand := range candidates {
+			if cand.Competition.ID == "" {
+				results[i] = perCandResult{idx: i}
+				continue
+			}
+			wg.Add(1)
+			go func(idx int, compID string) {
+				defer wg.Done()
+				events, err := b.Loader.GetEvents(compID, sport)
+				if err != nil {
+					results[idx] = perCandResult{idx: idx, err: fmt.Errorf("candidate pool: GetEvents(%s, %s): %w", compID, sport, err)}
+					return
+				}
+				teamNames, err := b.Loader.GetTeamNames(compID, sport)
+				if err != nil {
+					results[idx] = perCandResult{idx: idx, err: fmt.Errorf("candidate pool: GetTeamNames(%s, %s): %w", compID, sport, err)}
+					return
+				}
+				results[idx] = perCandResult{idx: idx, events: events, teamNames: teamNames}
+			}(i, cand.Competition.ID)
+		}
+		wg.Wait()
 	}
-	wg.Wait()
 
 	// 错误整体回滚（同旧版语义）：任一 candidate 报错就丢弃整批，不部分写回
 	for _, r := range results {
