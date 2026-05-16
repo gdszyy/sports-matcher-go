@@ -22,6 +22,7 @@
 package matcher
 
 import (
+	"context"
 	"fmt"
 	"sync"
 	"time"
@@ -56,6 +57,24 @@ type BatchTSEventLoader interface {
 type TimeRangeBatchTSEventLoader interface {
 	BatchTSEventLoader
 	GetEventsBatchInRange(competitionIDs []string, sport string, timeMinUnix, timeMaxUnix int64) (map[string][]db.TSEvent, error)
+}
+
+// ContextBatchTSEventLoader 是 BatchTSEventLoader 的 ctx-aware 扩展（PI-006 v1.14）。
+// 让长跑 SQL 能被 context.Done() 中断（配合 UniversalEngine.MaxRuntime 软超时
+// + context.WithDeadline 实现真正的 SQL 取消）。
+// *db.TSAdapter 同时实现 ContextBatchTSEventLoader 与 TimeRangeBatchTSEventLoader。
+// CandidatePoolBuilder.BuildCtx / BuildWithTimeRangeCtx 优先使用此接口；
+// stub Loader 通常只实现非 ctx 版本，自动回退到非取消语义。
+type ContextBatchTSEventLoader interface {
+	BatchTSEventLoader
+	GetEventsBatchCtx(ctx context.Context, competitionIDs []string, sport string) (map[string][]db.TSEvent, error)
+	GetTeamNamesBatchCtx(ctx context.Context, competitionIDs []string, sport string) (map[string]map[string]string, error)
+}
+
+// ContextTimeRangeBatchTSEventLoader 同时支持 ctx + 时间窗（v1.14）。
+type ContextTimeRangeBatchTSEventLoader interface {
+	ContextBatchTSEventLoader
+	GetEventsBatchInRangeCtx(ctx context.Context, competitionIDs []string, sport string, timeMinUnix, timeMaxUnix int64) (map[string][]db.TSEvent, error)
 }
 
 // TSCompetitionCandidate 是 P1 候选池生成器的输入单元：
@@ -350,6 +369,142 @@ func (b *CandidatePoolBuilder) BuildWithTimeRange(
 
 	result.Stats.Elapsed = time.Since(t0)
 	return result, nil
+}
+
+// BuildCtx 是 Build 的 ctx-aware 版本（v1.14）。
+// 若 Loader 实现 ContextBatchTSEventLoader 则用 ctx-aware SQL；否则回退到 Build。
+// ctx 提前 done 时返回 ctx.Err() wrap 的错误。
+func (b *CandidatePoolBuilder) BuildCtx(
+	ctx context.Context,
+	candidates []TSCompetitionCandidate,
+	sport string,
+) (*CandidatePoolResult, error) {
+	ctxLoader, ok := b.Loader.(ContextBatchTSEventLoader)
+	if !ok {
+		return b.Build(candidates, sport)
+	}
+	t0 := time.Now()
+	if sport != "football" && sport != "basketball" {
+		return nil, fmt.Errorf("candidate pool: unsupported sport: %s", sport)
+	}
+	result := &CandidatePoolResult{
+		Candidates:  []EvidenceEventCandidate{},
+		TSTeamNames: map[string]string{},
+		Stats:       CandidatePoolStats{PerCompetitionEventCnt: map[string]int{}},
+	}
+	result.Stats.CompetitionsScanned = len(candidates)
+	compIDs := make([]string, 0, len(candidates))
+	for _, cand := range candidates {
+		if cand.Competition.ID != "" {
+			compIDs = append(compIDs, cand.Competition.ID)
+		}
+	}
+	if len(compIDs) == 0 {
+		result.Stats.Elapsed = time.Since(t0)
+		return result, nil
+	}
+	eventsMap, err := ctxLoader.GetEventsBatchCtx(ctx, compIDs, sport)
+	if err != nil {
+		return nil, fmt.Errorf("candidate pool: GetEventsBatchCtx: %w", err)
+	}
+	teamNamesMap, err := ctxLoader.GetTeamNamesBatchCtx(ctx, compIDs, sport)
+	if err != nil {
+		return nil, fmt.Errorf("candidate pool: GetTeamNamesBatchCtx: %w", err)
+	}
+	assembleCandidatePool(result, candidates, eventsMap, teamNamesMap)
+	result.Stats.Elapsed = time.Since(t0)
+	return result, nil
+}
+
+// BuildWithTimeRangeCtx 是 BuildWithTimeRange 的 ctx-aware 版本（v1.14）。
+func (b *CandidatePoolBuilder) BuildWithTimeRangeCtx(
+	ctx context.Context,
+	candidates []TSCompetitionCandidate,
+	sport string,
+	timeMinUnix, timeMaxUnix int64,
+) (*CandidatePoolResult, error) {
+	ctxTR, ok := b.Loader.(ContextTimeRangeBatchTSEventLoader)
+	if !ok || timeMinUnix <= 0 {
+		return b.BuildCtx(ctx, candidates, sport)
+	}
+	t0 := time.Now()
+	if sport != "football" && sport != "basketball" {
+		return nil, fmt.Errorf("candidate pool: unsupported sport: %s", sport)
+	}
+	result := &CandidatePoolResult{
+		Candidates:  []EvidenceEventCandidate{},
+		TSTeamNames: map[string]string{},
+		Stats:       CandidatePoolStats{PerCompetitionEventCnt: map[string]int{}},
+	}
+	result.Stats.CompetitionsScanned = len(candidates)
+	compIDs := make([]string, 0, len(candidates))
+	for _, cand := range candidates {
+		if cand.Competition.ID != "" {
+			compIDs = append(compIDs, cand.Competition.ID)
+		}
+	}
+	if len(compIDs) == 0 {
+		result.Stats.Elapsed = time.Since(t0)
+		return result, nil
+	}
+	eventsMap, err := ctxTR.GetEventsBatchInRangeCtx(ctx, compIDs, sport, timeMinUnix, timeMaxUnix)
+	if err != nil {
+		return nil, fmt.Errorf("candidate pool: GetEventsBatchInRangeCtx: %w", err)
+	}
+	teamNamesMap, err := ctxTR.GetTeamNamesBatchCtx(ctx, compIDs, sport)
+	if err != nil {
+		return nil, fmt.Errorf("candidate pool: GetTeamNamesBatchCtx: %w", err)
+	}
+	assembleCandidatePool(result, candidates, eventsMap, teamNamesMap)
+	result.Stats.Elapsed = time.Since(t0)
+	return result, nil
+}
+
+// assembleCandidatePool 把 fetch 出来的 events/teamNames 装配到 CandidatePoolResult。
+// BuildCtx / BuildWithTimeRangeCtx 公用，保证输出语义与 Build / BuildWithTimeRange 一致。
+func assembleCandidatePool(
+	result *CandidatePoolResult,
+	candidates []TSCompetitionCandidate,
+	eventsMap map[string][]db.TSEvent,
+	teamNamesMap map[string]map[string]string,
+) {
+	for _, cand := range candidates {
+		compID := cand.Competition.ID
+		if compID == "" {
+			continue
+		}
+		for tsTeamID, name := range teamNamesMap[compID] {
+			if tsTeamID == "" {
+				continue
+			}
+			if _, exists := result.TSTeamNames[tsTeamID]; !exists {
+				result.TSTeamNames[tsTeamID] = name
+			}
+		}
+		eventCount := 0
+		for _, ev := range eventsMap[compID] {
+			if ev.MatchID == "" && ev.ID == "" {
+				continue
+			}
+			result.Candidates = append(result.Candidates, EvidenceEventCandidate{
+				CompetitionID:          compID,
+				CompetitionName:        cand.Competition.Name,
+				Event:                  ev,
+				CandidateScore:         cand.LeaguePriorScore,
+				StrongConstraintOK:     cand.StrongConstraintOK,
+				StrongConstraintReason: cand.StrongConstraintReason,
+			})
+			eventCount++
+		}
+		result.Stats.PerCompetitionEventCnt[compID] = eventCount
+		result.Stats.TotalTSEvents += eventCount
+		if eventCount > 0 {
+			result.Stats.CompetitionsKept++
+		}
+		if !cand.StrongConstraintOK {
+			result.Stats.CompetitionsVetoed++
+		}
+	}
 }
 
 // MergeTSTeamNames 把多份 TS 球队名映射合并为一份。常用于调用方已经按其他途径

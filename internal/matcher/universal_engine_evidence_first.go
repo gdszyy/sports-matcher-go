@@ -21,6 +21,7 @@
 package matcher
 
 import (
+	"context"
 	"fmt"
 	"log"
 	"time"
@@ -90,6 +91,14 @@ func (e *UniversalEngine) runLeagueEvidenceFirst(
 	prefix := fmt.Sprintf("[%s][EF]", adapter.SourceSide())
 	result := &UniversalMatchResult{}
 
+	// ── PI-006 v1.14: 用 MaxRuntime 派生 deadline context，让 SQL 真正可取消 ──
+	ctx := context.Background()
+	if e.MaxRuntime > 0 {
+		var cancel context.CancelFunc
+		ctx, cancel = context.WithDeadline(ctx, t0.Add(e.MaxRuntime))
+		defer cancel()
+	}
+
 	n := e.EvidenceFirstTopN
 	if n <= 0 {
 		n = defaultRunLeagueTopN
@@ -146,9 +155,9 @@ func (e *UniversalEngine) runLeagueEvidenceFirst(
 	poolBuilder := NewCandidatePoolBuilder(e.TS)
 	var pool *CandidatePoolResult
 	if timeMin > 0 {
-		pool, err = poolBuilder.BuildWithTimeRange(candInputs, sport, timeMin, timeMax)
+		pool, err = poolBuilder.BuildWithTimeRangeCtx(ctx, candInputs, sport, timeMin, timeMax)
 	} else {
-		pool, err = poolBuilder.Build(candInputs, sport)
+		pool, err = poolBuilder.BuildCtx(ctx, candInputs, sport)
 	}
 	if err != nil {
 		return nil, fmt.Errorf("EF P1 Build: %w", err)
