@@ -16,6 +16,7 @@ globs: ["internal/matcher/**/*"]
 | `ls_engine.go` | LSports 专用匹配引擎（760 行） |
 | `event.go` | 比赛匹配（五级降级规则 L1–L4b + TeamAliasIndex，625 行） |
 | `event_dtw.go` | DTW 时间序列比赛匹配（525 行） |
+| `candidate_pool.go` | **Evidence-First P1 候选池生成器** — 把"一组候选 TS competition + 联赛先验 + 强约束"转化为 []EvidenceEventCandidate；依赖最小 TSEventLoader 接口，单测可注入 stub（194 行） |
 | `evidence_event_matcher.go` | Evidence-First P3 比赛候选池适配层（多 competition 候选边打分 + 一对一冲突消解） |
 | `league.go` | 联赛匹配（已知映射表 + 名称相似度 + 全局占用机制） |
 | `league_alias.go` | 联赛别名匹配（629 行） |
@@ -74,6 +75,28 @@ type MatchResult struct {
         → DeriveTeamMappings（最终）
 ```
 
+### Evidence-First P1 候选池生成
+
+`CandidatePoolBuilder` 是 Evidence-First 流水线的 P1 阶段：把"一组候选 TS competition + 联赛先验 + 联赛级强约束"直接转化为 `[]EvidenceEventCandidate`，供后续 P3 评分。它**不做任何 SR↔TS 配对、打分、筛选**，那是 P3 的职责。
+
+| 字段 / 接口 | 说明 |
+|------------|------|
+| `TSCompetitionCandidate` | P1 输入单元：`{Competition, LeaguePriorScore∈[0,1], StrongConstraintOK, StrongConstraintReason}` |
+| `TSEventLoader` | 最小依赖接口（`GetEvents` + `GetTeamNames`）；`*db.TSAdapter` 自然实现，单测可注入 stub |
+| `CandidatePoolBuilder.Build(candidates, sport)` | 主入口，输出 `CandidatePoolResult{Candidates, TSTeamNames(union), Stats}` |
+| P0 向后兼容 | 当 `candidates` 长度为 1 时，输出与 P0 单 competition 路径在事件数 / 球队名映射上等价（已通过单测 `TestCandidatePool_P0BackwardCompat_SingleCompMatches` 锁定） |
+| Loader 错误处理 | 任一 competition 的 `GetEvents` / `GetTeamNames` 失败 → 返回 wrapped error，**不会部分写回**已拉的 candidates |
+| 球队名 union | 不同 competition 的 `TSTeamID` 冲突时**先到不被覆盖**（与 `MergeTSTeamNames` 一致） |
+| Veto 传递 | `StrongConstraintOK=false` 的 competition 仍写入候选池（标记 `CompetitionsVetoed`），由 P3 `bestEvidenceLevel` / `scoreEdge` 决定降级或淘汰，避免 P1 提前丢候选 |
+
+**关键入口**（`candidate_pool.go`）：
+
+| 入口 | 作用 |
+|------|------|
+| `NewCandidatePoolBuilder(loader TSEventLoader)` | 构造器 |
+| `(b *CandidatePoolBuilder).Build(candidates, sport)` | 主入口 |
+| `MergeTSTeamNames(maps...)` | 工具函数，先到不被覆盖语义的 map union |
+
 ### Evidence-First P3 比赛候选池适配
 
 `EvidenceEventMatcher` 面向 P2 输出的多 competition TS 比赛候选池，输入为 `[]EvidenceEventCandidate` 而不是单一联赛内的 `[]db.TSEvent`。候选结构显式保留 `competition_id`、P2 候选先验分、主客队候选分和强约束结果；输出 `ResolvedEventMatch` 保留 `ts_match_id`、`ts_competition_id`、主客队、时间、置信度、规则、reason code 与冲突淘汰解释。
@@ -83,25 +106,4 @@ type MatchResult struct {
 | 候选边打分 | 复用 `levelConfigs`、`gaussianTimeFactor`、`TeamAliasIndex.NameSimWithAlias`、`FSModel` 和 `EventDTWMatcher`，综合时间差、主客队相似度、P2 先验、强约束、别名命中和队伍 ID 锚点。 |
 | 主客反转 | 反转候选允许保留，但必须扣除反转惩罚，并在 `reason_codes` 中输出 `SIDE_REVERSED`。 |
 | 一对一确认 | 自动确认前按候选边分数降序做冲突消解，保证一个 `ts_match_id` 最多匹配一个源侧事件。 |
-| 冲突解释 | 被淘汰候选记录 `lost_to`、`winner_score`、`loser_score`、`score_gap` 和原因（如 `CONFLICT_TS_USED` / `CONFLICT_SOURCE_USED`）。 |
-| 两轮 L4b | `MatchTwoRound` 第一轮基于名称/候选分/别名推导 `teamIDMap`，第二轮注入 `teamIDMap` 激活 `TEAM_ID_FALLBACK` / L4b 兜底。 |
-
-**关键入口函数清单**（用于精确定位 evidence-first 代码点）：
-
-| 入口 | 路径 | 作用 |
-|------|------|------|
-| `NewEvidenceEventMatcher(cfg)` | `evidence_event_matcher.go` | 构造器，注入 levelConfigs / FSModel / DTWMatcher / aliasIdx / teamIDMap |
-| `(m *EvidenceEventMatcher).MatchTwoRound(...)` | 同上 | 两轮匹配主入口（第一轮推导 teamIDMap，第二轮注入） |
-| `(m *EvidenceEventMatcher).Match(srEvents, candidates)` | 同上 | 单轮匹配 |
-| `(m *EvidenceEventMatcher).scoreEdge(...)` | 同上 | 候选边打分（含 sideReversed/teamIDAnchor/aliasHit/candidatePrior 权重） |
-| `(m *EvidenceEventMatcher).resolveConflicts(...)` | 同上 | 一对一冲突消解 |
-| `bestEvidenceLevel(name, dt, reversed, strong)` | 同上 | 等级路由 → 选 L1~L5 |
-| `EventEvidenceEdge` / `ResolvedEventMatch` | 同上 | 候选边 / 已解析匹配数据模型，携带 `reason_codes` 与 `lost_to` 等冲突字段 |
-| `defaultEvidenceAutoConfirmThreshold=0.75` 等常量 | 同上文件顶部 const 段 | 自动确认阈值与各项加减分权重，调参入口集中在这里 |
-
-详见流程洞察：[PI-006 Evidence-First 比赛级匹配流程](process_insights/PI-006_evidence_first_matching_flow.md) 与 [PI-007 P0 基线冻结与评估集流程](process_insights/PI-007_evidence_first_p0_baseline.md)；规划文档：[`docs/evidence_first_matching_plan.md`](../../docs/evidence_first_matching_plan.md)；基线报告：[`docs/evidence_first_baseline_report.md`](../../docs/evidence_first_baseline_report.md)。
-
-### 名称归一化规则（name.go）
-
-- 去除变音符（如 `Müller → Muller`）
-- 处理先后名顺序（`John Smith` ↔ `Smith John
+| 冲突解释 | 被淘�

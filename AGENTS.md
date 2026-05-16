@@ -63,7 +63,8 @@
 |------|------|------|
 | 通用引擎主体 | `internal/matcher/universal_engine.go` | UniversalEngine、SRSourceAdapter、TSSourceAdapter、RunLeague 主流程 |
 | 事件级匹配核心 | `internal/matcher/event.go` | MatchEvents、高斯时间衰减、TeamAliasIndex、L1~L6 七级策略 |
-| **Evidence-First 比赛级匹配** | `internal/matcher/evidence_event_matcher.go` | EvidenceEventMatcher、候选边打分（复用 levelConfigs / FSModel / DTW）、一对一冲突消解、`MatchTwoRound` 两轮 teamIDMap 推导（**最新优化，详见 PI-006/PI-007**） |
+| **Evidence-First P1 候选池生成** | `internal/matcher/candidate_pool.go` | CandidatePoolBuilder、TSCompetitionCandidate、TSEventLoader 接口；把多 competition 候选 + 联赛先验 + 强约束转为 `[]EvidenceEventCandidate`（**最新落地，2026-05-16**） |
+| **Evidence-First P3 比赛级匹配** | `internal/matcher/evidence_event_matcher.go` | EvidenceEventMatcher、候选边打分（复用 levelConfigs / FSModel / DTW）、一对一冲突消解、`MatchTwoRound` 两轮 teamIDMap 推导（详见 PI-006/PI-007） |
 | 联赛特征约束 | `internal/matcher/league_features.go` | 六维强约束一票否决（性别/年龄/赛制/层级/区域/国家） |
 | 联赛别名知识图谱 | `internal/matcher/league_alias.go` | LeagueAliasIndex、AliasStore 持久化 |
 | 已知映射验证 | `internal/matcher/known_map_validator.go` | KnownLeagueMapValidator、RCR < 0.30 自动降级 |
@@ -86,9 +87,4 @@
 | 维度 | 加权 Precision | 加权 Recall | 加权 F1 | 平均置信度 |
 |------|--------------|------------|---------|----------|
 | 全量（14 GT 联赛） | 0.8927 | 0.8681 | 0.8799 | 0.9737 |
-| 热门联赛（7足球+NBA） | 0.851 | 0.815 | 0.832 | — |
-| 常规联赛（6个有GT） | 0.973 | 0.970 | 0.972 | — |
-
-详见流程洞察：[PI-004](`.cursor/rules/process_insights/PI-004_sr_2026_test_results.md`)
-
-### 5.3 Evidence-First 最新算法栈（2026-04-30 起）
+| 热门联赛（7足球+NB
