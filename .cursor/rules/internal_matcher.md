@@ -86,33 +86,22 @@ type MatchResult struct {
 | 冲突解释 | 被淘汰候选记录 `lost_to`、`winner_score`、`loser_score`、`score_gap` 和原因（如 `CONFLICT_TS_USED` / `CONFLICT_SOURCE_USED`）。 |
 | 两轮 L4b | `MatchTwoRound` 第一轮基于名称/候选分/别名推导 `teamIDMap`，第二轮注入 `teamIDMap` 激活 `TEAM_ID_FALLBACK` / L4b 兜底。 |
 
-详见流程洞察：[PI-006 Evidence-First 比赛级匹配流程](process_insights/PI-006_evidence_first_matching_flow.md) 与计划文档：[`docs/evidence_first_matching_plan.md`](../../docs/evidence_first_matching_plan.md)。
+**关键入口函数清单**（用于精确定位 evidence-first 代码点）：
+
+| 入口 | 路径 | 作用 |
+|------|------|------|
+| `NewEvidenceEventMatcher(cfg)` | `evidence_event_matcher.go` | 构造器，注入 levelConfigs / FSModel / DTWMatcher / aliasIdx / teamIDMap |
+| `(m *EvidenceEventMatcher).MatchTwoRound(...)` | 同上 | 两轮匹配主入口（第一轮推导 teamIDMap，第二轮注入） |
+| `(m *EvidenceEventMatcher).Match(srEvents, candidates)` | 同上 | 单轮匹配 |
+| `(m *EvidenceEventMatcher).scoreEdge(...)` | 同上 | 候选边打分（含 sideReversed/teamIDAnchor/aliasHit/candidatePrior 权重） |
+| `(m *EvidenceEventMatcher).resolveConflicts(...)` | 同上 | 一对一冲突消解 |
+| `bestEvidenceLevel(name, dt, reversed, strong)` | 同上 | 等级路由 → 选 L1~L5 |
+| `EventEvidenceEdge` / `ResolvedEventMatch` | 同上 | 候选边 / 已解析匹配数据模型，携带 `reason_codes` 与 `lost_to` 等冲突字段 |
+| `defaultEvidenceAutoConfirmThreshold=0.75` 等常量 | 同上文件顶部 const 段 | 自动确认阈值与各项加减分权重，调参入口集中在这里 |
+
+详见流程洞察：[PI-006 Evidence-First 比赛级匹配流程](process_insights/PI-006_evidence_first_matching_flow.md) 与 [PI-007 P0 基线冻结与评估集流程](process_insights/PI-007_evidence_first_p0_baseline.md)；规划文档：[`docs/evidence_first_matching_plan.md`](../../docs/evidence_first_matching_plan.md)；基线报告：[`docs/evidence_first_baseline_report.md`](../../docs/evidence_first_baseline_report.md)。
 
 ### 名称归一化规则（name.go）
 
 - 去除变音符（如 `Müller → Muller`）
-- 处理先后名顺序（`John Smith` ↔ `Smith John`）
-- 处理中间名缩写
-- Unicode 标准化
-
-## 4. 大文件函数索引
-
-以下文件超过 500 行，已由 `code-indexer` 生成函数级索引，修改前必须查阅：
-
-| 文件 | 行数 | 索引文件 |
-|------|------|---------|
-| `universal_engine.go` | 844 | [auto_index](auto_index/internal_matcher_universal_engine_go_index.md) |
-| `ls_engine.go` | 760 | [auto_index](auto_index/internal_matcher_ls_engine_go_index.md) |
-| `integration_test.go` | 642 | [auto_index](auto_index/internal_matcher_integration_test_go_index.md) |
-| `league_alias.go` | 629 | [auto_index](auto_index/internal_matcher_league_alias_go_index.md) |
-| `event.go` | 625 | [auto_index](auto_index/internal_matcher_event_go_index.md) |
-| `league_features.go` | 624 | [auto_index](auto_index/internal_matcher_league_features_go_index.md) |
-| `event_dtw.go` | 525 | [auto_index](auto_index/internal_matcher_event_dtw_go_index.md) |
-| `fs_model.go` | 519 | [auto_index](auto_index/internal_matcher_fs_model_go_index.md) |
-
-## 5. 详细设计文档索引
-
-- [通用匹配算法设计](../../docs/universal_matching_algorithm_design.md)
-- [联赛匹配评估规则](../../docs/league_match_evaluation_rule.md)
-- [LS/TS 匹配评估报告](../../docs/ls_ts_matching_assessment.md)
-- [优化测试报告](../../docs/optimization_test_report.md)
+- 处理先后名顺序（`John Smith` ↔ `Smith John

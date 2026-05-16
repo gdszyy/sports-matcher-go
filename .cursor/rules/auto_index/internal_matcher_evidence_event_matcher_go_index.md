@@ -1,6 +1,6 @@
-# internal/matcher/event_dtw.go 函数索引
+# internal/matcher/evidence_event_matcher.go 函数索引
 
-> 自动生成于 2026-05-16 | 总行数: 525 | 函数数: 0 | 语言: go
+> 自动生成于 2026-05-16 | 总行数: 492 | 函数数: 0 | 语言: go
 > **本文件由 code-indexer 脚本自动生成，严禁手动编辑。**
 
 ## 函数列表

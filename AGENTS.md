@@ -63,13 +63,14 @@
 |------|------|------|
 | 通用引擎主体 | `internal/matcher/universal_engine.go` | UniversalEngine、SRSourceAdapter、TSSourceAdapter、RunLeague 主流程 |
 | 事件级匹配核心 | `internal/matcher/event.go` | MatchEvents、高斯时间衰减、TeamAliasIndex、L1~L6 七级策略 |
+| **Evidence-First 比赛级匹配** | `internal/matcher/evidence_event_matcher.go` | EvidenceEventMatcher、候选边打分（复用 levelConfigs / FSModel / DTW）、一对一冲突消解、`MatchTwoRound` 两轮 teamIDMap 推导（**最新优化，详见 PI-006/PI-007**） |
 | 联赛特征约束 | `internal/matcher/league_features.go` | 六维强约束一票否决（性别/年龄/赛制/层级/区域/国家） |
 | 联赛别名知识图谱 | `internal/matcher/league_alias.go` | LeagueAliasIndex、AliasStore 持久化 |
 | 已知映射验证 | `internal/matcher/known_map_validator.go` | KnownLeagueMapValidator、RCR < 0.30 自动降级 |
 | Fellegi-Sunter EM | `internal/matcher/fs_model.go` | 无监督参数估计 |
 | EventDTW 兜底 | `internal/matcher/event_dtw.go` | 动态时间规整兜底匹配 |
 | 已知联赛映射表 | `internal/matcher/league.go` | KnownLeagueMap（SR tournament_id → TS competition_id） |
-| 命令行入口 | `cmd/server/main.go` | `match2`（单联赛）、`batch2`（批量 SR 2026）子命令 |
+| 命令行入口 | `cmd/server/main.go` | `match2`（单联赛）、`batch2`（批量 SR 2026）、`ls-match`/`ls-batch`（LS 链路）子命令 |
 | HTTP API 入口 | `internal/api/server.go` | `/api/v2/match/league`、`/api/v2/match/batch` |
 
 ### 5.2 SR 2026 算法测试脚本
@@ -77,6 +78,7 @@
 | 脚本 | 路径 | 说明 |
 |------|------|------|
 | SR↔TS 2026 测试（最新） | `python/test_sr_2026.py` | 复现 UniversalEngine 完整逻辑，支持 GT 重建 TS 候选集，覆盖 14 个 GT 联赛 |
+| Evidence-First P0 基线评估 | `python/evidence_first_baseline_eval.py` | 冻结旧流程基线、产出 SR↔TS 与 LS↔TS 双链路统一指标 JSON/CSV，为 P1–P5 迭代提供可复现对比（**最新**） |
 | LS↔TS 2026 测试 | `python/match_2026.py` | LS 链路测试脚本（旧版，仅供参考） |
 
 **SR 2026 测试最新结果**（2026-04-20，commit `afd4e5e`）：
@@ -89,12 +91,4 @@
 
 详见流程洞察：[PI-004](`.cursor/rules/process_insights/PI-004_sr_2026_test_results.md`)
 
----
-
-## 6. 流程洞察索引 (Process Insights)
-
-流程洞察是 Agent 在完成任务后沉淀的经验文档，记录非直观的隐蔽逻辑、跨模块耦合陷阱和关键操作流程。与静态模块规范不同，流程洞察随任务持续积累，并通过版本号管理演进。
-
-*   **洞察注册表**：[`.cursor/rules/process_insights/index.md`](.cursor/rules/process_insights/index.md) - 所有活跃与废弃洞察的版本索引。
-
-> **注意**：随着架构的演进，本索引应持续更新。负责重构的 Agent 需维护对应的规则文档和流程洞察。
+### 5.3 Evidence-First 最新算法栈（2026-04-30 起）

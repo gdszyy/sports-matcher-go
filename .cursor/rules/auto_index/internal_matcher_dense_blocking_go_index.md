@@ -1,6 +1,6 @@
-# internal/matcher/league_alias.go 函数索引
+# internal/matcher/dense_blocking.go 函数索引
 
-> 自动生成于 2026-05-16 | 总行数: 963 | 函数数: 4 | 语言: go
+> 自动生成于 2026-05-16 | 总行数: 450 | 函数数: 1 | 语言: go
 > **本文件由 code-indexer 脚本自动生成，严禁手动编辑。**
 
 ## 函数列表
@@ -10,6 +10,3 @@
 | 函数名 | 类型 | 签名 | 备注 |
 |--------|------|------|------|
 | len | function | `len()` |  |
-| RegisterAlias | function | `RegisterAlias()` |  |
-| RegisterGroup | function | `RegisterGroup()` |  |
-| isYearToken | function | `isYearToken()` |  |
