@@ -1,6 +1,6 @@
 ---
 id: "PI-006"
-version: "v1.9"
+version: "v1.10"
 last_updated: "2026-05-16"
 author: "Manus AI, Claude Cowork"
 related_modules: ["internal/matcher", "docs"]
@@ -75,4 +75,4 @@ Evidence-First P3 将 P2 输出的 **多 competition TS 比赛候选池** 转化
 | `EventDTW` | 对候选池整体估计时间偏移，修正后再进入比赛边打分。 |
 | `DeriveTeamMappings` | 两轮逻辑沿用现有比赛推导球队映射能力，第二轮启用 L4b 队伍 ID 兜底。 |
 | P4 聚合 | `ResolvedEventMatch` 必须保留 `ts_competition_id`、`ts_match_id`、`reason_codes` 和冲突淘汰解释，供联赛级反向确认和人工复核使用。 |
-| **P1 候选池生成（v1.1 新增）** | `internal/matcher/candidate_pool.go` 的 `CandidatePoolBuilder` 是 P1 落地实现：把"一组候选 TS competition + 联赛先验 + 强约束"转化为 `[]EvidenceEventCandidate`。**P1 不做配对/打分/筛选**，那是 P3 职
+| **P1 候选池生成（v1.1 新增）** | `internal/matcher/candidate_pool.go` 的 `CandidatePoolBuilder` 是 P1 落地实现：把"一组候选 TS competition + 联赛先验 + 强约束"转化为 `[]EvidenceEventCandidate`。**P1 不做配对/打分/筛选**，那是 P3 �
