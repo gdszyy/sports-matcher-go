@@ -3,7 +3,7 @@ id: "PI-006"
 version: "v1.16"
 last_updated: "2026-05-16"
 author: "Manus AI, Claude Cowork"
-related_modules: ["internal/matcher", "docs"]
+related_modules: ["internal/matcher", "internal/db", "cmd", "docs"]
 status: "active"
 ---
 
@@ -75,4 +75,25 @@ Evidence-First P3 将 P2 输出的 **多 competition TS 比赛候选池** 转化
 | `EventDTW` | 对候选池整体估计时间偏移，修正后再进入比赛边打分。 |
 | `DeriveTeamMappings` | 两轮逻辑沿用现有比赛推导球队映射能力，第二轮启用 L4b 队伍 ID 兜底。 |
 | P4 聚合 | `ResolvedEventMatch` 必须保留 `ts_competition_id`、`ts_match_id`、`reason_codes` 和冲突淘汰解释，供联赛级反向确认和人工复核使用。 |
-| **P1 候选池生成（v1.1 新增）** | `internal/matcher/candidate_pool.go` 的 `CandidatePoolBuilder` 是 P1 落地实现：把"一组候选 TS competition + 联赛先验 + 强约束"转化为 `[]EvidenceEventCandidate`。**P1 不做配对/打分/筛选**，那是 P3 �
+
+## 版本变更日志
+
+| 版本 | 日期 | 变更内容 | 作者 |
+|------|------|----------|------|
+| v1.0 | 2026-04-30 | 初始记录 Evidence-First P3 比赛级候选边打分、一对一冲突消解、主客反转降权、DTW 偏移修正和两轮 L4b 兜底流程。 | Manus AI |
+| v1.1 | 2026-05-16 | 落地 P1 候选池生成器 (`internal/matcher/candidate_pool.go`)：`CandidatePoolBuilder` 把 Top-N 联赛候选 + 联赛先验分 + 强约束转化为 `[]EvidenceEventCandidate`。**P1 不做配对/打分/筛选**（P3 职责）。`TSEventLoader` 最小接口 + 并行 goroutine fetch fallback；新增 P0BackwardCompat 单测。 | Claude Cowork |
+| v1.2 | 2026-05-16 | 落地 P2 球队级先验填充 (`team_prior_enricher.go` / `EnrichTeamPriors`)：对每个 EvidenceEventCandidate 扫描全部 SR 球队名，取最佳相似度填入 HomeTeamCandidateScore / AwayTeamCandidateScore；别名感知；纯函数原地修改。P3 隐性 contract：`resolveConflicts` 每个 SR 都输出 ResolvedEventMatch（含 NoMatch stub）。 | Claude Cowork |
+| v1.3 | 2026-05-16 | 落地联赛 Top-N 入口 (`league_topn.go` / `MatchLeagueTopN` + `ToTSCompetitionCandidates`)。KnownLeagueMap 命中保 Top-1，其余按 leagueNameScore 降序，每条携带 StrongConstraintOK。不破坏 P0（既有 MatchLeague 保留）。 | Claude Cowork |
+| v1.4 | 2026-05-16 | Wire Evidence-First 流水线进 `UniversalEngine.RunLeague`：`TopNAdapter` 可选接口 + `SRSourceAdapter.MatchLeagueTopN` + `runLeagueEvidenceFirst` 主体 + `UseEvidenceFirst` / `EvidenceFirstTopN` 两个 opt-in 字段。RunLeague 仅加 4 行 type-assertion 分支，默认 false 走原 P0。 | Claude Cowork |
+| v1.5 | 2026-05-16 | CLI 暴露 `--use-evidence-first` 和 `--evidence-first-topn N` 到 4 个生产命令（match2/batch2/ls-match/ls-batch）。 | Claude Cowork |
+| v1.6 | 2026-05-16 | LS 链路镜像 (`league_topn_ls.go` / `LSMatchLeagueTopN`)：KnownLSLeagueMap 命中占 Top-1，lsLeagueNameScore 排序，LS 特有 `lsLocationVeto` / `lsLocationVetoByName` 显式记录在 strong constraint reason。`LSSourceAdapter.MatchLeagueTopN` 转发并 propagate NoKnownMap。SR 与 LS 完全对称。 | Claude Cowork |
+| v1.7 | 2026-05-16 | P3 scoreEdge time-window 预筛：4 次 NameSimWithAlias 之前用 `correctedDiff > l5MaxTimeDiff (30 天)` + 无 teamIDAnchor 提前 false。严格子集裁剪不改结果集。3 个单测（SkipsFar / KeepsClose / KeepsFarWithAnchor）。 | Claude Cowork |
+| v1.8 | 2026-05-16 | P3 NameSim 缓存 + P1 并行 goroutine fetch：`buildNameSimCache` 预计算 unique (srTeamID, tsTeamID) 对，scoreEdge 4 次 NameSim 改为 O(1) 查表 — EPL P3 stage >20s → 1s；P1 串行 4 个 competition 30s → 并行 21s。EPL 实测 v1.5 >40s → v1.8 30.6s。 | Claude Cowork |
+| v1.9 | 2026-05-16 | DB batch SQL：`*db.TSAdapter.GetEventsBatch` + `GetTeamNamesBatch` (WHERE competition_id IN (...))；`BatchTSEventLoader` 可选接口。Loader 实现则 batch，否则回退到 v1.8 并行 goroutine。EPL P1 fetch 21s → 12s。 | Claude Cowork |
+| v1.10 | 2026-05-16 | **EF 真数据有效性首次正面验证**（沙箱真 DB 跑 3 个高歧义非 KnownMap SR 联赛）。**关键 case：sr:tournament:929 Jordan League** — P0 联赛到 'Jordan League Division 1' (conf=0.908) 但 0/78 events matched；EF TopN=5 同 Top-1 league，但跨 5 个候选 competition 拉了 1845 events，最终 76/78 matched (97.4%)。Premier Soccer League Zimbabwe / Serie B Women Italy 都是 P0 高 conf league 但 0/N events，EF `edges=0` 显式暴露错误。报告：`docs/evidence_first_real_data_validation.md`。 | Claude Cowork |
+| v1.11 | 2026-05-16 | `--max-runtime` 软超时：`UniversalEngine.MaxRuntime` + 4 个 CLI 命令 `--max-runtime` flag + `runLeagueEvidenceFirst` 各阶段入口 `budgetExceeded` 检查 → 超时输出当前最佳结果 `Stats.Truncated=true` + `TruncatedStage=topn\|p1\|p2\|p3`。**结构性局限**：budget check 只在 Go 栈空闲点工作，长跑 SQL 卡在 DB 调用里检查不到。3 个新单测。 | Claude Cowork |
+| v1.12 | 2026-05-16 | **edges=0 → LEAGUE_SUSPECT 自动降级**：若 `len(efResult.Edges)==0 && league.Matched && != RuleLeagueKnown`，confidence × 0.5、Rule → `RuleLeagueSuspect`。自动捕获 v1.10 Case A/C 类型的 P0 silent 误匹配。沙箱真数据验证 Zimbabwe: NAME_HI 0.890 → SUSPECT 0.445。7 个单测。 | Claude Cowork |
+| v1.13 | 2026-05-16 | SQL 时间窗下推（opt-in）：`GetEventsBatchInRange` (WHERE match_time BETWEEN tMin AND tMax) + `TimeRangeBatchTSEventLoader` + `BuildWithTimeRange` + `UniversalEngine.EvidenceFirstTimePadding` + CLI `--ef-time-padding`。Jordan TopN=5: 1845→252 events, 24s→13s (45% 加速), 76/78 不变。EPL: ±30d 217/225 (丢 6 L4b 跨季)，±180d 同样。**默认 0 不下推保 v1.12 行为**，用户按需 opt-in。 | Claude Cowork |
+| v1.14 | 2026-05-16 | Context cancellation wire 进 SQL：让 `--max-runtime` 真正能打断长跑 SQL（堵 v1.11 局限）。三层 ctx-aware：(1) `*db.TSAdapter` 加 `GetEventsBatchCtx` / `GetEventsBatchInRangeCtx` / `GetTeamNamesBatchCtx` 用 `db.QueryContext`；(2) `ContextBatchTSEventLoader` + `ContextTimeRangeBatchTSEventLoader` 可选接口；(3) `BuildCtx` / `BuildWithTimeRangeCtx` + `runLeagueEvidenceFirst` 头部 `context.WithDeadline(t0+MaxRuntime)`。stub 不实现 ctx-aware 自动回退。3 个单测。 | Claude Cowork |
+| v1.15 | 2026-05-16 | Direction D + E 双优化：(D) `UniversalEngine.tsCompCache` 缓存 `GetCompetitionsByFootball/Basketball` 跨 RunLeague 复用 + `InvalidateCompetitionCache()`。batch2 跨 29 联赛累计省 ~29s。(E) `BuildCtx` 与 `BuildWithTimeRangeCtx` 把 events + teamNames fetch 改为 sync.WaitGroup 并行 2 goroutine，单 RunLeague P1 fetch 串行 ~7s → 并行 ~4s。不改语义、不影响结果集。 | Claude Cowork |
+| **v1.16** | **2026-05-16** | **球队优先兜底路径（Team-First Fallback）— 沙箱端到端验证！** Zimbabwe Premier Soccer League: P0=0/75（BPL conf=0.890 silent 误匹配）→ EF v1.15=0/75（edges=0 SUSPECT）→ **EF+team-first=66/75 (88%) Rule=LEAGUE_TEAM_FIRST**（找到真 Zimbabwe 联赛 `4zp5rzgh7loq82w`，TS 球队名带 `(ZWE)` 标）。沙箱完整 30.5s 跑完。实现栈：(1) `db.TSAdapter` 加 `GetAllTeamsBriefCtx` / `GetEventsByTeamIDsInRangeCtx` / `SearchTeamsByTokensCtx`（SQL token REGEXP 预筛绕过 79K 全表 cold start）；(2) `matcher.TeamFirstPoolBuilder` + `TokenSearchTeamLoader` 可选接口；(3) `UniversalEngine.EnableTeamFirstFallback` + `tfBuilder` lazy；(4) `runLeagueEvidenceFirst` second-pass：edges=0 且非 KnownMap → team-first → 多数表决 → 重跑 EF P3 一次；成功则 league.Rule=`LEAGUE_TEAM_FIRST` conf=0.70；(5) 与 v1.12 SUSPECT 互斥（tfApplied=true 跳过）。4 个单测 + CLI `--use-team-first-fallback`。默认 false 保 v1.15 行为。 | Claude Cowork |
