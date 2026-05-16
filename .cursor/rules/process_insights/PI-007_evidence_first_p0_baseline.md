@@ -1,8 +1,8 @@
 ---
 id: "PI-007"
-version: "v1.0"
-last_updated: "2026-05-01"
-author: "Manus AI"
+version: "v1.1"
+last_updated: "2026-05-16"
+author: "Manus AI, Claude Cowork"
 related_modules: ["python", "python/data", "docs", "internal/matcher"]
 status: "active"
 ---
@@ -43,20 +43,13 @@ Evidence-First P0 的目标是冻结旧流程基线，而不是优化核心匹�
 
 **正确做法**：稳定性验收比较核心比例和计数字段，耗时只在报告中记录趋势。
 
-**关键位置**：`docs/tests/evidence_first_baseline_metrics.json` 与 `docs/tests/evidence_first_baseline_metrics_run2.json`。
+**关键位置**：`docs/tests/evidence_first_baseline_metrics.json`、`docs/tests/evidence_first_baseline_metrics_run2.json`、`docs/tests/evidence_first_baseline_metrics_run3.json`。
+
+**已验证（v1.1，2026-05-16）**：第三次复跑在两周后、新沙箱环境下，除 `generated_at` 与各级 `elapsed_ms` 外，所有 summary 字段（`league_count` / `event_matched` / `event_match_rate` / `team_match_rate` / `avg_rcr` / `weighted_precision` / `weighted_recall` / `weighted_f1` / `failure_reasons` / `rule_distribution` / `ambiguity_coverage`）与 run1 指纹完全一致。SR 总耗时从 29 053 ms 降至 17 668 ms，再次证明耗时只是沙箱性能观察值。稳定性核心结论：**Evidence-First P0 基线在 v1.0 → v1.1 期间未发生算法回退**。
 
 ## 关键耦合点
 
 | 耦合点 | 说明 |
 |--------|------|
 | `python/test_sr_2026.py` | P0 SR 离线事件匹配复用此脚本中的 `match_events_for_league`、`evaluate`、`KNOWN_LEAGUE_MAP` 和 `SR_2026_LEAGUES`。 |
-| `python/data/` | P0 离线基线唯一数据源，禁止在评估脚本中直连数据库。 |
-| `cmd/server/main.go` | Go 在线入口和 SR/LS 标准批量样本来源；P0 文档需记录但不改动。 |
-| `docs/ls_ts_algo_vs_known_2026.md` | LS 纯算法误匹配案例与高歧义类型的重要来源。 |
-| `docs/evidence_first_failure_cases.md` | P1–P5 失败案例回归清单，需与指标 JSON 中的 failure_reason 和 ambiguity_tags 对齐。 |
-
-## 版本变更日志
-
-| 版本 | 日期 | 变更内容 | 作者 |
-|------|------|----------|------|
-| v1.0 | 2026-05-01 | 初始记录 Evidence-First P0 离线基线脚本、评估集边界、高歧义样本与稳定性验收防坑指南。 | Manus AI |
+| `python/data/` | P0 离线基线唯一数据源，禁止�

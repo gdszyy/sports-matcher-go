@@ -1,0 +1,124 @@
+[06:38:38] 加载数据文件...
+[06:38:38] SR=22618, TS=34242, GT=2858
+{
+  "generated_at": "2026-05-16T06:38:56.868404+00:00",
+  "dataset_dir": "python/data",
+  "total": {
+    "league_count": 85,
+    "high_ambiguity_league_count": 33,
+    "source_event_total": 9017,
+    "event_matched": 4389,
+    "event_match_rate": 0.486747,
+    "team_total": 1469,
+    "team_matched": 724,
+    "team_match_rate": 0.492852,
+    "avg_rcr": 0.207329,
+    "elapsed_ms": 17786,
+    "weighted_precision": 0.892655,
+    "weighted_recall": 0.868089,
+    "weighted_f1": 0.879918,
+    "failure_reasons": {
+      "no_source_events": 55,
+      "has_false_positive": 12,
+      "ok": 3,
+      "no_ts_events": 2,
+      "no_known_map": 10,
+      "no_ground_truth": 3
+    },
+    "rule_distribution": {
+      "L1": 3866,
+      "L2": 96,
+      "L3": 96,
+      "L4": 331,
+      "L5": 0,
+      "L4b": 0,
+      "L6": 0
+    }
+  },
+  "by_source": {
+    "LS": {
+      "league_count": 55,
+      "high_ambiguity_league_count": 24,
+      "source_event_total": 479,
+      "event_matched": 88,
+      "event_match_rate": 0.183716,
+      "team_total": 359,
+      "team_matched": 50,
+      "team_match_rate": 0.139276,
+      "avg_rcr": 0.036364,
+      "elapsed_ms": 118,
+      "weighted_precision": null,
+      "weighted_recall": null,
+      "weighted_f1": null,
+      "failure_reasons": {
+        "no_source_events": 47,
+        "ok": 2,
+        "no_known_map": 6
+      },
+      "rule_distribution": {
+        "L1": 88,
+        "L2": 0,
+        "L3": 0,
+        "L4": 0,
+        "L5": 0,
+        "L4b": 0,
+        "L6": 0
+      }
+    },
+    "SR": {
+      "league_count": 30,
+      "high_ambiguity_league_count": 9,
+      "source_event_total": 8538,
+      "event_matched": 4301,
+      "event_match_rate": 0.503748,
+      "team_total": 1110,
+      "team_matched": 674,
+      "team_match_rate": 0.607207,
+      "avg_rcr": 0.520767,
+      "elapsed_ms": 17668,
+      "weighted_precision": 0.892655,
+      "weighted_recall": 0.868089,
+      "weighted_f1": 0.879918,
+      "failure_reasons": {
+        "no_source_events": 8,
+        "has_false_positive": 12,
+        "ok": 1,
+        "no_ts_events": 2,
+        "no_known_map": 4,
+        "no_ground_truth": 3
+      },
+      "rule_distribution": {
+        "L1": 3778,
+        "L2": 96,
+        "L3": 96,
+        "L4": 331,
+        "L5": 0,
+        "L4b": 0,
+        "L6": 0
+      }
+    }
+  },
+  "ambiguity_coverage": {
+    "covered_tags": [
+      "U19/青年队",
+      "Women/女子",
+      "二级联赛",
+      "商业冠名",
+      "国际赛事",
+      "杯赛",
+      "缩写歧义",
+      "跨国同名联赛"
+    ],
+    "required_tags": [
+      "U19/青年队",
+      "Women/女子",
+      "二级联赛",
+      "杯赛",
+      "国际赛事",
+      "商业冠名",
+      "跨国同名联赛",
+      "缩写歧义"
+    ],
+    "missing_tags": []
+  }
+}
