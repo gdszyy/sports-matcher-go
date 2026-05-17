@@ -202,18 +202,22 @@ def is_international(s):
 
 
 
-# v1.23 tier 提取 + veto，等价 Go league_features.go::extractTierNumber + CheckLeagueVeto
+# v1.23/v1.35 tier 提取 + veto，等价 Go league_features.go::extractTierNumber + CheckLeagueVeto
 _TIER_PATTERNS = [
     # "2. Bundesliga", "3. Liga", "2.Bundesliga"
-    (re.compile(r'(\d+)\s*\.?\s*(?:bundesliga|liga|division|tier)', re.I), lambda m: int(m.group(1))),
+    (re.compile(r'\b(\d+)\s*\.?\s*(?:bundesliga|liga|division|tier)\b', re.I), lambda m: int(m.group(1))),
     # "Liga 1", "Liga 2", "League 1", "Series A2"
-    (re.compile(r'(?:liga|league|serie|series)\s+(\d+)', re.I), lambda m: int(m.group(1))),
+    (re.compile(r'\b(?:liga|league|serie|series)\s+(\d+)\b', re.I), lambda m: int(m.group(1))),
     # "Premier League 2", "Premier League 3"
-    (re.compile(r'premier league\s+(\d+)', re.I), lambda m: int(m.group(1))),
+    (re.compile(r'\bpremier league\s+(\d+)\b', re.I), lambda m: int(m.group(1))),
     # "Serie A2", "Serie B3" — 罗马数字 + 数字组合
-    (re.compile(r'serie\s+[a-z]+(\d+)', re.I), lambda m: int(m.group(1))),
+    (re.compile(r'\bserie\s+[a-z]+(\d+)\b', re.I), lambda m: int(m.group(1))),
     # 通用 "N. xxx" 前缀（德国式）
     (re.compile(r'^\s*(\d+)\.\s*\w', re.I), lambda m: int(m.group(1))),
+    # v1.35: "Bundesliga 2" (liga 前是字母如 "s") / "League 2" 同理
+    (re.compile(r'(?:bundes|euro|champions|primer[ao]|segunda)?liga\s+(\d+)\b', re.I), lambda m: int(m.group(1))),
+    # v1.35: "K2 League" / "A2 League" — 字母 + 数字 + league 模式
+    (re.compile(r'\b[a-z](\d+)\s+(?:league|liga|serie|division)\b', re.I), lambda m: int(m.group(1))),
 ]
 
 
