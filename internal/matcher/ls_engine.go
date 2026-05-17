@@ -766,9 +766,11 @@ func lsLeagueNameScore(ls *db.LSTournament, ts *db.TSCompetition) float64 {
 
 	// 国家/地区名称匹配加分（同国加权提升置信度）+ alias canonical hit 后 country 二次约束（v1.25 同 SR 链路 P0-B）
 	// 优化（优化建议 §3.5）：引入地理别名词典，支持 USA vs United States 等模糊匹配
-	if ls.CategoryName != "" && ts.CountryName != "" {
+	// v1.30 P0: 用 EffectiveCountry 补全（basketball pool 无 host_country 时从 name 推断）
+	effectiveTSCountry := EffectiveCountry(ts.CountryName, ts.Name)
+	if ls.CategoryName != "" && effectiveTSCountry != "" {
 		catNorm := normalizeName(ls.CategoryName)
-		cntNorm := normalizeName(ts.CountryName)
+		cntNorm := normalizeName(effectiveTSCountry)
 		// 先尝试地理别名匹配
 		locSim := geoSimilarity(catNorm, cntNorm)
 		// v1.25 (镜像 SR v1.22 P0-B): alias canonical hit (base ≥ 0.95) 但 country 完全不同

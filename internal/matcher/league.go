@@ -187,9 +187,12 @@ func leagueNameScore(sr *db.SRTournament, ts *db.TSCompetition) float64 {
 	base *= penalty
 
 	// 国家/地区名称匹配加分（优化建议 §3.5）+ alias canonical hit 后 country 二次约束（v1.22 P0-B）
-	if sr.CategoryName != "" && ts.CountryName != "" {
+	// v1.30 P0: 用 EffectiveCountry 补全（ts.CountryName="" 时从 ts.Name 推断，解决 ts_bb_competition
+	// 无 host_country 字段的 basketball 场景）
+	effectiveTSCountry := EffectiveCountry(ts.CountryName, ts.Name)
+	if sr.CategoryName != "" && effectiveTSCountry != "" {
 		catNorm := normalizeName(sr.CategoryName)
-		cntNorm := normalizeName(ts.CountryName)
+		cntNorm := normalizeName(effectiveTSCountry)
 		locSim := geoSimilarity(catNorm, cntNorm)
 		// v1.22 P0-B: alias canonical hit (base ≥ 0.95) 但 country 完全不同（非 international）→
 		// 强降到 0.55（低于 NAME_LOW 阈值），避免 Russian Premier League 被 alias 归到

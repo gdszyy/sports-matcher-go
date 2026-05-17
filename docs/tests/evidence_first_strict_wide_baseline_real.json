@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-05-17T07:13:39.337180+00:00",
+  "generated_at": "2026-05-17T07:34:35.003436+00:00",
   "mode": "strict-no-mapping wide (v1.21)",
   "description": "Strict eval 扩到 KnownLeagueMap + KnownLSLeagueMap 全 100 个 GT 联赛",
   "ts_pool_size": 3988,
@@ -27,24 +27,6 @@
       "top7_accuracy": 0.8611
     },
     "by_sport": {
-      "basketball": {
-        "top1_hits": 4,
-        "top1_accuracy": 0.4,
-        "top2_hits": 5,
-        "top2_accuracy": 0.5,
-        "top3_hits": 5,
-        "top3_accuracy": 0.5,
-        "top4_hits": 5,
-        "top4_accuracy": 0.5,
-        "top5_hits": 5,
-        "top5_accuracy": 0.5,
-        "top6_hits": 6,
-        "top6_accuracy": 0.6,
-        "top7_hits": 6,
-        "top7_accuracy": 0.6,
-        "evaluable": 10,
-        "total_leagues": 10
-      },
       "football": {
         "top1_hits": 22,
         "top1_accuracy": 0.8462,
@@ -62,6 +44,24 @@
         "top7_accuracy": 0.9615,
         "evaluable": 26,
         "total_leagues": 26
+      },
+      "basketball": {
+        "top1_hits": 4,
+        "top1_accuracy": 0.4,
+        "top2_hits": 5,
+        "top2_accuracy": 0.5,
+        "top3_hits": 5,
+        "top3_accuracy": 0.5,
+        "top4_hits": 5,
+        "top4_accuracy": 0.5,
+        "top5_hits": 5,
+        "top5_accuracy": 0.5,
+        "top6_hits": 6,
+        "top6_accuracy": 0.6,
+        "top7_hits": 6,
+        "top7_accuracy": 0.6,
+        "evaluable": 10,
+        "total_leagues": 10
       }
     },
     "misclassified": [
@@ -151,17 +151,17 @@
         "src_cat": "Brazil",
         "sport": "basketball",
         "gt_ts_id": "kjw2r02t6xqz84o",
-        "top1_ts_id": "l965mk8tzx1m1ge",
-        "top1_ts_name": "Belarus Pro Series",
-        "top1_score": 0.7364,
+        "top1_ts_id": "p4jwq25txwjq0ve",
+        "top1_ts_name": "Brazil Copa Super 8",
+        "top1_score": 0.7838,
         "topk_ids": [
-          "l965mk8tzx1m1ge",
           "p4jwq25txwjq0ve",
-          "jednm9ktkenryox",
           "kjw2r02tx2oqz84",
           "9dn1m17t4gpmoep",
           "gpxwrx5tgv3qyk0",
-          "x4zp5rzkt1r82w1"
+          "kdj2ry7tj0gr1zp",
+          "p4jwq25t4g7q0ve",
+          "l965mk8tzx1m1ge"
         ],
         "status": "MISS"
       },
@@ -2005,10 +2005,10 @@
             "score": 0.833
           },
           {
-            "ts_id": "1v2y8m4ptoml074",
-            "ts_name": "China Women's Basketball Association",
-            "ts_country": "China",
-            "score": 0.8215
+            "ts_id": "jednm9ktygryox8",
+            "ts_name": "Adriatic Women's Basketball Association",
+            "ts_country": "",
+            "score": 0.7939
           }
         ],
         "topk_ids": [
@@ -2018,7 +2018,7 @@
           "0gx7lm73tor2wdk",
           "e4wyrn1t9knq86p",
           "xkn54ql7t8rvy9d",
-          "1v2y8m4ptoml074"
+          "jednm9ktygryox8"
         ],
         "status": "TOP1_HIT"
       },
@@ -2094,61 +2094,61 @@
         "sport": "basketball",
         "gt_ts_id": "kjw2r02t6xqz84o",
         "gt_in_pool": true,
-        "top1_ts_id": "l965mk8tzx1m1ge",
-        "top1_ts_name": "Belarus Pro Series",
-        "top1_score": 0.7364,
+        "top1_ts_id": "p4jwq25txwjq0ve",
+        "top1_ts_name": "Brazil Copa Super 8",
+        "top1_score": 0.7838,
         "topk": [
-          {
-            "ts_id": "l965mk8tzx1m1ge",
-            "ts_name": "Belarus Pro Series",
-            "ts_country": "",
-            "score": 0.7364
-          },
           {
             "ts_id": "p4jwq25txwjq0ve",
             "ts_name": "Brazil Copa Super 8",
             "ts_country": "Brazil",
-            "score": 0.7117
-          },
-          {
-            "ts_id": "jednm9ktkenryox",
-            "ts_name": "Italy Serie B",
-            "ts_country": "Italy",
-            "score": 0.695
+            "score": 0.7838
           },
           {
             "ts_id": "kjw2r02tx2oqz84",
             "ts_name": "Brazil Women's LSB",
             "ts_country": "Brazil",
-            "score": 0.6891
+            "score": 0.7668
           },
           {
             "ts_id": "9dn1m17t4gpmoep",
             "ts_name": "Brazil LSB",
             "ts_country": "Brazil",
-            "score": 0.6878
+            "score": 0.7658
           },
           {
             "ts_id": "gpxwrx5tgv3qyk0",
             "ts_name": "Brazil LDB",
             "ts_country": "Brazil",
-            "score": 0.6724
+            "score": 0.7543
           },
           {
-            "ts_id": "x4zp5rzkt1r82w1",
-            "ts_name": "Lega Basket Serie A",
-            "ts_country": "Italy",
-            "score": 0.6719
+            "ts_id": "kdj2ry7tj0gr1zp",
+            "ts_name": "Brazil Copa ESDB",
+            "ts_country": "Brazil",
+            "score": 0.7532
+          },
+          {
+            "ts_id": "p4jwq25t4g7q0ve",
+            "ts_name": "Brazil Supercopa Clubs",
+            "ts_country": "Brazil",
+            "score": 0.7525
+          },
+          {
+            "ts_id": "l965mk8tzx1m1ge",
+            "ts_name": "Belarus Pro Series",
+            "ts_country": "",
+            "score": 0.7364
           }
         ],
         "topk_ids": [
-          "l965mk8tzx1m1ge",
           "p4jwq25txwjq0ve",
-          "jednm9ktkenryox",
           "kjw2r02tx2oqz84",
           "9dn1m17t4gpmoep",
           "gpxwrx5tgv3qyk0",
-          "x4zp5rzkt1r82w1"
+          "kdj2ry7tj0gr1zp",
+          "p4jwq25t4g7q0ve",
+          "l965mk8tzx1m1ge"
         ],
         "status": "MISS"
       },
@@ -2616,40 +2616,22 @@
     "gt_not_in_pool": 0,
     "evaluable": 64,
     "overall": {
-      "top1_hits": 38,
-      "top1_accuracy": 0.5938,
-      "top2_hits": 40,
-      "top2_accuracy": 0.625,
-      "top3_hits": 45,
-      "top3_accuracy": 0.7031,
-      "top4_hits": 48,
-      "top4_accuracy": 0.75,
-      "top5_hits": 49,
-      "top5_accuracy": 0.7656,
+      "top1_hits": 39,
+      "top1_accuracy": 0.6094,
+      "top2_hits": 41,
+      "top2_accuracy": 0.6406,
+      "top3_hits": 47,
+      "top3_accuracy": 0.7344,
+      "top4_hits": 50,
+      "top4_accuracy": 0.7812,
+      "top5_hits": 50,
+      "top5_accuracy": 0.7812,
       "top6_hits": 51,
       "top6_accuracy": 0.7969,
-      "top7_hits": 51,
-      "top7_accuracy": 0.7969
+      "top7_hits": 52,
+      "top7_accuracy": 0.8125
     },
     "by_sport": {
-      "basketball": {
-        "top1_hits": 6,
-        "top1_accuracy": 0.2609,
-        "top2_hits": 6,
-        "top2_accuracy": 0.2609,
-        "top3_hits": 8,
-        "top3_accuracy": 0.3478,
-        "top4_hits": 10,
-        "top4_accuracy": 0.4348,
-        "top5_hits": 11,
-        "top5_accuracy": 0.4783,
-        "top6_hits": 12,
-        "top6_accuracy": 0.5217,
-        "top7_hits": 12,
-        "top7_accuracy": 0.5217,
-        "evaluable": 23,
-        "total_leagues": 23
-      },
       "football": {
         "top1_hits": 32,
         "top1_accuracy": 0.7805,
@@ -2667,6 +2649,24 @@
         "top7_accuracy": 0.9512,
         "evaluable": 41,
         "total_leagues": 41
+      },
+      "basketball": {
+        "top1_hits": 7,
+        "top1_accuracy": 0.3043,
+        "top2_hits": 7,
+        "top2_accuracy": 0.3043,
+        "top3_hits": 10,
+        "top3_accuracy": 0.4348,
+        "top4_hits": 12,
+        "top4_accuracy": 0.5217,
+        "top5_hits": 12,
+        "top5_accuracy": 0.5217,
+        "top6_hits": 12,
+        "top6_accuracy": 0.5217,
+        "top7_hits": 13,
+        "top7_accuracy": 0.5652,
+        "evaluable": 23,
+        "total_leagues": 23
       }
     },
     "misclassified": [
@@ -2870,15 +2870,15 @@
         "gt_ts_id": "v2y8m4ptdeml074",
         "top1_ts_id": "56ypq3ktldkmd7o",
         "top1_ts_name": "Spain Liga EBA",
-        "top1_score": 0.8355,
+        "top1_score": 0.8767,
         "topk_ids": [
           "56ypq3ktldkmd7o",
           "v2y8m4pt155ml07",
-          "vl7oqd4tnkq510j",
-          "d9k82re8twrepzj",
-          "kdj2ry7tkler1zp",
           "v2y8m4ptdeml074",
-          "gy0or5gt0x1qwzv"
+          "vl7oqd4tnkq510j",
+          "j1l4rjztegym7vx",
+          "d9k82re8twrepzj",
+          "gx7lm73twk1r2wd"
         ],
         "status": "TOPN_HIT"
       },
@@ -2890,15 +2890,15 @@
         "gt_ts_id": "x4zp5rzkt1r82w1",
         "top1_ts_id": "gy0or5gte2dqwzv",
         "top1_ts_name": "Italy Serie C",
-        "top1_score": 0.8366,
+        "top1_score": 0.8774,
         "topk_ids": [
           "gy0or5gte2dqwzv",
           "jednm9ktkenryox",
           "x4zp5rzkt1r82w1",
-          "9vjxm8xtxl6q6od",
-          "kdj2ry7t8or1zpg",
           "kn54ql7tdwervy9",
-          "kjw2r02tnelqz84"
+          "kjw2r02tnelqz84",
+          "9vjxm8xtxl6q6od",
+          "gx7lm73toor2wdk"
         ],
         "status": "TOPN_HIT"
       },
@@ -2910,7 +2910,7 @@
         "gt_ts_id": "gx7lm73tp6gr2wd",
         "top1_ts_id": "9dn1m17teoomoep",
         "top1_ts_name": "France Nationale 1",
-        "top1_score": 0.7427,
+        "top1_score": 0.807,
         "topk_ids": [
           "9dn1m17teoomoep",
           "e4wyrn1tnoq86pv",
@@ -2933,34 +2933,14 @@
         "top1_score": 0.6579,
         "topk_ids": [
           "gx7lm73t5k7r2wd",
-          "9k82re8t7grepzj",
+          "kn54ql7tj60rvy9",
+          "v2y8m4ptj59ml07",
+          "7p4jwq25t6q0veo",
+          "jednm9kt9xryox8",
           "9k82re8t1e3repz",
-          "p3glrwyt7pqdyjv",
-          "yl5ergyt5e0r8k0",
-          "8y39mp4t9oymojx",
-          "gpxwrx5tvl0qyk0"
+          "yl5ergyt5e0r8k0"
         ],
-        "status": "MISS"
-      },
-      {
-        "src_id": "48191",
-        "src_name": "LNB Pro B",
-        "src_cat": "France",
-        "sport": "basketball",
-        "gt_ts_id": "jednm9kt9xryox8",
-        "top1_ts_id": "l965mk8tzpkm1ge",
-        "top1_ts_name": "BNXT",
-        "top1_score": 0.6203,
-        "topk_ids": [
-          "l965mk8tzpkm1ge",
-          "yl5ergyt5v0r8k0",
-          "gpxwrx5t2v5qyk0",
-          "j1l4rjzt346m7vx",
-          "vl7oqd4tnppq510",
-          "8y39mp4t5lgmojx",
-          "jednm9kte59ryox"
-        ],
-        "status": "MISS"
+        "status": "TOPN_HIT"
       },
       {
         "src_id": "34184",
@@ -2975,10 +2955,10 @@
           "gx7lm73tkor2wdk",
           "vl7oqd4t4kq510j",
           "9k82re8tpnrepzj",
-          "p3glrwytz0oqdyj",
-          "v2y8m4ptx1ml074",
           "d23xmv1to4mg8ny",
-          "v2y8m4ptdeml074"
+          "p3glrwytz0oqdyj",
+          "z318q6nt066mo9j",
+          "v2y8m4ptx1ml074"
         ],
         "status": "MISS"
       },
@@ -2994,11 +2974,11 @@
         "topk_ids": [
           "xe4wyrn1twq86pv",
           "3yl5ergyt7r8k0o",
-          "p3glrwytjkqdyjv",
           "gy0or5gtll3qwzv",
           "p4jwq25t13zq0ve",
-          "kdj2ry7tk6r1zpg",
-          "j1l4rjzt13m7vx5"
+          "e4wyrn1tx8q86pv",
+          "j1l4rjzt356m7vx",
+          "j1l4rjztz3m7vx5"
         ],
         "status": "MISS"
       },
@@ -3014,11 +2994,11 @@
         "topk_ids": [
           "8y39mp4t50mojxg",
           "gpxwrx5tgdqyk0j",
-          "7p4jwq25t6q0veo",
           "gpxwrx5t1zxqyk0",
           "l965mk8t62m1ge4",
           "9vjxm8xtg4q6odg",
-          "jednm9kt9xryox8"
+          "z318q6ntk53mo9j",
+          "e4wyrn1tl8q86pv"
         ],
         "status": "MISS"
       },
@@ -3034,11 +3014,11 @@
         "topk_ids": [
           "49vjxm8xt4q6odg",
           "yl5ergyt3wkr8k0",
-          "0l965mk8tom1ge4",
-          "j1l4rjzt36gm7vx",
-          "9k82re8t7grepzj",
-          "gx7lm73t5k7r2wd",
-          "56ypq3ktz94md7o"
+          "p3glrwytjj5qdyj",
+          "9dn1m17t4gpmoep",
+          "gpxwrx5tgv3qyk0",
+          "jednm9ktdejryox",
+          "d23xmv1tx0zmg8n"
         ],
         "status": "MISS"
       },
@@ -3050,7 +3030,7 @@
         "gt_ts_id": "x4zp5rzkt1r82w1",
         "top1_ts_id": "l965mk8tnk6m1ge",
         "top1_ts_name": "Australia QBL",
-        "top1_score": 0.9292,
+        "top1_score": 0.9469,
         "topk_ids": [
           "l965mk8tnk6m1ge",
           "p3glrwytwyoqdyj",
@@ -3058,7 +3038,7 @@
           "gy0or5gt1ylqwzv",
           "xkn54ql7t8rvy9d",
           "e4wyrn1t9knq86p",
-          "yl5ergyt3wkr8k0"
+          "56ypq3kt0pymd7o"
         ],
         "status": "MISS"
       },
@@ -3074,11 +3054,11 @@
         "topk_ids": [
           "jednm9kt30ryox8",
           "9vjxm8xt6zq6odg",
-          "jednm9ktd5ryox8",
-          "kdj2ry7tzor1zpg",
           "gy0or5gt46pqwzv",
-          "l965mk8t3w8m1ge",
-          "p3glrwyt7pqdyjv"
+          "d23xmv1toe6mg8n",
+          "j1l4rjztzy7m7vx",
+          "jednm9ktdzlryox",
+          "gx7lm73t3zr2wdk"
         ],
         "status": "MISS"
       },
@@ -3093,14 +3073,14 @@
         "top1_score": 0.8116,
         "topk_ids": [
           "l965mk8t3om1ge4",
-          "yl5ergytv7r8k0o",
-          "x4zp5rzkt1r82w1",
-          "0l965mk8tom1ge4",
           "p4jwq25tk6q0veo",
           "zgpxwrx5tdqyk0j",
-          "xz318q6ntxmo9jd"
+          "xz318q6ntxmo9jd",
+          "p3glrwytlj0qdyj",
+          "kjw2r02t6xqz84o",
+          "56ypq3kt4g7md7o"
         ],
-        "status": "TOPN_HIT"
+        "status": "MISS"
       },
       {
         "src_id": "841",
@@ -3133,14 +3113,14 @@
         "top1_score": 0.8367,
         "topk_ids": [
           "l965mk8t3om1ge4",
-          "yl5ergytv7r8k0o",
           "p4jwq25tk6q0veo",
-          "x4zp5rzkt1r82w1",
-          "0l965mk8tom1ge4",
+          "kdj2ry7tzor1zpg",
           "zgpxwrx5tdqyk0j",
-          "xz318q6ntxmo9jd"
+          "xz318q6ntxmo9jd",
+          "kjw2r02t6xqz84o",
+          "p3glrwytlj0qdyj"
         ],
-        "status": "TOPN_HIT"
+        "status": "MISS"
       },
       {
         "src_id": "7666",
@@ -3168,19 +3148,19 @@
         "src_cat": "New Zealand",
         "sport": "basketball",
         "gt_ts_id": "49vjxm8xt4q6odg",
-        "top1_ts_id": "l965mk8tnk6m1ge",
-        "top1_ts_name": "Australia QBL",
-        "top1_score": 0.9292,
+        "top1_ts_id": "xkn54ql7t8rvy9d",
+        "top1_ts_name": "National Basketball League",
+        "top1_score": 0.9022,
         "topk_ids": [
-          "l965mk8tnk6m1ge",
-          "p3glrwytwyoqdyj",
-          "yl5ergytng6r8k0",
-          "gy0or5gt1ylqwzv",
           "xkn54ql7t8rvy9d",
           "e4wyrn1t9knq86p",
-          "yl5ergyt3wkr8k0"
+          "yl5ergyt3wkr8k0",
+          "gy0or5gt0lzqwzv",
+          "9dn1m17t1wdmoep",
+          "v2y8m4pt1klml07",
+          "49vjxm8xt4q6odg"
         ],
-        "status": "MISS"
+        "status": "TOPN_HIT"
       }
     ],
     "per_league": [
@@ -5846,10 +5826,10 @@
             "score": 0.833
           },
           {
-            "ts_id": "1v2y8m4ptoml074",
-            "ts_name": "China Women's Basketball Association",
-            "ts_country": "China",
-            "score": 0.8215
+            "ts_id": "jednm9ktygryox8",
+            "ts_name": "Adriatic Women's Basketball Association",
+            "ts_country": "",
+            "score": 0.7939
           }
         ],
         "topk_ids": [
@@ -5859,7 +5839,7 @@
           "0gx7lm73tor2wdk",
           "e4wyrn1t9knq86p",
           "xkn54ql7t8rvy9d",
-          "1v2y8m4ptoml074"
+          "jednm9ktygryox8"
         ],
         "status": "TOP1_HIT"
       },
@@ -5937,25 +5917,25 @@
         "gt_in_pool": true,
         "top1_ts_id": "jednm9ktd5ryox8",
         "top1_ts_name": "EuroLeague",
-        "top1_score": 0.98,
+        "top1_score": 0.995,
         "topk": [
           {
             "ts_id": "jednm9ktd5ryox8",
             "ts_name": "EuroLeague",
             "ts_country": "International",
-            "score": 0.98
+            "score": 0.995
           },
           {
             "ts_id": "p3glrwytlonqdyj",
             "ts_name": "Euroleague U20",
             "ts_country": "International",
-            "score": 0.899
+            "score": 0.9243
           },
           {
             "ts_id": "z8yomovtx5q0j6l",
             "ts_name": "EuroLeague Women",
             "ts_country": "International",
-            "score": 0.8627
+            "score": 0.897
           },
           {
             "ts_id": "l965mk8tgwm1ge4",
@@ -6002,49 +5982,49 @@
         "gt_in_pool": true,
         "top1_ts_id": "ngy0or5gteqwzv3",
         "top1_ts_name": "Chinese Basketball Association",
-        "top1_score": 0.98,
+        "top1_score": 0.995,
         "topk": [
           {
             "ts_id": "ngy0or5gteqwzv3",
             "ts_name": "Chinese Basketball Association",
             "ts_country": "China",
-            "score": 0.98
+            "score": 0.995
           },
           {
             "ts_id": "yvl7oqd4tkq510j",
             "ts_name": "China Basketball Association All Star",
             "ts_country": "China",
-            "score": 0.9154
+            "score": 0.9366
           },
           {
             "ts_id": "1v2y8m4ptoml074",
             "ts_name": "China Women's Basketball Association",
             "ts_country": "China",
-            "score": 0.8888
+            "score": 0.9166
           },
           {
             "ts_id": "4zp5rzktolr82w1",
             "ts_name": "China Basketball Association Summer League",
             "ts_country": "China",
-            "score": 0.88
+            "score": 0.91
           },
           {
             "ts_id": "jednm9kteydryox",
             "ts_name": "Chinese University Basketball Association League",
             "ts_country": "China",
-            "score": 0.8207
+            "score": 0.8655
           },
           {
-            "ts_id": "49vjxm8xt4q6odg",
-            "ts_name": "National Basketball Association",
-            "ts_country": "",
-            "score": 0.8185
+            "ts_id": "gpxwrx5tvwkqyk0",
+            "ts_name": "China Taiwan University Basketball Association",
+            "ts_country": "China",
+            "score": 0.8613
           },
           {
-            "ts_id": "8y39mp4to5mojxg",
-            "ts_name": "Philippine Baskerball Association",
-            "ts_country": "",
-            "score": 0.8184
+            "ts_id": "p3glrwytoexqdyj",
+            "ts_name": "China Taiwan University Basketball Association",
+            "ts_country": "China",
+            "score": 0.8613
           }
         ],
         "topk_ids": [
@@ -6053,8 +6033,8 @@
           "1v2y8m4ptoml074",
           "4zp5rzktolr82w1",
           "jednm9kteydryox",
-          "49vjxm8xt4q6odg",
-          "8y39mp4to5mojxg"
+          "gpxwrx5tvwkqyk0",
+          "p3glrwytoexqdyj"
         ],
         "status": "TOP1_HIT"
       },
@@ -6067,19 +6047,25 @@
         "gt_in_pool": true,
         "top1_ts_id": "56ypq3ktldkmd7o",
         "top1_ts_name": "Spain Liga EBA",
-        "top1_score": 0.8355,
+        "top1_score": 0.8767,
         "topk": [
           {
             "ts_id": "56ypq3ktldkmd7o",
             "ts_name": "Spain Liga EBA",
             "ts_country": "Spain",
-            "score": 0.8355
+            "score": 0.8767
           },
           {
             "ts_id": "v2y8m4pt155ml07",
             "ts_name": "Spain Liga EBA",
             "ts_country": "Spain",
-            "score": 0.8355
+            "score": 0.8767
+          },
+          {
+            "ts_id": "v2y8m4ptdeml074",
+            "ts_name": "Spain ACB League",
+            "ts_country": "Spain",
+            "score": 0.8011
           },
           {
             "ts_id": "vl7oqd4tnkq510j",
@@ -6088,38 +6074,32 @@
             "score": 0.7963
           },
           {
+            "ts_id": "j1l4rjztegym7vx",
+            "ts_name": "Spain  Liga 2  Women",
+            "ts_country": "Spain",
+            "score": 0.7933
+          },
+          {
             "ts_id": "d9k82re8twrepzj",
             "ts_name": "Ligat HaAl",
             "ts_country": "",
             "score": 0.7887
           },
           {
-            "ts_id": "kdj2ry7tkler1zp",
-            "ts_name": "Liga de Baloncesto",
-            "ts_country": "",
-            "score": 0.7413
-          },
-          {
-            "ts_id": "v2y8m4ptdeml074",
-            "ts_name": "Spain ACB League",
+            "ts_id": "gx7lm73twk1r2wd",
+            "ts_name": "Spain Women's Liga 2",
             "ts_country": "Spain",
-            "score": 0.7348
-          },
-          {
-            "ts_id": "gy0or5gt0x1qwzv",
-            "ts_name": "Liga Unike",
-            "ts_country": "",
-            "score": 0.7318
+            "score": 0.7843
           }
         ],
         "topk_ids": [
           "56ypq3ktldkmd7o",
           "v2y8m4pt155ml07",
-          "vl7oqd4tnkq510j",
-          "d9k82re8twrepzj",
-          "kdj2ry7tkler1zp",
           "v2y8m4ptdeml074",
-          "gy0or5gt0x1qwzv"
+          "vl7oqd4tnkq510j",
+          "j1l4rjztegym7vx",
+          "d9k82re8twrepzj",
+          "gx7lm73twk1r2wd"
         ],
         "status": "TOPN_HIT"
       },
@@ -6132,59 +6112,59 @@
         "gt_in_pool": true,
         "top1_ts_id": "0l965mk8tom1ge4",
         "top1_ts_name": "Basketball Bundesliga",
-        "top1_score": 0.7814,
+        "top1_score": 0.836,
         "topk": [
           {
             "ts_id": "0l965mk8tom1ge4",
             "ts_name": "Basketball Bundesliga",
             "ts_country": "Germany",
-            "score": 0.7814
-          },
-          {
-            "ts_id": "56ypq3kt548md7o",
-            "ts_name": "Algeria Super Division",
-            "ts_country": "",
-            "score": 0.7485
-          },
-          {
-            "ts_id": "z318q6nt58mo9jd",
-            "ts_name": "Algeria Super Division",
-            "ts_country": "",
-            "score": 0.7485
-          },
-          {
-            "ts_id": "e4wyrn1t704q86p",
-            "ts_name": "Algerian national First Division",
-            "ts_country": "",
-            "score": 0.7398
+            "score": 0.836
           },
           {
             "ts_id": "p3glrwytwkqdyjv",
             "ts_name": "German All Star",
             "ts_country": "Germany",
-            "score": 0.7236
+            "score": 0.7927
           },
           {
-            "ts_id": "4zp5rzkt2z3r82w",
-            "ts_name": "Kosovo First Division",
-            "ts_country": "",
-            "score": 0.7124
+            "ts_id": "56ypq3ktvvmd7oj",
+            "ts_name": "German Super Cup",
+            "ts_country": "Germany",
+            "score": 0.7793
           },
           {
-            "ts_id": "9vjxm8xtxz8q6od",
-            "ts_name": "Poland 1st Division",
-            "ts_country": "Poland",
-            "score": 0.7107
+            "ts_id": "jednm9kte59ryox",
+            "ts_name": "German Pro B South",
+            "ts_country": "Germany",
+            "score": 0.7703
+          },
+          {
+            "ts_id": "vl7oqd4tvwq510j",
+            "ts_name": "German Pro B South",
+            "ts_country": "Germany",
+            "score": 0.7703
+          },
+          {
+            "ts_id": "8y39mp4t5lgmojx",
+            "ts_name": "German Pro B North",
+            "ts_country": "Germany",
+            "score": 0.7669
+          },
+          {
+            "ts_id": "yl5ergyt75r8k0o",
+            "ts_name": "German Basketball Cup",
+            "ts_country": "Germany",
+            "score": 0.7658
           }
         ],
         "topk_ids": [
           "0l965mk8tom1ge4",
-          "56ypq3kt548md7o",
-          "z318q6nt58mo9jd",
-          "e4wyrn1t704q86p",
           "p3glrwytwkqdyjv",
-          "4zp5rzkt2z3r82w",
-          "9vjxm8xtxz8q6od"
+          "56ypq3ktvvmd7oj",
+          "jednm9kte59ryox",
+          "vl7oqd4tvwq510j",
+          "8y39mp4t5lgmojx",
+          "yl5ergyt75r8k0o"
         ],
         "status": "TOP1_HIT"
       },
@@ -6221,25 +6201,25 @@
             "ts_id": "yl5ergytpjkr8k0",
             "ts_name": "Russia MLBL",
             "ts_country": "Russia",
-            "score": 0.8255
+            "score": 0.8691
           },
           {
             "ts_id": "l965mk8tz91m1ge",
             "ts_name": "Russia VTB Students",
             "ts_country": "Russia",
-            "score": 0.7989
-          },
-          {
-            "ts_id": "p3glrwytz0oqdyj",
-            "ts_name": "BRA  League",
-            "ts_country": "",
-            "score": 0.7933
+            "score": 0.8492
           },
           {
             "ts_id": "gy0or5gt1klqwzv",
             "ts_name": "Russia. PAVB. Veterans",
             "ts_country": "Russia",
-            "score": 0.7493
+            "score": 0.812
+          },
+          {
+            "ts_id": "vl7oqd4tn5pq510",
+            "ts_name": "Russia VTB United League U21",
+            "ts_country": "Russia",
+            "score": 0.8066
           }
         ],
         "topk_ids": [
@@ -6248,8 +6228,8 @@
           "vl7oqd4t4kq510j",
           "yl5ergytpjkr8k0",
           "l965mk8tz91m1ge",
-          "p3glrwytz0oqdyj",
-          "gy0or5gt1klqwzv"
+          "gy0or5gt1klqwzv",
+          "vl7oqd4tn5pq510"
         ],
         "status": "TOP1_HIT"
       },
@@ -6262,25 +6242,37 @@
         "gt_in_pool": true,
         "top1_ts_id": "gy0or5gte2dqwzv",
         "top1_ts_name": "Italy Serie C",
-        "top1_score": 0.8366,
+        "top1_score": 0.8774,
         "topk": [
           {
             "ts_id": "gy0or5gte2dqwzv",
             "ts_name": "Italy Serie C",
             "ts_country": "Italy",
-            "score": 0.8366
+            "score": 0.8774
           },
           {
             "ts_id": "jednm9ktkenryox",
             "ts_name": "Italy Serie B",
             "ts_country": "Italy",
-            "score": 0.8366
+            "score": 0.8774
           },
           {
             "ts_id": "x4zp5rzkt1r82w1",
             "ts_name": "Lega Basket Serie A",
             "ts_country": "Italy",
-            "score": 0.8355
+            "score": 0.8766
+          },
+          {
+            "ts_id": "kn54ql7tdwervy9",
+            "ts_name": "Italian Regional league",
+            "ts_country": "Italy",
+            "score": 0.8354
+          },
+          {
+            "ts_id": "kjw2r02tnelqz84",
+            "ts_name": "Italy Serie B Cup",
+            "ts_country": "Italy",
+            "score": 0.83
           },
           {
             "ts_id": "9vjxm8xtxl6q6od",
@@ -6289,32 +6281,20 @@
             "score": 0.8246
           },
           {
-            "ts_id": "kdj2ry7t8or1zpg",
-            "ts_name": "Serie B Basket",
-            "ts_country": "",
-            "score": 0.8067
-          },
-          {
-            "ts_id": "kn54ql7tdwervy9",
-            "ts_name": "Italian Regional league",
+            "ts_id": "gx7lm73toor2wdk",
+            "ts_name": "Italian Lega Basket Serie A Women",
             "ts_country": "Italy",
-            "score": 0.7805
-          },
-          {
-            "ts_id": "kjw2r02tnelqz84",
-            "ts_name": "Italy Serie B Cup",
-            "ts_country": "Italy",
-            "score": 0.7734
+            "score": 0.8204
           }
         ],
         "topk_ids": [
           "gy0or5gte2dqwzv",
           "jednm9ktkenryox",
           "x4zp5rzkt1r82w1",
-          "9vjxm8xtxl6q6od",
-          "kdj2ry7t8or1zpg",
           "kn54ql7tdwervy9",
-          "kjw2r02tnelqz84"
+          "kjw2r02tnelqz84",
+          "9vjxm8xtxl6q6od",
+          "gx7lm73toor2wdk"
         ],
         "status": "TOPN_HIT"
       },
@@ -6327,25 +6307,25 @@
         "gt_in_pool": true,
         "top1_ts_id": "9dn1m17teoomoep",
         "top1_ts_name": "France Nationale 1",
-        "top1_score": 0.7427,
+        "top1_score": 0.807,
         "topk": [
           {
             "ts_id": "9dn1m17teoomoep",
             "ts_name": "France Nationale 1",
             "ts_country": "France",
-            "score": 0.7427
+            "score": 0.807
           },
           {
             "ts_id": "e4wyrn1tnoq86pv",
             "ts_name": "France Nationale 1",
             "ts_country": "France",
-            "score": 0.7427
+            "score": 0.807
           },
           {
             "ts_id": "gx7lm73tp6gr2wd",
             "ts_name": "France Nationale 1",
             "ts_country": "France",
-            "score": 0.7427
+            "score": 0.807
           },
           {
             "ts_id": "9dn1m17t16dmoep",
@@ -6401,10 +6381,28 @@
             "score": 0.6579
           },
           {
-            "ts_id": "9k82re8t7grepzj",
-            "ts_name": "NBA-G league",
-            "ts_country": "USA",
-            "score": 0.5905
+            "ts_id": "kn54ql7tj60rvy9",
+            "ts_name": "France LNB Espoirs U21",
+            "ts_country": "France",
+            "score": 0.6055
+          },
+          {
+            "ts_id": "v2y8m4ptj59ml07",
+            "ts_name": "France LNB Espoirs U21",
+            "ts_country": "France",
+            "score": 0.6055
+          },
+          {
+            "ts_id": "7p4jwq25t6q0veo",
+            "ts_name": "Ligue Nationale de Basket Pro A",
+            "ts_country": "France",
+            "score": 0.5942
+          },
+          {
+            "ts_id": "jednm9kt9xryox8",
+            "ts_name": "Ligue Nationale de Basket Pro B",
+            "ts_country": "France",
+            "score": 0.5942
           },
           {
             "ts_id": "9k82re8t1e3repz",
@@ -6413,40 +6411,22 @@
             "score": 0.5885
           },
           {
-            "ts_id": "p3glrwyt7pqdyjv",
-            "ts_name": "NBA Summer League",
-            "ts_country": "USA",
-            "score": 0.5885
-          },
-          {
             "ts_id": "yl5ergyt5e0r8k0",
             "ts_name": "NCAAB Extra Games",
             "ts_country": "",
             "score": 0.5885
-          },
-          {
-            "ts_id": "8y39mp4t9oymojx",
-            "ts_name": "NBL1 Central Women",
-            "ts_country": "",
-            "score": 0.5819
-          },
-          {
-            "ts_id": "gpxwrx5tvl0qyk0",
-            "ts_name": "Poland 2 Liga",
-            "ts_country": "Poland",
-            "score": 0.5699
           }
         ],
         "topk_ids": [
           "gx7lm73t5k7r2wd",
-          "9k82re8t7grepzj",
+          "kn54ql7tj60rvy9",
+          "v2y8m4ptj59ml07",
+          "7p4jwq25t6q0veo",
+          "jednm9kt9xryox8",
           "9k82re8t1e3repz",
-          "p3glrwyt7pqdyjv",
-          "yl5ergyt5e0r8k0",
-          "8y39mp4t9oymojx",
-          "gpxwrx5tvl0qyk0"
+          "yl5ergyt5e0r8k0"
         ],
-        "status": "MISS"
+        "status": "TOPN_HIT"
       },
       {
         "src_id": "48191",
@@ -6455,10 +6435,34 @@
         "sport": "basketball",
         "gt_ts_id": "jednm9kt9xryox8",
         "gt_in_pool": true,
-        "top1_ts_id": "l965mk8tzpkm1ge",
-        "top1_ts_name": "BNXT",
-        "top1_score": 0.6203,
+        "top1_ts_id": "jednm9kt9xryox8",
+        "top1_ts_name": "Ligue Nationale de Basket Pro B",
+        "top1_score": 0.6586,
         "topk": [
+          {
+            "ts_id": "jednm9kt9xryox8",
+            "ts_name": "Ligue Nationale de Basket Pro B",
+            "ts_country": "France",
+            "score": 0.6586
+          },
+          {
+            "ts_id": "kn54ql7tj60rvy9",
+            "ts_name": "France LNB Espoirs U21",
+            "ts_country": "France",
+            "score": 0.6577
+          },
+          {
+            "ts_id": "v2y8m4ptj59ml07",
+            "ts_name": "France LNB Espoirs U21",
+            "ts_country": "France",
+            "score": 0.6577
+          },
+          {
+            "ts_id": "7p4jwq25t6q0veo",
+            "ts_name": "Ligue Nationale de Basket Pro A",
+            "ts_country": "France",
+            "score": 0.6436
+          },
           {
             "ts_id": "l965mk8tzpkm1ge",
             "ts_name": "BNXT",
@@ -6472,46 +6476,22 @@
             "score": 0.6203
           },
           {
-            "ts_id": "gpxwrx5t2v5qyk0",
-            "ts_name": "Lebanese Super Cup",
-            "ts_country": "",
-            "score": 0.6021
-          },
-          {
-            "ts_id": "j1l4rjzt346m7vx",
-            "ts_name": "Albania Super Cup",
-            "ts_country": "",
-            "score": 0.594
-          },
-          {
-            "ts_id": "vl7oqd4tnppq510",
-            "ts_name": "Iceland Super Cup",
-            "ts_country": "",
-            "score": 0.5885
-          },
-          {
-            "ts_id": "8y39mp4t5lgmojx",
-            "ts_name": "German Pro B North",
-            "ts_country": "Germany",
-            "score": 0.5836
-          },
-          {
-            "ts_id": "jednm9kte59ryox",
-            "ts_name": "German Pro B South",
-            "ts_country": "Germany",
-            "score": 0.5836
+            "ts_id": "jednm9kt4gryox8",
+            "ts_name": "France Leaders Cup Pro B",
+            "ts_country": "France",
+            "score": 0.6119
           }
         ],
         "topk_ids": [
+          "jednm9kt9xryox8",
+          "kn54ql7tj60rvy9",
+          "v2y8m4ptj59ml07",
+          "7p4jwq25t6q0veo",
           "l965mk8tzpkm1ge",
           "yl5ergyt5v0r8k0",
-          "gpxwrx5t2v5qyk0",
-          "j1l4rjzt346m7vx",
-          "vl7oqd4tnppq510",
-          "8y39mp4t5lgmojx",
-          "jednm9kte59ryox"
+          "jednm9kt4gryox8"
         ],
-        "status": "MISS"
+        "status": "TOP1_HIT"
       },
       {
         "src_id": "48524",
@@ -6561,10 +6541,10 @@
             "score": 0.8197
           },
           {
-            "ts_id": "kdj2ry7tk99r1zp",
-            "ts_name": "Zain League",
-            "ts_country": "",
-            "score": 0.7818
+            "ts_id": "jednm9ktd5ryox8",
+            "ts_name": "EuroLeague",
+            "ts_country": "International",
+            "score": 0.792
           }
         ],
         "topk_ids": [
@@ -6574,7 +6554,7 @@
           "vl7oqd4t4kq510j",
           "v2y8m4ptx1ml074",
           "p3glrwytz0oqdyj",
-          "kdj2ry7tk99r1zp"
+          "jednm9ktd5ryox8"
         ],
         "status": "TOP1_HIT"
       },
@@ -6605,7 +6585,13 @@
             "ts_id": "9k82re8tpnrepzj",
             "ts_name": "Japan League B3",
             "ts_country": "Japan",
-            "score": 0.8865
+            "score": 0.9149
+          },
+          {
+            "ts_id": "d23xmv1to4mg8ny",
+            "ts_name": "Japan Basketball League",
+            "ts_country": "Japan",
+            "score": 0.8573
           },
           {
             "ts_id": "p3glrwytz0oqdyj",
@@ -6614,32 +6600,26 @@
             "score": 0.8379
           },
           {
+            "ts_id": "z318q6nt066mo9j",
+            "ts_name": "Japan Early Cup",
+            "ts_country": "Japan",
+            "score": 0.8156
+          },
+          {
             "ts_id": "v2y8m4ptx1ml074",
             "ts_name": "VTB United League",
             "ts_country": "",
             "score": 0.8102
-          },
-          {
-            "ts_id": "d23xmv1to4mg8ny",
-            "ts_name": "Japan Basketball League",
-            "ts_country": "Japan",
-            "score": 0.8098
-          },
-          {
-            "ts_id": "v2y8m4ptdeml074",
-            "ts_name": "Spain ACB League",
-            "ts_country": "Spain",
-            "score": 0.807
           }
         ],
         "topk_ids": [
           "gx7lm73tkor2wdk",
           "vl7oqd4t4kq510j",
           "9k82re8tpnrepzj",
-          "p3glrwytz0oqdyj",
-          "v2y8m4ptx1ml074",
           "d23xmv1to4mg8ny",
-          "v2y8m4ptdeml074"
+          "p3glrwytz0oqdyj",
+          "z318q6nt066mo9j",
+          "v2y8m4ptx1ml074"
         ],
         "status": "MISS"
       },
@@ -6667,12 +6647,6 @@
             "score": 0.8716
           },
           {
-            "ts_id": "p3glrwytjkqdyjv",
-            "ts_name": "Swiss Basketball League",
-            "ts_country": "Switzerland",
-            "score": 0.851
-          },
-          {
             "ts_id": "gy0or5gtll3qwzv",
             "ts_name": "British Basketball League",
             "ts_country": "",
@@ -6685,26 +6659,32 @@
             "score": 0.8414
           },
           {
-            "ts_id": "kdj2ry7tk6r1zpg",
-            "ts_name": "Danish Basketball League",
-            "ts_country": "Denmark",
-            "score": 0.8377
+            "ts_id": "e4wyrn1tx8q86pv",
+            "ts_name": "Poland Basketball Cup",
+            "ts_country": "Poland",
+            "score": 0.8349
           },
           {
-            "ts_id": "j1l4rjzt13m7vx5",
-            "ts_name": "Dutch Basketball League",
-            "ts_country": "Netherlands",
-            "score": 0.8259
+            "ts_id": "j1l4rjzt356m7vx",
+            "ts_name": "Libya Basketball League\t",
+            "ts_country": "",
+            "score": 0.8244
+          },
+          {
+            "ts_id": "j1l4rjztz3m7vx5",
+            "ts_name": "Poland Basketball All Star",
+            "ts_country": "Poland",
+            "score": 0.8061
           }
         ],
         "topk_ids": [
           "xe4wyrn1twq86pv",
           "3yl5ergyt7r8k0o",
-          "p3glrwytjkqdyjv",
           "gy0or5gtll3qwzv",
           "p4jwq25t13zq0ve",
-          "kdj2ry7tk6r1zpg",
-          "j1l4rjzt13m7vx5"
+          "e4wyrn1tx8q86pv",
+          "j1l4rjzt356m7vx",
+          "j1l4rjztz3m7vx5"
         ],
         "status": "MISS"
       },
@@ -6732,12 +6712,6 @@
             "score": 0.8224
           },
           {
-            "ts_id": "7p4jwq25t6q0veo",
-            "ts_name": "Ligue Nationale de Basket Pro A",
-            "ts_country": "France",
-            "score": 0.8082
-          },
-          {
             "ts_id": "gpxwrx5t1zxqyk0",
             "ts_name": "Liga Feminina de Basquetebol",
             "ts_country": "",
@@ -6756,20 +6730,26 @@
             "score": 0.7989
           },
           {
-            "ts_id": "jednm9kt9xryox8",
-            "ts_name": "Ligue Nationale de Basket Pro B",
-            "ts_country": "France",
-            "score": 0.7969
+            "ts_id": "z318q6ntk53mo9j",
+            "ts_name": "Liga Profesional de Baloncesto",
+            "ts_country": "",
+            "score": 0.7887
+          },
+          {
+            "ts_id": "e4wyrn1tl8q86pv",
+            "ts_name": "Liga Sudamericana de Básquetbol",
+            "ts_country": "",
+            "score": 0.7653
           }
         ],
         "topk_ids": [
           "8y39mp4t50mojxg",
           "gpxwrx5tgdqyk0j",
-          "7p4jwq25t6q0veo",
           "gpxwrx5t1zxqyk0",
           "l965mk8t62m1ge4",
           "9vjxm8xtg4q6odg",
-          "jednm9kt9xryox8"
+          "z318q6ntk53mo9j",
+          "e4wyrn1tl8q86pv"
         ],
         "status": "MISS"
       },
@@ -6797,44 +6777,44 @@
             "score": 0.6619
           },
           {
-            "ts_id": "0l965mk8tom1ge4",
-            "ts_name": "Basketball Bundesliga",
-            "ts_country": "Germany",
-            "score": 0.6222
+            "ts_id": "p3glrwytjj5qdyj",
+            "ts_name": "Brazil CBB U21",
+            "ts_country": "Brazil",
+            "score": 0.592
           },
           {
-            "ts_id": "j1l4rjzt36gm7vx",
-            "ts_name": "EBBL Cup",
-            "ts_country": "",
-            "score": 0.5288
+            "ts_id": "9dn1m17t4gpmoep",
+            "ts_name": "Brazil LSB",
+            "ts_country": "Brazil",
+            "score": 0.5573
           },
           {
-            "ts_id": "9k82re8t7grepzj",
-            "ts_name": "NBA-G league",
-            "ts_country": "USA",
-            "score": 0.52
+            "ts_id": "gpxwrx5tgv3qyk0",
+            "ts_name": "Brazil LDB",
+            "ts_country": "Brazil",
+            "score": 0.5573
           },
           {
-            "ts_id": "gx7lm73t5k7r2wd",
-            "ts_name": "NBL1 Eastern",
-            "ts_country": "",
-            "score": 0.52
+            "ts_id": "jednm9ktdejryox",
+            "ts_name": "Brazil FPB Women U20",
+            "ts_country": "Brazil",
+            "score": 0.5411
           },
           {
-            "ts_id": "56ypq3ktz94md7o",
-            "ts_name": "Asian Basketball League",
-            "ts_country": "",
-            "score": 0.5184
+            "ts_id": "d23xmv1tx0zmg8n",
+            "ts_name": "Brazil LDB U20",
+            "ts_country": "Brazil",
+            "score": 0.5313
           }
         ],
         "topk_ids": [
           "49vjxm8xt4q6odg",
           "yl5ergyt3wkr8k0",
-          "0l965mk8tom1ge4",
-          "j1l4rjzt36gm7vx",
-          "9k82re8t7grepzj",
-          "gx7lm73t5k7r2wd",
-          "56ypq3ktz94md7o"
+          "p3glrwytjj5qdyj",
+          "9dn1m17t4gpmoep",
+          "gpxwrx5tgv3qyk0",
+          "jednm9ktdejryox",
+          "d23xmv1tx0zmg8n"
         ],
         "status": "MISS"
       },
@@ -6847,31 +6827,31 @@
         "gt_in_pool": true,
         "top1_ts_id": "l965mk8tnk6m1ge",
         "top1_ts_name": "Australia QBL",
-        "top1_score": 0.9292,
+        "top1_score": 0.9469,
         "topk": [
           {
             "ts_id": "l965mk8tnk6m1ge",
             "ts_name": "Australia QBL",
             "ts_country": "Australia",
-            "score": 0.9292
+            "score": 0.9469
           },
           {
             "ts_id": "p3glrwytwyoqdyj",
             "ts_name": "Australia SBL",
             "ts_country": "Australia",
-            "score": 0.9292
+            "score": 0.9469
           },
           {
             "ts_id": "yl5ergytng6r8k0",
             "ts_name": "Australia QBL",
             "ts_country": "Australia",
-            "score": 0.9292
+            "score": 0.9469
           },
           {
             "ts_id": "gy0or5gt1ylqwzv",
             "ts_name": "Australia WL",
             "ts_country": "Australia",
-            "score": 0.9027
+            "score": 0.9271
           },
           {
             "ts_id": "xkn54ql7t8rvy9d",
@@ -6886,10 +6866,10 @@
             "score": 0.9013
           },
           {
-            "ts_id": "yl5ergyt3wkr8k0",
-            "ts_name": "ENBL",
-            "ts_country": "",
-            "score": 0.8929
+            "ts_id": "56ypq3kt0pymd7o",
+            "ts_name": "Australia NBL Blitz",
+            "ts_country": "Australia",
+            "score": 0.8946
           }
         ],
         "topk_ids": [
@@ -6899,7 +6879,7 @@
           "gy0or5gt1ylqwzv",
           "xkn54ql7t8rvy9d",
           "e4wyrn1t9knq86p",
-          "yl5ergyt3wkr8k0"
+          "56ypq3kt0pymd7o"
         ],
         "status": "MISS"
       },
@@ -6927,44 +6907,44 @@
             "score": 0.8073
           },
           {
-            "ts_id": "jednm9ktd5ryox8",
-            "ts_name": "EuroLeague",
-            "ts_country": "International",
-            "score": 0.7987
-          },
-          {
-            "ts_id": "kdj2ry7tzor1zpg",
-            "ts_name": "Superliga",
-            "ts_country": "Denmark",
-            "score": 0.7983
-          },
-          {
             "ts_id": "gy0or5gt46pqwzv",
             "ts_name": "Higher League",
             "ts_country": "",
             "score": 0.7765
           },
           {
-            "ts_id": "l965mk8t3w8m1ge",
-            "ts_name": "CBA Summer League",
-            "ts_country": "China",
-            "score": 0.7485
+            "ts_id": "d23xmv1toe6mg8n",
+            "ts_name": "Albania Super League",
+            "ts_country": "",
+            "score": 0.7467
           },
           {
-            "ts_id": "p3glrwyt7pqdyjv",
-            "ts_name": "NBA Summer League",
-            "ts_country": "USA",
-            "score": 0.7485
+            "ts_id": "j1l4rjztzy7m7vx",
+            "ts_name": "Serbia 2nd League",
+            "ts_country": "",
+            "score": 0.7357
+          },
+          {
+            "ts_id": "jednm9ktdzlryox",
+            "ts_name": "Serbia 1st League",
+            "ts_country": "",
+            "score": 0.7357
+          },
+          {
+            "ts_id": "gx7lm73t3zr2wdk",
+            "ts_name": "Georgia Super League",
+            "ts_country": "",
+            "score": 0.73
           }
         ],
         "topk_ids": [
           "jednm9kt30ryox8",
           "9vjxm8xt6zq6odg",
-          "jednm9ktd5ryox8",
-          "kdj2ry7tzor1zpg",
           "gy0or5gt46pqwzv",
-          "l965mk8t3w8m1ge",
-          "p3glrwyt7pqdyjv"
+          "d23xmv1toe6mg8n",
+          "j1l4rjztzy7m7vx",
+          "jednm9ktdzlryox",
+          "gx7lm73t3zr2wdk"
         ],
         "status": "MISS"
       },
@@ -6986,24 +6966,6 @@
             "score": 0.8116
           },
           {
-            "ts_id": "yl5ergytv7r8k0o",
-            "ts_name": "Basketball Ireland",
-            "ts_country": "Ireland",
-            "score": 0.7936
-          },
-          {
-            "ts_id": "x4zp5rzkt1r82w1",
-            "ts_name": "Lega Basket Serie A",
-            "ts_country": "Italy",
-            "score": 0.7465
-          },
-          {
-            "ts_id": "0l965mk8tom1ge4",
-            "ts_name": "Basketball Bundesliga",
-            "ts_country": "Germany",
-            "score": 0.7463
-          },
-          {
             "ts_id": "p4jwq25tk6q0veo",
             "ts_name": "Dameligaen",
             "ts_country": "",
@@ -7020,18 +6982,36 @@
             "ts_name": "Basketbol Super Ligi",
             "ts_country": "",
             "score": 0.7106
+          },
+          {
+            "ts_id": "p3glrwytlj0qdyj",
+            "ts_name": "Svenska Basketligan 2",
+            "ts_country": "",
+            "score": 0.6889
+          },
+          {
+            "ts_id": "kjw2r02t6xqz84o",
+            "ts_name": "Basketball Champions League",
+            "ts_country": "",
+            "score": 0.685
+          },
+          {
+            "ts_id": "56ypq3kt4g7md7o",
+            "ts_name": "Basketball Champions League Asia",
+            "ts_country": "",
+            "score": 0.6746
           }
         ],
         "topk_ids": [
           "l965mk8t3om1ge4",
-          "yl5ergytv7r8k0o",
-          "x4zp5rzkt1r82w1",
-          "0l965mk8tom1ge4",
           "p4jwq25tk6q0veo",
           "zgpxwrx5tdqyk0j",
-          "xz318q6ntxmo9jd"
+          "xz318q6ntxmo9jd",
+          "p3glrwytlj0qdyj",
+          "kjw2r02t6xqz84o",
+          "56ypq3kt4g7md7o"
         ],
-        "status": "TOPN_HIT"
+        "status": "MISS"
       },
       {
         "src_id": "841",
@@ -7116,28 +7096,16 @@
             "score": 0.8367
           },
           {
-            "ts_id": "yl5ergytv7r8k0o",
-            "ts_name": "Basketball Ireland",
-            "ts_country": "Ireland",
-            "score": 0.7936
-          },
-          {
             "ts_id": "p4jwq25tk6q0veo",
             "ts_name": "Dameligaen",
             "ts_country": "",
             "score": 0.7842
           },
           {
-            "ts_id": "x4zp5rzkt1r82w1",
-            "ts_name": "Lega Basket Serie A",
-            "ts_country": "Italy",
-            "score": 0.7427
-          },
-          {
-            "ts_id": "0l965mk8tom1ge4",
-            "ts_name": "Basketball Bundesliga",
-            "ts_country": "Germany",
-            "score": 0.7356
+            "ts_id": "kdj2ry7tzor1zpg",
+            "ts_name": "Superliga",
+            "ts_country": "Denmark",
+            "score": 0.7464
           },
           {
             "ts_id": "zgpxwrx5tdqyk0j",
@@ -7150,18 +7118,30 @@
             "ts_name": "Basketbol Super Ligi",
             "ts_country": "",
             "score": 0.713
+          },
+          {
+            "ts_id": "kjw2r02t6xqz84o",
+            "ts_name": "Basketball Champions League",
+            "ts_country": "",
+            "score": 0.6967
+          },
+          {
+            "ts_id": "p3glrwytlj0qdyj",
+            "ts_name": "Svenska Basketligan 2",
+            "ts_country": "",
+            "score": 0.6893
           }
         ],
         "topk_ids": [
           "l965mk8t3om1ge4",
-          "yl5ergytv7r8k0o",
           "p4jwq25tk6q0veo",
-          "x4zp5rzkt1r82w1",
-          "0l965mk8tom1ge4",
+          "kdj2ry7tzor1zpg",
           "zgpxwrx5tdqyk0j",
-          "xz318q6ntxmo9jd"
+          "xz318q6ntxmo9jd",
+          "kjw2r02t6xqz84o",
+          "p3glrwytlj0qdyj"
         ],
-        "status": "TOPN_HIT"
+        "status": "MISS"
       },
       {
         "src_id": "7666",
@@ -7235,34 +7215,10 @@
         "sport": "basketball",
         "gt_ts_id": "49vjxm8xt4q6odg",
         "gt_in_pool": true,
-        "top1_ts_id": "l965mk8tnk6m1ge",
-        "top1_ts_name": "Australia QBL",
-        "top1_score": 0.9292,
+        "top1_ts_id": "xkn54ql7t8rvy9d",
+        "top1_ts_name": "National Basketball League",
+        "top1_score": 0.9022,
         "topk": [
-          {
-            "ts_id": "l965mk8tnk6m1ge",
-            "ts_name": "Australia QBL",
-            "ts_country": "Australia",
-            "score": 0.9292
-          },
-          {
-            "ts_id": "p3glrwytwyoqdyj",
-            "ts_name": "Australia SBL",
-            "ts_country": "Australia",
-            "score": 0.9292
-          },
-          {
-            "ts_id": "yl5ergytng6r8k0",
-            "ts_name": "Australia QBL",
-            "ts_country": "Australia",
-            "score": 0.9292
-          },
-          {
-            "ts_id": "gy0or5gt1ylqwzv",
-            "ts_name": "Australia WL",
-            "ts_country": "Australia",
-            "score": 0.9027
-          },
           {
             "ts_id": "xkn54ql7t8rvy9d",
             "ts_name": "National Basketball League",
@@ -7280,18 +7236,42 @@
             "ts_name": "ENBL",
             "ts_country": "",
             "score": 0.8929
+          },
+          {
+            "ts_id": "gy0or5gt0lzqwzv",
+            "ts_name": "National Women’s Basketball League1 East",
+            "ts_country": "",
+            "score": 0.8343
+          },
+          {
+            "ts_id": "9dn1m17t1wdmoep",
+            "ts_name": "National Women’s Basketball League1 South",
+            "ts_country": "",
+            "score": 0.8193
+          },
+          {
+            "ts_id": "v2y8m4pt1klml07",
+            "ts_name": "National Women’s Basketball League1 West",
+            "ts_country": "",
+            "score": 0.818
+          },
+          {
+            "ts_id": "49vjxm8xt4q6odg",
+            "ts_name": "National Basketball Association",
+            "ts_country": "",
+            "score": 0.8171
           }
         ],
         "topk_ids": [
-          "l965mk8tnk6m1ge",
-          "p3glrwytwyoqdyj",
-          "yl5ergytng6r8k0",
-          "gy0or5gt1ylqwzv",
           "xkn54ql7t8rvy9d",
           "e4wyrn1t9knq86p",
-          "yl5ergyt3wkr8k0"
+          "yl5ergyt3wkr8k0",
+          "gy0or5gt0lzqwzv",
+          "9dn1m17t1wdmoep",
+          "v2y8m4pt1klml07",
+          "49vjxm8xt4q6odg"
         ],
-        "status": "MISS"
+        "status": "TOPN_HIT"
       }
     ]
   },
@@ -7313,24 +7293,6 @@
       "top7_accuracy": 0.8611
     },
     "sr_by_sport": {
-      "basketball": {
-        "top1_hits": 4,
-        "top1_accuracy": 0.4,
-        "top2_hits": 5,
-        "top2_accuracy": 0.5,
-        "top3_hits": 5,
-        "top3_accuracy": 0.5,
-        "top4_hits": 5,
-        "top4_accuracy": 0.5,
-        "top5_hits": 5,
-        "top5_accuracy": 0.5,
-        "top6_hits": 6,
-        "top6_accuracy": 0.6,
-        "top7_hits": 6,
-        "top7_accuracy": 0.6,
-        "evaluable": 10,
-        "total_leagues": 10
-      },
       "football": {
         "top1_hits": 22,
         "top1_accuracy": 0.8462,
@@ -7348,43 +7310,43 @@
         "top7_accuracy": 0.9615,
         "evaluable": 26,
         "total_leagues": 26
+      },
+      "basketball": {
+        "top1_hits": 4,
+        "top1_accuracy": 0.4,
+        "top2_hits": 5,
+        "top2_accuracy": 0.5,
+        "top3_hits": 5,
+        "top3_accuracy": 0.5,
+        "top4_hits": 5,
+        "top4_accuracy": 0.5,
+        "top5_hits": 5,
+        "top5_accuracy": 0.5,
+        "top6_hits": 6,
+        "top6_accuracy": 0.6,
+        "top7_hits": 6,
+        "top7_accuracy": 0.6,
+        "evaluable": 10,
+        "total_leagues": 10
       }
     },
     "ls_overall": {
-      "top1_hits": 38,
-      "top1_accuracy": 0.5938,
-      "top2_hits": 40,
-      "top2_accuracy": 0.625,
-      "top3_hits": 45,
-      "top3_accuracy": 0.7031,
-      "top4_hits": 48,
-      "top4_accuracy": 0.75,
-      "top5_hits": 49,
-      "top5_accuracy": 0.7656,
+      "top1_hits": 39,
+      "top1_accuracy": 0.6094,
+      "top2_hits": 41,
+      "top2_accuracy": 0.6406,
+      "top3_hits": 47,
+      "top3_accuracy": 0.7344,
+      "top4_hits": 50,
+      "top4_accuracy": 0.7812,
+      "top5_hits": 50,
+      "top5_accuracy": 0.7812,
       "top6_hits": 51,
       "top6_accuracy": 0.7969,
-      "top7_hits": 51,
-      "top7_accuracy": 0.7969
+      "top7_hits": 52,
+      "top7_accuracy": 0.8125
     },
     "ls_by_sport": {
-      "basketball": {
-        "top1_hits": 6,
-        "top1_accuracy": 0.2609,
-        "top2_hits": 6,
-        "top2_accuracy": 0.2609,
-        "top3_hits": 8,
-        "top3_accuracy": 0.3478,
-        "top4_hits": 10,
-        "top4_accuracy": 0.4348,
-        "top5_hits": 11,
-        "top5_accuracy": 0.4783,
-        "top6_hits": 12,
-        "top6_accuracy": 0.5217,
-        "top7_hits": 12,
-        "top7_accuracy": 0.5217,
-        "evaluable": 23,
-        "total_leagues": 23
-      },
       "football": {
         "top1_hits": 32,
         "top1_accuracy": 0.7805,
@@ -7402,6 +7364,24 @@
         "top7_accuracy": 0.9512,
         "evaluable": 41,
         "total_leagues": 41
+      },
+      "basketball": {
+        "top1_hits": 7,
+        "top1_accuracy": 0.3043,
+        "top2_hits": 7,
+        "top2_accuracy": 0.3043,
+        "top3_hits": 10,
+        "top3_accuracy": 0.4348,
+        "top4_hits": 12,
+        "top4_accuracy": 0.5217,
+        "top5_hits": 12,
+        "top5_accuracy": 0.5217,
+        "top6_hits": 12,
+        "top6_accuracy": 0.5217,
+        "top7_hits": 13,
+        "top7_accuracy": 0.5652,
+        "evaluable": 23,
+        "total_leagues": 23
       }
     }
   }

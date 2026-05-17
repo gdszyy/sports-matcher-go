@@ -235,13 +235,15 @@ def match_league_topk(src_name, src_category, src_sport, ts_pool, k=5):
     v1.22 P0-B 增量：alias canonical hit (base>=0.95) 但 country 完全不同
     （非 international 且 locSim<0.4）→ 强降到 0.55（低于 NAME_LOW 阈值），
     避免 Russian Premier League / Serie A Brazil 这类跨地域错配。"""
-    is_basketball = (src_sport == 'basketball')
     scored = []
     for ts in ts_pool:
         if ts.get('sport') != src_sport:
             continue
         ts_name = ts.get('name', '')
-        ts_country = '' if is_basketball else (ts.get('country', '') or '')
+        # v1.30 P0: 不再对 basketball 强制清空 ts_country（v1.20 是因 fetch 脚本给了脏 hash ID
+        # 才强制清空，但 v1.27 后 wide_baseline 加载 real pool 时用 _infer_country_from_tsname
+        # 推断，所以 country 字段是合法推断值，可以参与匹配）
+        ts_country = ts.get('country', '') or ''
         # v1.23: tier veto（等价 Go CheckLeagueVeto P0-C）
         if check_tier_veto(src_name, ts_name):
             continue
