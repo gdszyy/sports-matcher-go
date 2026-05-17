@@ -35,6 +35,9 @@ from evidence_first_baseline_eval import LS_2026_LEAGUES  # noqa: E402
 
 _NORM_KEEP = re.compile(r'[a-z0-9 ]')
 
+from functools import lru_cache
+
+@lru_cache(maxsize=20000)
 def normalize(s):
     if not s:
         return ''
@@ -91,6 +94,7 @@ def jaro_winkler(s1, s2):
     return jaro + prefix * 0.1 * (1 - jaro)
 
 
+@lru_cache(maxsize=100000)
 def name_similarity(a, b):
     na, nb = normalize(a), normalize(b)
     if not na or not nb:
@@ -139,17 +143,17 @@ def alias_get_all_by_name(name):
     return _ALIAS_CANONICAL_TO_ALIASES.get(canonical, [])
 
 
+@lru_cache(maxsize=200000)
 def league_name_similarity_with_alias(a, b):
-    """等价 Go leagueNameSimilarityWithAlias:
-    1) base name_similarity 作基线
-    2) 两侧映射到同 canonical → 直接 0.98
-    3) 单侧命中 → 拿 group 所有 aliases 跟对侧比，取最大值
-    """
+    """等价 Go leagueNameSimilarityWithAlias + 短路优化。"""
     base = name_similarity(a, b)
     ca = alias_lookup(a)
     cb = alias_lookup(b)
     if ca and cb and ca == cb:
         return 0.98
+    # 短路：base 极低且都不在 alias 字典 → 直接 return（省 alias 展开）
+    if not ca and not cb:
+        return base
     best = base
     if ca:
         for alias in alias_get_all_by_name(a):

@@ -382,3 +382,62 @@ LS football Top-2 = 95.1% 表明算法**基本能看见正确 GT**。
 | **P1** | 评估集 stub TS 名称重复治理（`English Football League One` 两条同名 ts_id）| ~5% Top-1 提升 |
 | **P1** | basketball 数据 fetch 修 `_infer_country_from_tsname` 给所有 NCAA/NBL/CBL 等填 country | basketball Top-1 50% → ~70% |
 | P2 | LNB Elite / Nationale 1 / LNB Pro B 法国级别拆 alias | LS basketball 边缘改善 |
+
+---
+
+## v1.25 + v1.26 — LS 同步 P0-B + 生产 TS pool 真实数据
+
+### v1.25 LS 链路同步 P0-B
+
+`internal/matcher/ls_engine.go::lsLeagueNameScore` 加 v1.22 P0-B 等价的 alias canonical hit + country 二次约束（在原有 lsLocationVeto 之上做后置防护）。当 LS.CategoryName 空时 lsLocationVeto 不触发，仍能被这一层兜住。
+
+### v1.26 生产 TS pool 拉真实数据
+
+- `scripts/sync_ts_pool.py` — SSH 隧道 + pymysql 直连 test-thesports-db
+- `python/data/ts_pool_real.json` — 2601 football + 1387 basketball = **3988 个真实 TS 联赛**
+- `wide_baseline.py --use-real-pool` 切换池子
+
+### 真实池 vs stub 池数字对比
+
+| 指标 | stub (56) | **real (3988)** | Δ |
+|------|-----------|----------------|---|
+| SR 整体 Top-1 | 80.6% | **63.9%** | -16.7 pp |
+| SR football | 92.3% | **73.1%** | -19.2 pp |
+| SR basketball | 50.0% | **40.0%** | -10 pp |
+| SR football Top-7 | 96.2% | **88.5%** | -7.7 pp |
+| LS 整体 Top-1 | 67.2% | **57.8%** | -9.4 pp |
+| LS football | 85.4% | **75.6%** | -9.8 pp |
+| LS football Top-7 | 97.6% | **90.2%** | -7.4 pp |
+| LS basketball | 34.8% | **26.1%** | -8.7 pp |
+
+stub 池数字虚高 — 候选池从 56 → 3988 (70x 干扰项) 后真实算法暴露。
+
+### 真实池暴露的新弱点（v1.27+ 攻关）
+
+1. **alias canonical 内部多 TS ID 歧义**（最严重）
+   - `Premier League (Russia)` → BPL (English) 0.98（同 canonical 多 ts_id，选错那个）
+   - `Premier League (Egypt)` → BPL 0.98（同问题）
+   - `EFL League One` → English Football League One (不是 GT 的那个 ts_id)
+   - `FA Cup` → FA Cup (不是 GT)
+   - **根因**：alias group "Premier League" / "FA Cup" 对应**多个真实 ts_id**（England/Russia/Egypt 等都叫 Premier League），canonical 命中给 0.98 后无 country 排序
+
+2. **alias 抢占（不同 canonical 误判）**
+   - `National League` → `UEFA Nations League` 0.92（base name_similarity 高 + 都含 'League'）
+   - `EFL Cup` → `Leagues Cup` 0.97
+
+3. **Brazilian Serie B** → `Belarus Pro Series` 0.736（"Pro Series" 拐弯字面相似度）
+4. **National League North (England Amateur)** → `National Basketball League1 South`（sport 一致 + alias 高分）
+
+### v1.27+ 必做（基于真实池数字）
+
+| 优先级 | 改进 | 攻击的误匹配 |
+|--------|------|--------------|
+| **P0** | alias canonical hit 后必须按 country 二次排序选 ts_id（不是简单降分，要换 ts_id） | Premier League (Russia/Egypt) → BPL 类 |
+| **P0** | basketball 池增补 country 字段（数据 fetch 或推断） | basketball 整体 -10pp |
+| **P1** | `Premier League` / `FA Cup` 等 alias group 拆按 country/region 子分组 | 同 canonical 多 ts_id 问题 |
+| **P1** | `National League` veto 'UEFA Nations League'（Nations vs National 字面相似但 international/non-international 分类不同） | National League → Nations League |
+| **P2** | `Leagues Cup` / `Pro Series` 等冷门字面相似的干扰项加 country veto | 边缘修 |
+
+### 性能注解
+
+3988 候选 × 100 GT × alias 展开 = ~22.8s 跑完（加了 lru_cache）。生产 Go 端没问题（同样算法在 Go 里 ms 级），Python eval 只是验证工具。

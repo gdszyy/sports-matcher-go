@@ -155,6 +155,8 @@ def main():
     ap = argparse.ArgumentParser()
     ap.add_argument('--output-json',
                     default='docs/tests/evidence_first_strict_wide_baseline.json')
+    ap.add_argument('--use-real-pool', action='store_true',
+                    help='用 python/data/ts_pool_real.json (生产 DB 真实 3988 TS 联赛) 替代 stub 池')
     args = ap.parse_args()
 
     sr_entries = extract_known_map_with_comments(
@@ -166,7 +168,11 @@ def main():
     print(f'SR KnownLeagueMap entries: {len(sr_entries)}')
     print(f'LS KnownLSLeagueMap entries: {len(ls_entries)}')
 
-    ts_pool_base = json.load(open(os.path.join(DATA_DIR, 'ts_leagues_2026.json')))
+    if args.use_real_pool:
+        ts_pool_base = json.load(open(os.path.join(DATA_DIR, 'ts_pool_real.json')))
+        print(f'[wide_baseline] real pool: {len(ts_pool_base)} TS leagues (production DB)')
+    else:
+        ts_pool_base = json.load(open(os.path.join(DATA_DIR, 'ts_leagues_2026.json')))
     gt_records = json.load(open(os.path.join(DATA_DIR, 'sr_ts_ground_truth.json')))
     sr_leagues = json.load(open(os.path.join(DATA_DIR, 'sr_leagues_2026.json')))
     ls_leagues = json.load(open(os.path.join(DATA_DIR, 'ls_leagues_2026.json')))

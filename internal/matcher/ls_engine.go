@@ -764,13 +764,20 @@ func lsLeagueNameScore(ls *db.LSTournament, ts *db.TSCompetition) float64 {
 	}
 	base *= penalty
 
-	// 国家/地区名称匹配加分（同国加权提升置信度）
+	// 国家/地区名称匹配加分（同国加权提升置信度）+ alias canonical hit 后 country 二次约束（v1.25 同 SR 链路 P0-B）
 	// 优化（优化建议 §3.5）：引入地理别名词典，支持 USA vs United States 等模糊匹配
 	if ls.CategoryName != "" && ts.CountryName != "" {
 		catNorm := normalizeName(ls.CategoryName)
 		cntNorm := normalizeName(ts.CountryName)
 		// 先尝试地理别名匹配
 		locSim := geoSimilarity(catNorm, cntNorm)
+		// v1.25 (镜像 SR v1.22 P0-B): alias canonical hit (base ≥ 0.95) 但 country 完全不同
+		// （非 international 且 locSim < 0.4）→ 强降到 0.55。lsLocationVeto 是预 veto
+		// 但当 LS.CategoryName 为空时不触发；这里是后置二次约束。
+		if base >= 0.95 && locSim < 0.4 &&
+			!lsInternationalCategory(catNorm) && !lsInternationalCategory(cntNorm) {
+			return 0.55
+		}
 		if locSim >= 0.6 {
 			// 同国联赛：名称相似度加权提升
 			base = base*0.75 + 0.25*locSim
