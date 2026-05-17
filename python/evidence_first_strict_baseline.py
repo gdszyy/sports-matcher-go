@@ -143,6 +143,26 @@ def alias_get_all_by_name(name):
     return _ALIAS_CANONICAL_TO_ALIASES.get(canonical, [])
 
 
+# v1.33 P0: canonical → default_country 反查表（懒加载）
+_ALIAS_CANONICAL_TO_DEFAULT_COUNTRY = None
+
+def alias_default_country(name):
+    """v1.33: 返回 name 所在 alias group 的 default_country。"""
+    global _ALIAS_CANONICAL_TO_DEFAULT_COUNTRY
+    _load_alias_index()
+    if _ALIAS_CANONICAL_TO_DEFAULT_COUNTRY is None:
+        # 从 league_alias_groups.json 反查 default_country
+        d = {}
+        for g in _ALIAS_GROUPS:
+            if g.get('default_country'):
+                d[g['canonical']] = g['default_country']
+        _ALIAS_CANONICAL_TO_DEFAULT_COUNTRY = d
+    canonical = _ALIAS_NORM_TO_CANONICAL.get(normalize(name))
+    if not canonical:
+        return ''
+    return _ALIAS_CANONICAL_TO_DEFAULT_COUNTRY.get(canonical, '')
+
+
 @lru_cache(maxsize=200000)
 def league_name_similarity_with_alias(a, b):
     """等价 Go leagueNameSimilarityWithAlias + 短路优化。"""

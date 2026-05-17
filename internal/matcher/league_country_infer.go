@@ -83,6 +83,10 @@ func InferCountryFromName(name string) string {
 
 // EffectiveCountry 返回 ts.CountryName 或推断 country（v1.30 P0）。
 // 优先用真实 CountryName；为空则用 name 推断。
+//
+// 注：v1.33 曾尝试加 alias group default_country fallback，让 BPL 也获得 England，
+// 但导致同 group 多 ts_id 抢占时仍平手且 LS basketball Top-1 退化 -8.7 pp。回滚。
+// DefaultCountry 字段保留作基础设施给未来更精细方案用（如 source-side 推断）。
 func EffectiveCountry(countryName, leagueName string) string {
 	if countryName != "" {
 		return countryName

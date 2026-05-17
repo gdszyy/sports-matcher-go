@@ -34,8 +34,9 @@ import (
 // LeagueAliasGroup 一组等价的联赛名称（官方名 + 常用名 + 缩写）
 // CanonicalName 是该组的规范名称（用于相似度计算的基准）
 type LeagueAliasGroup struct {
-	CanonicalName string   // 规范名称（通常为最完整的官方名）
-	Aliases       []string // 所有等价名称（含规范名本身）
+	CanonicalName  string   // 规范名称（通常为最完整的官方名）
+	Aliases        []string // 所有等价名称（含规范名本身）
+	DefaultCountry string   // v1.33 P0: 默认国别（空则不参与 country 推断）
 }
 
 // staticLeagueAliasGroups 内置静态别名词典
@@ -52,6 +53,7 @@ var staticLeagueAliasGroups = []LeagueAliasGroup{
 			"Barclays Premier League",
 			"BPL",
 		},
+		DefaultCountry: "England",
 	},
 	{
 		CanonicalName: "EFL Championship",
@@ -65,6 +67,7 @@ var staticLeagueAliasGroups = []LeagueAliasGroup{
 			"English Championship",
 			"Second Division England",
 		},
+		DefaultCountry: "England",
 	},
 	{
 		CanonicalName: "EFL League One",
@@ -78,6 +81,7 @@ var staticLeagueAliasGroups = []LeagueAliasGroup{
 			"League 1 England",
 			"League 1",
 		},
+		DefaultCountry: "England",
 	},
 	{
 		CanonicalName: "EFL League Two",
@@ -91,6 +95,7 @@ var staticLeagueAliasGroups = []LeagueAliasGroup{
 			"League 2 England",
 			"League 2",
 		},
+		DefaultCountry: "England",
 	},
 	{
 		CanonicalName: "National League",
@@ -101,6 +106,7 @@ var staticLeagueAliasGroups = []LeagueAliasGroup{
 			"Football Conference",
 			"Vanarama National League",
 		},
+		DefaultCountry: "England",
 	},
 	{
 		CanonicalName: "FA Cup",
@@ -110,6 +116,7 @@ var staticLeagueAliasGroups = []LeagueAliasGroup{
 			"Football Association Challenge Cup",
 			"The FA Cup",
 		},
+		DefaultCountry: "England",
 	},
 	{
 		CanonicalName: "EFL Cup",
@@ -122,6 +129,7 @@ var staticLeagueAliasGroups = []LeagueAliasGroup{
 			"Football League Cup",
 			"English League Cup",
 		},
+		DefaultCountry: "England",
 	},
 	{
 		CanonicalName: "EFL Trophy",
@@ -132,6 +140,7 @@ var staticLeagueAliasGroups = []LeagueAliasGroup{
 			"Papa John's Trophy",
 			"LDV Vans Trophy",
 		},
+		DefaultCountry: "England",
 	},
 	// ── 德国足球联赛体系 ──────────────────────────────────────────────────
 	{
@@ -143,6 +152,7 @@ var staticLeagueAliasGroups = []LeagueAliasGroup{
 			"Fussball-Bundesliga",
 			"German First Division",
 		},
+		DefaultCountry: "Germany",
 	},
 	{
 		CanonicalName: "2. Bundesliga",
@@ -153,6 +163,7 @@ var staticLeagueAliasGroups = []LeagueAliasGroup{
 			"German Second Division",
 			"2nd Bundesliga",
 		},
+		DefaultCountry: "Germany",
 	},
 	{
 		CanonicalName: "3. Liga",
@@ -163,6 +174,7 @@ var staticLeagueAliasGroups = []LeagueAliasGroup{
 			"German Third Division",
 			"3rd Liga",
 		},
+		DefaultCountry: "Germany",
 	},
 	// ── 西班牙足球联赛体系 ────────────────────────────────────────────────
 	{
@@ -177,6 +189,7 @@ var staticLeagueAliasGroups = []LeagueAliasGroup{
 			"Santander La Liga",
 			"LaLiga Santander",
 		},
+		DefaultCountry: "Spain",
 	},
 	{
 		CanonicalName: "LaLiga2",
@@ -189,6 +202,7 @@ var staticLeagueAliasGroups = []LeagueAliasGroup{
 			"LaLiga SmartBank",
 			"Liga Adelante",
 		},
+		DefaultCountry: "Spain",
 	},
 	// ── 意大利足球联赛体系 ────────────────────────────────────────────────
 	{
@@ -199,6 +213,7 @@ var staticLeagueAliasGroups = []LeagueAliasGroup{
 			"Serie A TIM",
 			"Lega Serie A",
 		},
+		DefaultCountry: "Italy",
 	},
 	{
 		CanonicalName: "Serie B",
@@ -207,6 +222,7 @@ var staticLeagueAliasGroups = []LeagueAliasGroup{
 			"Italian Serie B",
 			"Serie BKT",
 		},
+		DefaultCountry: "Italy",
 	},
 	// ── 法国足球联赛体系 ──────────────────────────────────────────────────
 	{
@@ -217,6 +233,7 @@ var staticLeagueAliasGroups = []LeagueAliasGroup{
 			"Ligue 1 Uber Eats",
 			"Division 1 France",
 		},
+		DefaultCountry: "France",
 	},
 	{
 		CanonicalName: "Ligue 2",
@@ -226,6 +243,7 @@ var staticLeagueAliasGroups = []LeagueAliasGroup{
 			"Ligue 2 BKT",
 			"Division 2 France",
 		},
+		DefaultCountry: "France",
 	},
 	// ── UEFA 赛事 ────────────────────────────────────────────────────────
 	{
@@ -237,6 +255,7 @@ var staticLeagueAliasGroups = []LeagueAliasGroup{
 			"European Champions Cup",
 			"European Cup",
 		},
+		DefaultCountry: "International",
 	},
 	{
 		CanonicalName: "UEFA Europa League",
@@ -246,6 +265,7 @@ var staticLeagueAliasGroups = []LeagueAliasGroup{
 			"UEL",
 			"UEFA Cup",
 		},
+		DefaultCountry: "International",
 	},
 	{
 		CanonicalName: "UEFA Europa Conference League",
@@ -255,6 +275,7 @@ var staticLeagueAliasGroups = []LeagueAliasGroup{
 			"UECL",
 			"Europa Conference League",
 		},
+		DefaultCountry: "International",
 	},
 	// ── 荷兰足球联赛体系 ──────────────────────────────────────────────────
 	{
@@ -277,6 +298,7 @@ var staticLeagueAliasGroups = []LeagueAliasGroup{
 			"Portuguese Primeira Liga",
 			"Liga Portuguesa",
 		},
+		DefaultCountry: "Portugal",
 	},
 	// ── 土耳其足球联赛体系 ────────────────────────────────────────────────
 	{
@@ -297,6 +319,7 @@ var staticLeagueAliasGroups = []LeagueAliasGroup{
 			"RFPL",
 			"Russian Football National League",
 		},
+		DefaultCountry: "Russia",
 	},
 	// ── 美国足球联赛体系 ──────────────────────────────────────────────────
 	{
@@ -307,6 +330,7 @@ var staticLeagueAliasGroups = []LeagueAliasGroup{
 			"United States Major League Soccer",
 			"American MLS",
 		},
+		DefaultCountry: "USA",
 	},
 	// ── 巴西足球联赛体系 ──────────────────────────────────────────────────
 	{
@@ -318,6 +342,7 @@ var staticLeagueAliasGroups = []LeagueAliasGroup{
 			"Brasileirao",
 			"Serie A Brazil",
 		},
+		DefaultCountry: "Brazil",
 	},
 	// ── 日本足球联赛体系 ──────────────────────────────────────────────────
 	{
@@ -339,6 +364,7 @@ var staticLeagueAliasGroups = []LeagueAliasGroup{
 			"China Super League",
 			"Chinese Football Super League",
 		},
+		DefaultCountry: "China",
 	},
 	// ── 篮球联赛体系 ────────────────────────────────────────────────────
 	{
@@ -348,6 +374,7 @@ var staticLeagueAliasGroups = []LeagueAliasGroup{
 			"National Basketball Association",
 			"American NBA",
 		},
+		DefaultCountry: "USA",
 	},
 	{
 		CanonicalName: "EuroLeague",
@@ -356,6 +383,7 @@ var staticLeagueAliasGroups = []LeagueAliasGroup{
 			"EuroLeague Basketball",
 			"Turkish Airlines EuroLeague",
 		},
+		DefaultCountry: "International",
 	},
 	// ── 俄罗斯足球联赛体系（修复 FNL→Finalissima 误配）────────────────────────
 	{
@@ -367,6 +395,7 @@ var staticLeagueAliasGroups = []LeagueAliasGroup{
 			"Russian Football National League",
 			"First League Russia",
 		},
+		DefaultCountry: "Russia",
 	},
 	// ── 克罗地亚足球联赛体系（修复 HNL 缩写歧义）────────────────────────────
 	{
@@ -379,6 +408,7 @@ var staticLeagueAliasGroups = []LeagueAliasGroup{
 			"Croatian First Football League",
 			"1. HNL",
 		},
+		DefaultCountry: "Croatia",
 	},
 	// ── 澳大利亚篮球联赛（修复 NBL→ENBL 误配）──────────────────────────────
 	{
@@ -389,6 +419,7 @@ var staticLeagueAliasGroups = []LeagueAliasGroup{
 			"National Basketball League Australia",
 			"Australian NBL",
 		},
+		DefaultCountry: "Australia",
 	},
 	// ── 比利时足球联赛体系（修复 Jupiler League 跨国误配）───────────────────
 	{
@@ -401,6 +432,7 @@ var staticLeagueAliasGroups = []LeagueAliasGroup{
 			"First Division A Belgium",
 			"Belgian First Division",
 		},
+		DefaultCountry: "Belgium",
 	},
 	// ── 中国篮球联赛（防止 CBA 与 CBA Draft 混淆）──────────────────────────
 	{
@@ -411,6 +443,7 @@ var staticLeagueAliasGroups = []LeagueAliasGroup{
 			"China Basketball Association",
 			"Chinese CBA",
 		},
+		DefaultCountry: "China",
 	},
 	// ── 美国职业足球联赛（修复 MLS→MLS All Star 误配）──────────────────────
 	{
@@ -472,6 +505,7 @@ var staticLeagueAliasGroups = []LeagueAliasGroup{
 			"SPFL Premiership",
 			"Cinch Premiership",
 		},
+		DefaultCountry: "Scotland",
 	},
 	{
 		CanonicalName: "Scottish Championship",
@@ -568,6 +602,7 @@ var staticLeagueAliasGroups = []LeagueAliasGroup{
 			"Fortuna Liga Czech",
 			"Czech Liga",
 		},
+		DefaultCountry: "Czech Republic",
 	},
 	// ── 罗马尼亚足球联赛体系 ────────────────────────────────────────────────
 	{
@@ -597,6 +632,7 @@ var staticLeagueAliasGroups = []LeagueAliasGroup{
 			"UPL",
 			"Ukrainian Football Premier League",
 		},
+		DefaultCountry: "Ukraine",
 	},
 	// ── 墨西哥足球联赛体系 ──────────────────────────────────────────────────
 	{
@@ -607,6 +643,7 @@ var staticLeagueAliasGroups = []LeagueAliasGroup{
 			"Liga BBVA MX",
 			"Primera Division Mexico",
 		},
+		DefaultCountry: "Mexico",
 	},
 	// ── 阿根廷足球联赛体系 ──────────────────────────────────────────────────
 	{
@@ -666,6 +703,7 @@ var staticLeagueAliasGroups = []LeagueAliasGroup{
 			"Ligat ha'Al",
 			"Ligat HaAl",
 		},
+		DefaultCountry: "Israel",
 	},
 	// ── 国际足球赛事 ─────────────────────────────────────────────────────────
 	{
@@ -675,6 +713,7 @@ var staticLeagueAliasGroups = []LeagueAliasGroup{
 			"World Cup",
 			"FIFA World Cup Qualification",
 		},
+		DefaultCountry: "International",
 	},
 	{
 		CanonicalName: "UEFA Nations League",
@@ -683,6 +722,7 @@ var staticLeagueAliasGroups = []LeagueAliasGroup{
 			"Nations League",
 			"UNL",
 		},
+		DefaultCountry: "International",
 	},
 	{
 		CanonicalName: "Finalissima",
@@ -690,6 +730,7 @@ var staticLeagueAliasGroups = []LeagueAliasGroup{
 			"Finalissima",
 			"CONMEBOL-UEFA Cup of Champions",
 		},
+		DefaultCountry: "International",
 	},
 	// ── Basketball alias groups (v1.22 P0-A 大扩) ──────────────────────────
 	{
@@ -712,6 +753,7 @@ var staticLeagueAliasGroups = []LeagueAliasGroup{
 			"Spanish ACB",
 			"Spanish Liga ACB",
 		},
+		DefaultCountry: "Spain",
 	},
 	{
 		CanonicalName: "Lega Basket Serie A",
@@ -724,6 +766,7 @@ var staticLeagueAliasGroups = []LeagueAliasGroup{
 			"Italian Basketball Serie A",
 			"Serie A Italian Basketball",
 		},
+		DefaultCountry: "Italy",
 	},
 	{
 		CanonicalName: "Basketball Bundesliga",
@@ -734,6 +777,7 @@ var staticLeagueAliasGroups = []LeagueAliasGroup{
 			"easyCredit BBL",
 			"German BBL",
 		},
+		DefaultCountry: "Germany",
 	},
 	{
 		CanonicalName: "VTB United League",
@@ -743,6 +787,7 @@ var staticLeagueAliasGroups = []LeagueAliasGroup{
 			"VTB",
 			"Russian VTB",
 		},
+		DefaultCountry: "Russia",
 	},
 	{
 		CanonicalName: "B.League B1",
@@ -753,6 +798,7 @@ var staticLeagueAliasGroups = []LeagueAliasGroup{
 			"Japan B.League B1",
 			"Japan B1 League",
 		},
+		DefaultCountry: "Japan",
 	},
 	{
 		CanonicalName: "BNXT League",
@@ -761,6 +807,7 @@ var staticLeagueAliasGroups = []LeagueAliasGroup{
 			"BNXT",
 			"BNXT Pro League",
 		},
+		DefaultCountry: "Netherlands",
 	},
 	{
 		CanonicalName: "Orlen Basket Liga",
@@ -771,6 +818,7 @@ var staticLeagueAliasGroups = []LeagueAliasGroup{
 			"Polish Basketball League",
 			"Polish PLK",
 		},
+		DefaultCountry: "Poland",
 	},
 	// ── 跨国杯赛 alias groups (v1.24) ──────────────────────────────────────
 	{
@@ -782,6 +830,7 @@ var staticLeagueAliasGroups = []LeagueAliasGroup{
 			"Libertadores",
 			"Copa CONMEBOL Libertadores",
 		},
+		DefaultCountry: "International",
 	},
 	{
 		CanonicalName: "Copa Sudamericana",
@@ -792,6 +841,7 @@ var staticLeagueAliasGroups = []LeagueAliasGroup{
 			"Sudamericana",
 			"South American Cup",
 		},
+		DefaultCountry: "International",
 	},
 	{
 		CanonicalName: "AFC Champions League",
@@ -801,6 +851,7 @@ var staticLeagueAliasGroups = []LeagueAliasGroup{
 			"AFC Champions League Elite",
 			"ACL",
 		},
+		DefaultCountry: "International",
 	},
 	{
 		CanonicalName: "CAF Champions League",
@@ -809,6 +860,7 @@ var staticLeagueAliasGroups = []LeagueAliasGroup{
 			"African Champions League",
 			"Africa Champions League",
 		},
+		DefaultCountry: "International",
 	},
 }
 
@@ -824,6 +876,8 @@ type LeagueAliasIndex struct {
 	normalizedToCanonical map[string]string
 	// canonicalToAliases: 规范名称 → 所有别名（含规范名本身）
 	canonicalToAliases map[string][]string
+	// v1.33 P0: canonicalToDefaultCountry: 规范名称 → 默认国别（"" 表示无默认）
+	canonicalToDefaultCountry map[string]string
 }
 
 // globalLeagueAliasIndex 全局单例别名索引（启动时从静态词典初始化）
@@ -834,11 +888,15 @@ var globalLeagueAliasOnce sync.Once
 func GetLeagueAliasIndex() *LeagueAliasIndex {
 	globalLeagueAliasOnce.Do(func() {
 		idx := &LeagueAliasIndex{
-			normalizedToCanonical: make(map[string]string),
-			canonicalToAliases:    make(map[string][]string),
+			normalizedToCanonical:     make(map[string]string),
+			canonicalToAliases:        make(map[string][]string),
+			canonicalToDefaultCountry: make(map[string]string),
 		}
 		for _, group := range staticLeagueAliasGroups {
 			idx.addGroup(group.CanonicalName, group.Aliases)
+			if group.DefaultCountry != "" {
+				idx.canonicalToDefaultCountry[normalizeName(group.CanonicalName)] = group.DefaultCountry
+			}
 		}
 		globalLeagueAliasIndex = idx
 	})
@@ -892,6 +950,22 @@ func (idx *LeagueAliasIndex) Lookup(name string) (string, bool) {
 	canonical, ok := idx.normalizedToCanonical[normName]
 	idx.mu.RUnlock()
 	return canonical, ok
+}
+
+// GetDefaultCountry 返回 name 所在 alias group 的默认国别（v1.33 P0）。
+// 未命中或未设置 default_country 时返回 ""。
+func (idx *LeagueAliasIndex) GetDefaultCountry(name string) string {
+	normName := normalizeName(name)
+	idx.mu.RLock()
+	defer idx.mu.RUnlock()
+	canonical, ok := idx.normalizedToCanonical[normName]
+	if !ok {
+		return ""
+	}
+	if idx.canonicalToDefaultCountry == nil {
+		return ""
+	}
+	return idx.canonicalToDefaultCountry[canonical]
 }
 
 // ExpandName 将联赛名称展开为规范名称（若存在别名映射）

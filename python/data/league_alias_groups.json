@@ -8,7 +8,8 @@
       "EPL",
       "Barclays Premier League",
       "BPL"
-    ]
+    ],
+    "default_country": "England"
   },
   {
     "canonical": "EFL Championship",
@@ -21,7 +22,8 @@
       "Championship England",
       "English Championship",
       "Second Division England"
-    ]
+    ],
+    "default_country": "England"
   },
   {
     "canonical": "EFL League One",
@@ -34,7 +36,8 @@
       "Third Division England",
       "League 1 England",
       "League 1"
-    ]
+    ],
+    "default_country": "England"
   },
   {
     "canonical": "EFL League Two",
@@ -47,7 +50,8 @@
       "Fourth Division England",
       "League 2 England",
       "League 2"
-    ]
+    ],
+    "default_country": "England"
   },
   {
     "canonical": "National League",
@@ -57,7 +61,8 @@
       "Conference National",
       "Football Conference",
       "Vanarama National League"
-    ]
+    ],
+    "default_country": "England"
   },
   {
     "canonical": "FA Cup",
@@ -66,7 +71,8 @@
       "FA Challenge Cup",
       "Football Association Challenge Cup",
       "The FA Cup"
-    ]
+    ],
+    "default_country": "England"
   },
   {
     "canonical": "EFL Cup",
@@ -78,7 +84,8 @@
       "Carling Cup",
       "Football League Cup",
       "English League Cup"
-    ]
+    ],
+    "default_country": "England"
   },
   {
     "canonical": "EFL Trophy",
@@ -88,7 +95,8 @@
       "Johnstone's Paint Trophy",
       "Papa John's Trophy",
       "LDV Vans Trophy"
-    ]
+    ],
+    "default_country": "England"
   },
   {
     "canonical": "Bundesliga",
@@ -98,7 +106,8 @@
       "German Bundesliga",
       "Fussball-Bundesliga",
       "German First Division"
-    ]
+    ],
+    "default_country": "Germany"
   },
   {
     "canonical": "2. Bundesliga",
@@ -108,7 +117,8 @@
       "Bundesliga 2",
       "German Second Division",
       "2nd Bundesliga"
-    ]
+    ],
+    "default_country": "Germany"
   },
   {
     "canonical": "3. Liga",
@@ -118,7 +128,8 @@
       "Liga 3",
       "German Third Division",
       "3rd Liga"
-    ]
+    ],
+    "default_country": "Germany"
   },
   {
     "canonical": "LaLiga",
@@ -131,7 +142,8 @@
       "Liga BBVA",
       "Santander La Liga",
       "LaLiga Santander"
-    ]
+    ],
+    "default_country": "Spain"
   },
   {
     "canonical": "LaLiga2",
@@ -143,7 +155,8 @@
       "Spanish Segunda Division",
       "LaLiga SmartBank",
       "Liga Adelante"
-    ]
+    ],
+    "default_country": "Spain"
   },
   {
     "canonical": "Serie A",
@@ -152,7 +165,8 @@
       "Italian Serie A",
       "Serie A TIM",
       "Lega Serie A"
-    ]
+    ],
+    "default_country": "Italy"
   },
   {
     "canonical": "Serie B",
@@ -160,7 +174,8 @@
       "Serie B",
       "Italian Serie B",
       "Serie BKT"
-    ]
+    ],
+    "default_country": "Italy"
   },
   {
     "canonical": "Ligue 1",
@@ -169,7 +184,8 @@
       "French Ligue 1",
       "Ligue 1 Uber Eats",
       "Division 1 France"
-    ]
+    ],
+    "default_country": "France"
   },
   {
     "canonical": "Ligue 2",
@@ -178,7 +194,8 @@
       "French Ligue 2",
       "Ligue 2 BKT",
       "Division 2 France"
-    ]
+    ],
+    "default_country": "France"
   },
   {
     "canonical": "UEFA Champions League",
@@ -188,7 +205,8 @@
       "UCL",
       "European Champions Cup",
       "European Cup"
-    ]
+    ],
+    "default_country": "International"
   },
   {
     "canonical": "UEFA Europa League",
@@ -197,7 +215,8 @@
       "Europa League",
       "UEL",
       "UEFA Cup"
-    ]
+    ],
+    "default_country": "International"
   },
   {
     "canonical": "UEFA Europa Conference League",
@@ -206,7 +225,8 @@
       "Conference League",
       "UECL",
       "Europa Conference League"
-    ]
+    ],
+    "default_country": "International"
   },
   {
     "canonical": "Eredivisie",
@@ -226,7 +246,8 @@
       "Ligabwin",
       "Portuguese Primeira Liga",
       "Liga Portuguesa"
-    ]
+    ],
+    "default_country": "Portugal"
   },
   {
     "canonical": "Süper Lig",
@@ -244,7 +265,8 @@
       "RPL",
       "RFPL",
       "Russian Football National League"
-    ]
+    ],
+    "default_country": "Russia"
   },
   {
     "canonical": "MLS",
@@ -253,7 +275,8 @@
       "Major League Soccer",
       "United States Major League Soccer",
       "American MLS"
-    ]
+    ],
+    "default_country": "USA"
   },
   {
     "canonical": "Campeonato Brasileiro Série A",
@@ -263,7 +286,8 @@
       "Brazilian Serie A",
       "Brasileirao",
       "Serie A Brazil"
-    ]
+    ],
+    "default_country": "Brazil"
   },
   {
     "canonical": "J1 League",
@@ -282,7 +306,8 @@
       "CSL",
       "China Super League",
       "Chinese Football Super League"
-    ]
+    ],
+    "default_country": "China"
   },
   {
     "canonical": "NBA",
@@ -290,7 +315,8 @@
       "NBA",
       "National Basketball Association",
       "American NBA"
-    ]
+    ],
+    "default_country": "USA"
   },
   {
     "canonical": "EuroLeague",
@@ -298,7 +324,8 @@
       "EuroLeague",
       "EuroLeague Basketball",
       "Turkish Airlines EuroLeague"
-    ]
+    ],
+    "default_country": "International"
   },
   {
     "canonical": "Russian First League",
@@ -308,7 +335,8 @@
       "Pari Premyer Liga",
       "Russian Football National League",
       "First League Russia"
-    ]
+    ],
+    "default_country": "Russia"
   },
   {
     "canonical": "Croatian Football League",
@@ -319,7 +347,8 @@
       "Supersport HNL",
       "Croatian First Football League",
       "1. HNL"
-    ]
+    ],
+    "default_country": "Croatia"
   },
   {
     "canonical": "NBL Australia",
@@ -328,7 +357,8 @@
       "NBL",
       "National Basketball League Australia",
       "Australian NBL"
-    ]
+    ],
+    "default_country": "Australia"
   },
   {
     "canonical": "Belgian First Division A",
@@ -339,7 +369,8 @@
       "Belgian Pro League",
       "First Division A Belgium",
       "Belgian First Division"
-    ]
+    ],
+    "default_country": "Belgium"
   },
   {
     "canonical": "CBA",
@@ -348,7 +379,8 @@
       "Chinese Basketball Association",
       "China Basketball Association",
       "Chinese CBA"
-    ]
+    ],
+    "default_country": "China"
   },
   {
     "canonical": "MLS All-Stars",
@@ -405,7 +437,8 @@
       "SPL",
       "SPFL Premiership",
       "Cinch Premiership"
-    ]
+    ],
+    "default_country": "Scotland"
   },
   {
     "canonical": "Scottish Championship",
@@ -492,7 +525,8 @@
       "Czech Republic First League",
       "Fortuna Liga Czech",
       "Czech Liga"
-    ]
+    ],
+    "default_country": "Czech Republic"
   },
   {
     "canonical": "Romanian Liga 1",
@@ -518,7 +552,8 @@
       "Ukraine Premier League",
       "UPL",
       "Ukrainian Football Premier League"
-    ]
+    ],
+    "default_country": "Ukraine"
   },
   {
     "canonical": "Liga MX",
@@ -527,7 +562,8 @@
       "Mexican Liga MX",
       "Liga BBVA MX",
       "Primera Division Mexico"
-    ]
+    ],
+    "default_country": "Mexico"
   },
   {
     "canonical": "Argentine Primera Division",
@@ -580,7 +616,8 @@
       "Israel Premier League",
       "Ligat ha'Al",
       "Ligat HaAl"
-    ]
+    ],
+    "default_country": "Israel"
   },
   {
     "canonical": "FIFA World Cup",
@@ -588,7 +625,8 @@
       "FIFA World Cup",
       "World Cup",
       "FIFA World Cup Qualification"
-    ]
+    ],
+    "default_country": "International"
   },
   {
     "canonical": "UEFA Nations League",
@@ -596,14 +634,16 @@
       "UEFA Nations League",
       "Nations League",
       "UNL"
-    ]
+    ],
+    "default_country": "International"
   },
   {
     "canonical": "Finalissima",
     "aliases": [
       "Finalissima",
       "CONMEBOL-UEFA Cup of Champions"
-    ]
+    ],
+    "default_country": "International"
   },
   {
     "canonical": "EuroLeague",
@@ -624,7 +664,8 @@
       "ACB",
       "Spanish ACB",
       "Spanish Liga ACB"
-    ]
+    ],
+    "default_country": "Spain"
   },
   {
     "canonical": "Lega Basket Serie A",
@@ -636,7 +677,8 @@
       "Basketball Serie A",
       "Italian Basketball Serie A",
       "Serie A Italian Basketball"
-    ]
+    ],
+    "default_country": "Italy"
   },
   {
     "canonical": "Basketball Bundesliga",
@@ -646,7 +688,8 @@
       "German Basketball Bundesliga",
       "easyCredit BBL",
       "German BBL"
-    ]
+    ],
+    "default_country": "Germany"
   },
   {
     "canonical": "VTB United League",
@@ -655,7 +698,8 @@
       "VTB League",
       "VTB",
       "Russian VTB"
-    ]
+    ],
+    "default_country": "Russia"
   },
   {
     "canonical": "B.League B1",
@@ -665,7 +709,8 @@
       "B1",
       "Japan B.League B1",
       "Japan B1 League"
-    ]
+    ],
+    "default_country": "Japan"
   },
   {
     "canonical": "BNXT League",
@@ -673,7 +718,8 @@
       "BNXT League",
       "BNXT",
       "BNXT Pro League"
-    ]
+    ],
+    "default_country": "Netherlands"
   },
   {
     "canonical": "Orlen Basket Liga",
@@ -683,7 +729,8 @@
       "Polska Liga Koszykowki",
       "Polish Basketball League",
       "Polish PLK"
-    ]
+    ],
+    "default_country": "Poland"
   },
   {
     "canonical": "CONMEBOL Libertadores",
@@ -693,7 +740,8 @@
       "CONMEBOL Copa Libertadores",
       "Libertadores",
       "Copa CONMEBOL Libertadores"
-    ]
+    ],
+    "default_country": "International"
   },
   {
     "canonical": "Copa Sudamericana",
@@ -703,7 +751,8 @@
       "CONMEBOL Copa Sudamericana",
       "Sudamericana",
       "South American Cup"
-    ]
+    ],
+    "default_country": "International"
   },
   {
     "canonical": "AFC Champions League",
@@ -712,7 +761,8 @@
       "Asian Champions League",
       "AFC Champions League Elite",
       "ACL"
-    ]
+    ],
+    "default_country": "International"
   },
   {
     "canonical": "CAF Champions League",
@@ -720,6 +770,7 @@
       "CAF Champions League",
       "African Champions League",
       "Africa Champions League"
-    ]
+    ],
+    "default_country": "International"
   }
 ]

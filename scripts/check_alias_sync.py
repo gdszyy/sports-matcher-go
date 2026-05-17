@@ -37,15 +37,20 @@ def extract_go_groups():
         print('ERROR: staticLeagueAliasGroups not found in Go source')
         sys.exit(2)
     block = m.group(1)
+    # v1.33: 同时提取 DefaultCountry 字段（可选）
     pattern = re.compile(
-        r'CanonicalName:\s*"([^"]+)",\s*Aliases:\s*\[\]string\{([^}]+)\}',
+        r'CanonicalName:\s*"([^"]+)",\s*Aliases:\s*\[\]string\{([^}]+)\},'
+        r'(?:\s*DefaultCountry:\s*"([^"]+)",)?',
         re.DOTALL,
     )
     out = []
     for g in pattern.finditer(block):
         canonical = g.group(1)
         aliases = re.findall(r'"([^"]+)"', g.group(2))
-        out.append({'canonical': canonical, 'aliases': aliases})
+        entry = {'canonical': canonical, 'aliases': aliases}
+        if g.group(3):
+            entry['default_country'] = g.group(3)
+        out.append(entry)
     return out
 
 
