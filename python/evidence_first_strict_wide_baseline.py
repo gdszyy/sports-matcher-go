@@ -206,6 +206,23 @@ def main():
     print(f'SR KnownLeagueMap entries: {len(sr_entries)}')
     print(f'LS KnownLSLeagueMap entries: {len(ls_entries)}')
 
+    # v1.34 GT_PLACEHOLDER: 注释含 "(closest)" / "(alt id)" 占位标记 → 不计 evaluable
+    # KnownLSLeagueMap 大量 basketball 条目是占位（生产 TS DB 没对应国家的联赛）
+    _placeholder_re = re.compile(r'\(closest\)|\(alt id\)', re.I)
+    sr_placeholder = [e for e in sr_entries if _placeholder_re.search(e["comment"] or "")]
+    ls_placeholder = [e for e in ls_entries if _placeholder_re.search(e["comment"] or "")]
+    if sr_placeholder:
+        print(f'[wide_baseline] SR GT_PLACEHOLDER 排除: {len(sr_placeholder)} 条')
+        for e in sr_placeholder[:5]:
+            print(f'  - {e["src_key"]} ({e["comment"]})')
+        sr_entries = [e for e in sr_entries if not _placeholder_re.search(e["comment"] or "")]
+    if ls_placeholder:
+        print(f'[wide_baseline] LS GT_PLACEHOLDER 排除: {len(ls_placeholder)} 条')
+        for e in ls_placeholder[:8]:
+            print(f'  - {e["src_key"]} ({e["comment"]})')
+        ls_entries = [e for e in ls_entries if not _placeholder_re.search(e["comment"] or "")]
+    print(f'  → 评估集修正: SR {len(sr_entries)} / LS {len(ls_entries)}')
+
     if args.use_real_pool:
         ts_pool_base = json.load(open(os.path.join(DATA_DIR, 'ts_pool_real.json')))
         # v1.27 P0: 真实池里 country 一半空，用 ts_name 推断填补
