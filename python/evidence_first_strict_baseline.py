@@ -170,9 +170,14 @@ def league_name_similarity_with_alias(a, b):
 
 
 def is_international(s):
+    """v1.32: 等价 Go lsInternationalCategory 关键词集（含 UEFA/CONMEBOL/AFC/CAF/FIFA/CONCACAF
+    等国际组织名）。'cup' 单独命中跨国杯赛（FA Cup 之类是国内 cup，但本函数主要给
+    international vs domestic veto 用，会与 'cup' 之外的更强信号配合，不会误伤）。"""
     if not s:
         return False
-    return bool(re.search(r'international|world|continental|cup', s.lower()))
+    return bool(re.search(
+        r'international|world|continental|uefa|conmebol|caf|afc|fifa|concacaf|'
+        r'europe|europa|asia|africa|america|oceania', s.lower()))
 
 
 
@@ -246,6 +251,11 @@ def match_league_topk(src_name, src_category, src_sport, ts_pool, k=5):
         ts_country = ts.get('country', '') or ''
         # v1.23: tier veto（等价 Go CheckLeagueVeto P0-C）
         if check_tier_veto(src_name, ts_name):
+            continue
+        # v1.32 P0: international vs domestic veto
+        # 一侧含 UEFA/CONMEBOL/CAF/AFC 等关键词、另一侧无 → veto
+        # （National League vs UEFA Nations League / EFL Cup vs Leagues Cup *  非典型）
+        if is_international(src_name) != is_international(ts_name):
             continue
         base = league_name_similarity_with_alias(src_name, ts_name)
         if src_category and ts_country:

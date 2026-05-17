@@ -147,6 +147,9 @@ def build_eval_set(side, entries, leagues_2026_json):
             else:
                 src_name = src_name_fallback
                 src_cat = ''
+            # v1.31 P0: src_cat 空时从注释 + src_name 推断 country fallback
+            if not src_cat:
+                src_cat = _infer_country_from_tsname(comment) or _infer_country_from_tsname(ts_name) or ''
             eval_set.append({
                 'tournament_id': src_id,
                 'name': src_name,
@@ -162,6 +165,9 @@ def build_eval_set(side, entries, leagues_2026_json):
             else:
                 src_name = src_name_fallback
                 src_cat = ts_country
+            # v1.31 P0: src_cat 空时从注释 + ts_name 推断 country fallback
+            if not src_cat:
+                src_cat = _infer_country_from_tsname(comment) or _infer_country_from_tsname(ts_name) or ''
             eval_set.append({
                 'id': src_id,
                 'name': src_name,

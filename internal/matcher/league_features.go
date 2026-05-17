@@ -656,6 +656,20 @@ func CheckLeagueVeto(a, b LeagueFeatures, confidenceLevel string) LeagueVetoResu
 		}
 	}
 
+	// v1.32 P0: international vs domestic veto
+	// 一侧含 UEFA/CONMEBOL/CAF/AFC/FIFA 等 international 关键词、另一侧没有 →
+	// 即便字面相似度高也 veto（"National League" vs "UEFA Nations League" /
+	// "EFL Cup" vs "Leagues Cup"  *  非典型组合）
+	aInternational := lsInternationalCategory(a.NormalizedName)
+	bInternational := lsInternationalCategory(b.NormalizedName)
+	if aInternational != bInternational {
+		return LeagueVetoResult{
+			Vetoed: true,
+			Reason: VetoRegion,
+			Detail: "international vs domestic mismatch",
+		}
+	}
+
 	return LeagueVetoResult{Vetoed: false, Reason: VetoNone}
 }
 
