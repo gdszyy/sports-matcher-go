@@ -164,3 +164,48 @@
 - **basketball:12855** GT `0l965mk8tom1ge4` 注释='Basketligaen (Denmark) → Basketball Bundesliga (closest)'
 - **basketball:7666** GT `49vjxm8xt4q6odg` 注释='BSN (Puerto Rico) → National Basketball Association (closest)'
 - **basketball:4379** GT `49vjxm8xt4q6odg` 注释='NBL (New Zealand) → National Basketball Association (closest)'
+
+---
+
+## v1.40 真 GT 判定：用事件级重叠度，不靠注释（杜绝 mapping 循环论证）
+
+**用户洞察**：v1.39 audit 用 KnownMap ts_id 当 GT 判 SUSPECT 实质是 mapping 验 mapping 的循环论证。**真正的 GT 应该是联赛匹配后参赛球队和比赛重叠度** — SR/LS 联赛跟哪条 TS competition_id 的真实球队/事件重叠最高，那条就是真 GT（PI-006 v1.10 Jordan League 模式的精髓）。
+
+### 工具
+
+`scripts/verify_known_map_by_events.py` — SSH 连生产 DB，对每条 SUSPECT 自动算：
+- LS 联赛 2026 球队清单（规范化后） vs 两个候选 TS competition 球队清单 → 重叠数
+- LS 联赛 2026 比赛清单（日期+主客队 set） vs 两个候选 TS competition 比赛清单 → 同日同队重叠数
+
+### 用法（在能稳定 SSH 的环境跑）
+
+```bash
+SSH_KEY_PATH=/path/to/key python3 scripts/verify_known_map_by_events.py
+```
+
+### 预期输出形态
+
+```
+=== LS football:3799 ===  (FNL Russia)
+  LS teams=20 events=240
+  → [GT Russian Premier League] ts_id=8y39mp1hwxmojxg
+      ts_teams=18 | team_overlap=2/20 (10%)
+      ts_events=300 | ev_overlap=5/240 (2%)
+  → [Suggested Russian First League] ts_id=9k82rekh6lrepzj
+      ts_teams=22 | team_overlap=19/20 (95%)
+      ts_events=380 | ev_overlap=215/240 (90%)
+
+→ FNL 真 GT 是 Russian First League (95% 球队重叠 vs 10%)，
+  KnownLSLeagueMap 注释把 FNL 误标成 Russian Premier League
+```
+
+### Ops 决策依据
+
+每条 SUSPECT 跑出"球队/事件重叠率"后：
+- 算法 Top-1 重叠率 **明显高于** GT（如 90% vs 10%）→ **GT 标错，改 KnownLSLeagueMap**
+- 算法 Top-1 重叠率 **明显低于** GT（如 5% vs 95%）→ **算法 bug，留 v1.40+ 改进**
+- 两者重叠率都低（如 5% vs 8%）→ **两个 ts_id 都不对**，需要在 ts pool 找别的候选或承认无对应
+
+### 沙箱限制
+
+沙箱 SSH 隧道跑大 SQL（LS/TS 双 join + 全表 scan）超时。工具给生产环境/Windows 端用。
