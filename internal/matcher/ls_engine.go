@@ -778,6 +778,14 @@ func lsLeagueNameScore(ls *db.LSTournament, ts *db.TSCompetition) float64 {
 			!lsInternationalCategory(catNorm) && !lsInternationalCategory(cntNorm) {
 			return 0.55
 		}
+		// v1.29 P0-2 (镜像 SR): alias canonical hit + country 高匹配 → 加分 0.015 让 country 一致赢
+		if base >= 0.95 && locSim >= 0.8 {
+			boosted := base + 0.015
+			if boosted > 0.999 {
+				boosted = 0.999
+			}
+			return boosted
+		}
 		if locSim >= 0.6 {
 			// 同国联赛：名称相似度加权提升
 			base = base*0.75 + 0.25*locSim

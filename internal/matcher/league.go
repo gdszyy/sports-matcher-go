@@ -36,10 +36,10 @@ var KnownLeagueMap = map[string]string{
 	// SR 官方名称 "EFL League One" 在 TS 中对应 "League One"
 	// 别名索引已内置处理该差异，此处补充已知 SR tournament_id 映射
 	"football:sr:tournament:18":  "l965mkyh32r1ge4", // EFL Championship (English Football League Championship)
-	"football:sr:tournament:19":  "xk4zp5rh3nr82w1", // EFL League One (English Football League One)
-	"football:sr:tournament:20":  "8y39mp1h7amojxg", // EFL League Two (English Football League Two)
-	"football:sr:tournament:21":  "z318q66h72qo9jd", // National League (England)
-	"football:sr:tournament:9":   "jednm9wh5zryox8", // FA Cup (Football Association Challenge Cup)
+	"football:sr:tournament:19":  "8y39mp1hjzmojxg", // EFL League One → English Football League One (v1.29 drift fix)
+	"football:sr:tournament:20":  "9k82rekhygrepzj", // EFL League Two → English Football League Two (v1.29 drift fix)
+	"football:sr:tournament:21":  "z318q66hv8qo9jd", // National League → English National League (v1.29 drift fix)
+	"football:sr:tournament:9":   "9vjxm8gh8gr6odg", // FA Cup (v1.29 drift fix)
 	"football:sr:tournament:22":  "56ypq3nh5xmd7oj", // EFL Cup (League Cup / Carabao Cup)
 
 	// ── 足球常规 ──────────────────────────────────────────────────────
@@ -198,6 +198,14 @@ func leagueNameScore(sr *db.SRTournament, ts *db.TSCompetition) float64 {
 		if base >= 0.95 && locSim < 0.4 &&
 			!lsInternationalCategory(catNorm) && !lsInternationalCategory(cntNorm) {
 			return 0.55
+		}
+		// v1.29 P0-2: alias canonical hit + country 高匹配 → 加分 0.015 让 country 一致的 ts_id 赢
+		if base >= 0.95 && locSim >= 0.8 {
+			boosted := base + 0.015
+			if boosted > 0.999 {
+				boosted = 0.999
+			}
+			return boosted
 		}
 		if locSim > 0.6 {
 			base = base*0.8 + 0.2*locSim

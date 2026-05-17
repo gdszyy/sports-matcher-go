@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-05-17T07:05:17.032211+00:00",
+  "generated_at": "2026-05-17T07:13:39.337180+00:00",
   "mode": "strict-no-mapping wide (v1.21)",
   "description": "Strict eval 扩到 KnownLeagueMap + KnownLSLeagueMap 全 100 个 GT 联赛",
   "ts_pool_size": 3988,
@@ -8,43 +8,25 @@
     "side": "SR",
     "total_leagues": 36,
     "no_gt": 0,
-    "gt_not_in_pool": 4,
-    "evaluable": 32,
+    "gt_not_in_pool": 0,
+    "evaluable": 36,
     "overall": {
-      "top1_hits": 22,
-      "top1_accuracy": 0.6875,
-      "top2_hits": 25,
-      "top2_accuracy": 0.7812,
-      "top3_hits": 25,
-      "top3_accuracy": 0.7812,
-      "top4_hits": 25,
-      "top4_accuracy": 0.7812,
-      "top5_hits": 25,
-      "top5_accuracy": 0.7812,
-      "top6_hits": 27,
-      "top6_accuracy": 0.8438,
-      "top7_hits": 27,
-      "top7_accuracy": 0.8438
+      "top1_hits": 26,
+      "top1_accuracy": 0.7222,
+      "top2_hits": 29,
+      "top2_accuracy": 0.8056,
+      "top3_hits": 29,
+      "top3_accuracy": 0.8056,
+      "top4_hits": 29,
+      "top4_accuracy": 0.8056,
+      "top5_hits": 29,
+      "top5_accuracy": 0.8056,
+      "top6_hits": 31,
+      "top6_accuracy": 0.8611,
+      "top7_hits": 31,
+      "top7_accuracy": 0.8611
     },
     "by_sport": {
-      "football": {
-        "top1_hits": 18,
-        "top1_accuracy": 0.8182,
-        "top2_hits": 20,
-        "top2_accuracy": 0.9091,
-        "top3_hits": 20,
-        "top3_accuracy": 0.9091,
-        "top4_hits": 20,
-        "top4_accuracy": 0.9091,
-        "top5_hits": 20,
-        "top5_accuracy": 0.9091,
-        "top6_hits": 21,
-        "top6_accuracy": 0.9545,
-        "top7_hits": 21,
-        "top7_accuracy": 0.9545,
-        "evaluable": 22,
-        "total_leagues": 26
-      },
       "basketball": {
         "top1_hits": 4,
         "top1_accuracy": 0.4,
@@ -62,6 +44,24 @@
         "top7_accuracy": 0.6,
         "evaluable": 10,
         "total_leagues": 10
+      },
+      "football": {
+        "top1_hits": 22,
+        "top1_accuracy": 0.8462,
+        "top2_hits": 24,
+        "top2_accuracy": 0.9231,
+        "top3_hits": 24,
+        "top3_accuracy": 0.9231,
+        "top4_hits": 24,
+        "top4_accuracy": 0.9231,
+        "top5_hits": 24,
+        "top5_accuracy": 0.9231,
+        "top6_hits": 25,
+        "top6_accuracy": 0.9615,
+        "top7_hits": 25,
+        "top7_accuracy": 0.9615,
+        "evaluable": 26,
+        "total_leagues": 26
       }
     },
     "misclassified": [
@@ -86,22 +86,22 @@
         "status": "TOPN_HIT"
       },
       {
-        "src_id": "sr:tournament:7",
-        "src_name": "UEFA Champions League",
-        "src_cat": "International Clubs",
+        "src_id": "sr:tournament:21",
+        "src_name": "National League → English National League",
+        "src_cat": "",
         "sport": "football",
-        "gt_ts_id": "z8yomo4h7wq0j6l",
-        "top1_ts_id": "9vjxm8ghly2r6od",
-        "top1_ts_name": "UCL",
-        "top1_score": 0.98,
+        "gt_ts_id": "z318q66hv8qo9jd",
+        "top1_ts_id": "z8yomo4h0llq0j6",
+        "top1_ts_name": "National Super League",
+        "top1_score": 0.7253,
         "topk_ids": [
-          "9vjxm8ghly2r6od",
-          "z8yomo4h7wq0j6l",
-          "56ypq3nh0llmd7o",
-          "gy0or5jhnokqwzv",
-          "9dn1m1ghjpmoepl",
-          "z8yomo4hg66q0j6",
-          "d23xmvkh43oqg8n"
+          "z8yomo4h0llq0j6",
+          "z318q66hv8qo9jd",
+          "vl7oqdehejkr510",
+          "gx7lm7ph92ym2wd",
+          "jednm9whz6xryox",
+          "e4wyrn4hokwq86p",
+          "j1l4rjnhk4om7vx"
         ],
         "status": "TOPN_HIT"
       },
@@ -341,19 +341,19 @@
         "gt_in_pool": true,
         "top1_ts_id": "vl7oqdehlyr510j",
         "top1_ts_name": "Spanish La Liga",
-        "top1_score": 0.985,
+        "top1_score": 0.995,
         "topk": [
           {
             "ts_id": "vl7oqdehlyr510j",
             "ts_name": "Spanish La Liga",
             "ts_country": "Spain",
-            "score": 0.985
+            "score": 0.995
           },
           {
             "ts_id": "kdj2ryohnkq1zpg",
             "ts_name": "Spanish Segunda Division",
             "ts_country": "Spain",
-            "score": 0.9641
+            "score": 0.9671
           },
           {
             "ts_id": "e4wyrn4hvydq86p",
@@ -406,25 +406,25 @@
         "gt_in_pool": true,
         "top1_ts_id": "gy0or5jhg6qwzv3",
         "top1_ts_name": "Bundesliga",
-        "top1_score": 0.985,
+        "top1_score": 0.995,
         "topk": [
           {
             "ts_id": "gy0or5jhg6qwzv3",
             "ts_name": "Bundesliga",
             "ts_country": "Germany",
-            "score": 0.985
+            "score": 0.995
           },
           {
             "ts_id": "8y39mp1hjoemojx",
             "ts_name": "German Bundesliga 5",
             "ts_country": "Germany",
-            "score": 0.9739
+            "score": 0.9801
           },
           {
             "ts_id": "kn54qllhjzqvy9d",
             "ts_name": "German Bundesliga 2",
             "ts_country": "Germany",
-            "score": 0.9739
+            "score": 0.9801
           },
           {
             "ts_id": "56ypq3nhze2md7o",
@@ -471,31 +471,31 @@
         "gt_in_pool": true,
         "top1_ts_id": "4zp5rzghp5q82w1",
         "top1_ts_name": "Italian Serie A",
-        "top1_score": 0.985,
+        "top1_score": 0.995,
         "topk": [
           {
             "ts_id": "4zp5rzghp5q82w1",
             "ts_name": "Italian Serie A",
             "ts_country": "Italy",
-            "score": 0.985
+            "score": 0.995
           },
           {
             "ts_id": "j1l4rjnhx9m7vx5",
             "ts_name": "Italian Serie B",
             "ts_country": "Italy",
-            "score": 0.968
+            "score": 0.9723
           },
           {
             "ts_id": "p4jwq2ghxgm0veo",
             "ts_name": "Italian Serie C",
             "ts_country": "Italy",
-            "score": 0.968
+            "score": 0.9723
           },
           {
             "ts_id": "v2y8m4zhjlzql07",
             "ts_name": "Italian Serie D",
             "ts_country": "Italy",
-            "score": 0.968
+            "score": 0.9723
           },
           {
             "ts_id": "9vjxm8gh8dor6od",
@@ -536,19 +536,19 @@
         "gt_in_pool": true,
         "top1_ts_id": "yl5ergphnzr8k0o",
         "top1_ts_name": "French Ligue 1",
-        "top1_score": 0.985,
+        "top1_score": 0.995,
         "topk": [
           {
             "ts_id": "yl5ergphnzr8k0o",
             "ts_name": "French Ligue 1",
             "ts_country": "France",
-            "score": 0.985
+            "score": 0.995
           },
           {
             "ts_id": "kjw2r09hw8rz84o",
             "ts_name": "French Ligue 2",
             "ts_country": "France",
-            "score": 0.9657
+            "score": 0.9693
           },
           {
             "ts_id": "gpxwrxlhvzryk0j",
@@ -599,21 +599,21 @@
         "sport": "football",
         "gt_ts_id": "z8yomo4h7wq0j6l",
         "gt_in_pool": true,
-        "top1_ts_id": "9vjxm8ghly2r6od",
-        "top1_ts_name": "UCL",
-        "top1_score": 0.98,
+        "top1_ts_id": "z8yomo4h7wq0j6l",
+        "top1_ts_name": "UEFA Champions League",
+        "top1_score": 0.995,
         "topk": [
+          {
+            "ts_id": "z8yomo4h7wq0j6l",
+            "ts_name": "UEFA Champions League",
+            "ts_country": "International",
+            "score": 0.995
+          },
           {
             "ts_id": "9vjxm8ghly2r6od",
             "ts_name": "UCL",
             "ts_country": "",
             "score": 0.98
-          },
-          {
-            "ts_id": "z8yomo4h7wq0j6l",
-            "ts_name": "UEFA Champions League",
-            "ts_country": "International",
-            "score": 0.9568
           },
           {
             "ts_id": "56ypq3nh0llmd7o",
@@ -647,15 +647,15 @@
           }
         ],
         "topk_ids": [
-          "9vjxm8ghly2r6od",
           "z8yomo4h7wq0j6l",
+          "9vjxm8ghly2r6od",
           "56ypq3nh0llmd7o",
           "gy0or5jhnokqwzv",
           "9dn1m1ghjpmoepl",
           "z8yomo4hg66q0j6",
           "d23xmvkh43oqg8n"
         ],
-        "status": "TOPN_HIT"
+        "status": "TOP1_HIT"
       },
       {
         "src_id": "sr:tournament:679",
@@ -666,13 +666,13 @@
         "gt_in_pool": true,
         "top1_ts_id": "56ypq3nh0xmd7oj",
         "top1_ts_name": "UEFA Europa League",
-        "top1_score": 0.9568,
+        "top1_score": 0.995,
         "topk": [
           {
             "ts_id": "56ypq3nh0xmd7oj",
             "ts_name": "UEFA Europa League",
             "ts_country": "International",
-            "score": 0.9568
+            "score": 0.995
           },
           {
             "ts_id": "9vjxm8gh8gr6odg",
@@ -731,13 +731,13 @@
         "gt_in_pool": true,
         "top1_ts_id": "l965mkyh32r1ge4",
         "top1_ts_name": "English Football League Championship",
-        "top1_score": 0.985,
+        "top1_score": 0.995,
         "topk": [
           {
             "ts_id": "l965mkyh32r1ge4",
             "ts_name": "English Football League Championship",
             "ts_country": "England",
-            "score": 0.985
+            "score": 0.995
           },
           {
             "ts_id": "8y39mp1hjzmojxg",
@@ -789,56 +789,56 @@
       },
       {
         "src_id": "sr:tournament:19",
-        "src_name": "EFL League One",
+        "src_name": "EFL League One → English Football League One",
         "src_category": "",
         "sport": "football",
-        "gt_ts_id": "xk4zp5rh3nr82w1",
-        "gt_in_pool": false,
+        "gt_ts_id": "8y39mp1hjzmojxg",
+        "gt_in_pool": true,
         "top1_ts_id": "8y39mp1hjzmojxg",
         "top1_ts_name": "English Football League One",
-        "top1_score": 0.98,
+        "top1_score": 0.7712,
         "topk": [
           {
             "ts_id": "8y39mp1hjzmojxg",
             "ts_name": "English Football League One",
             "ts_country": "England",
-            "score": 0.98
+            "score": 0.7712
           },
           {
             "ts_id": "9k82rekhygrepzj",
             "ts_name": "English Football League Two",
             "ts_country": "England",
-            "score": 0.9526
+            "score": 0.7221
           },
           {
             "ts_id": "gx7lm7phw0m2wdk",
             "ts_name": "English Football League Cup",
             "ts_country": "England",
-            "score": 0.9289
+            "score": 0.7129
           },
           {
             "ts_id": "gy0or5jh33qwzv3",
             "ts_name": "English Football League Trophy",
             "ts_country": "England",
-            "score": 0.922
-          },
-          {
-            "ts_id": "l965mkyh32r1ge4",
-            "ts_name": "English Football League Championship",
-            "ts_country": "England",
-            "score": 0.8924
+            "score": 0.6929
           },
           {
             "ts_id": "yl5ergphvjr8k0o",
             "ts_name": "English Southern Football League",
             "ts_country": "England",
-            "score": 0.8531
+            "score": 0.6826
           },
           {
-            "ts_id": "56ypq3nhlp8md7o",
-            "ts_name": "Leagues Cup",
+            "ts_id": "d23xmvkh4edqg8n",
+            "ts_name": "Lebanese women's Football League",
             "ts_country": "",
-            "score": 0.8361
+            "score": 0.6819
+          },
+          {
+            "ts_id": "l965mkyh32r1ge4",
+            "ts_name": "English Football League Championship",
+            "ts_country": "England",
+            "score": 0.674
           }
         ],
         "topk_ids": [
@@ -846,64 +846,64 @@
           "9k82rekhygrepzj",
           "gx7lm7phw0m2wdk",
           "gy0or5jh33qwzv3",
-          "l965mkyh32r1ge4",
           "yl5ergphvjr8k0o",
-          "56ypq3nhlp8md7o"
+          "d23xmvkh4edqg8n",
+          "l965mkyh32r1ge4"
         ],
-        "status": "GT_NOT_IN_POOL"
+        "status": "TOP1_HIT"
       },
       {
         "src_id": "sr:tournament:20",
-        "src_name": "EFL League Two",
+        "src_name": "EFL League Two → English Football League Two",
         "src_category": "",
         "sport": "football",
-        "gt_ts_id": "8y39mp1h7amojxg",
-        "gt_in_pool": false,
+        "gt_ts_id": "9k82rekhygrepzj",
+        "gt_in_pool": true,
         "top1_ts_id": "9k82rekhygrepzj",
         "top1_ts_name": "English Football League Two",
-        "top1_score": 0.98,
+        "top1_score": 0.7734,
         "topk": [
           {
             "ts_id": "9k82rekhygrepzj",
             "ts_name": "English Football League Two",
             "ts_country": "England",
-            "score": 0.98
+            "score": 0.7734
           },
           {
             "ts_id": "8y39mp1hjzmojxg",
             "ts_name": "English Football League One",
             "ts_country": "England",
-            "score": 0.9526
+            "score": 0.735
           },
           {
             "ts_id": "gy0or5jh33qwzv3",
             "ts_name": "English Football League Trophy",
             "ts_country": "England",
-            "score": 0.9445
+            "score": 0.7162
           },
           {
             "ts_id": "gx7lm7phw0m2wdk",
             "ts_name": "English Football League Cup",
             "ts_country": "England",
-            "score": 0.9289
+            "score": 0.7129
           },
           {
-            "ts_id": "l965mkyh32r1ge4",
-            "ts_name": "English Football League Championship",
-            "ts_country": "England",
-            "score": 0.8719
+            "ts_id": "d23xmvkh4edqg8n",
+            "ts_name": "Lebanese women's Football League",
+            "ts_country": "",
+            "score": 0.7008
           },
           {
             "ts_id": "yl5ergphvjr8k0o",
             "ts_name": "English Southern Football League",
             "ts_country": "England",
-            "score": 0.8434
+            "score": 0.6794
           },
           {
-            "ts_id": "56ypq3nhlp8md7o",
-            "ts_name": "Leagues Cup",
+            "ts_id": "e4wyrn4hv6dq86p",
+            "ts_name": "Nigeria Women's Football League",
             "ts_country": "",
-            "score": 0.8361
+            "score": 0.6642
           }
         ],
         "topk_ids": [
@@ -911,84 +911,84 @@
           "8y39mp1hjzmojxg",
           "gy0or5jh33qwzv3",
           "gx7lm7phw0m2wdk",
-          "l965mkyh32r1ge4",
+          "d23xmvkh4edqg8n",
           "yl5ergphvjr8k0o",
-          "56ypq3nhlp8md7o"
+          "e4wyrn4hv6dq86p"
         ],
-        "status": "GT_NOT_IN_POOL"
+        "status": "TOP1_HIT"
       },
       {
         "src_id": "sr:tournament:21",
-        "src_name": "National League",
+        "src_name": "National League → English National League",
         "src_category": "",
         "sport": "football",
-        "gt_ts_id": "z318q66h72qo9jd",
-        "gt_in_pool": false,
-        "top1_ts_id": "d23xmvkh43oqg8n",
-        "top1_ts_name": "UEFA Nations League",
-        "top1_score": 0.9202,
+        "gt_ts_id": "z318q66hv8qo9jd",
+        "gt_in_pool": true,
+        "top1_ts_id": "z8yomo4h0llq0j6",
+        "top1_ts_name": "National Super League",
+        "top1_score": 0.7253,
         "topk": [
-          {
-            "ts_id": "d23xmvkh43oqg8n",
-            "ts_name": "UEFA Nations League",
-            "ts_country": "International",
-            "score": 0.9202
-          },
           {
             "ts_id": "z8yomo4h0llq0j6",
             "ts_name": "National Super League",
             "ts_country": "",
-            "score": 0.879
+            "score": 0.7253
           },
           {
-            "ts_id": "jednm9whgw3ryox",
-            "ts_name": "Niger National League",
+            "ts_id": "z318q66hv8qo9jd",
+            "ts_name": "English National League",
+            "ts_country": "England",
+            "score": 0.7238
+          },
+          {
+            "ts_id": "vl7oqdehejkr510",
+            "ts_name": "National Collegiate Association",
             "ts_country": "",
-            "score": 0.8137
+            "score": 0.7228
           },
           {
-            "ts_id": "e4wyrn4hd4lq86p",
-            "ts_name": "Fijian National League",
+            "ts_id": "gx7lm7ph92ym2wd",
+            "ts_name": "National Collegiate Association Women",
             "ts_country": "",
-            "score": 0.7996
+            "score": 0.7222
           },
           {
-            "ts_id": "gy0or5jh42nqwzv",
-            "ts_name": "Rwandan National League",
+            "ts_id": "jednm9whz6xryox",
+            "ts_name": "National Premier Soccer League",
             "ts_country": "",
-            "score": 0.7888
+            "score": 0.7207
           },
           {
-            "ts_id": "9k82rekh9n1repz",
-            "ts_name": "Korean National League",
-            "ts_country": "Korea",
-            "score": 0.7863
+            "ts_id": "e4wyrn4hokwq86p",
+            "ts_name": "National Youth School Football League",
+            "ts_country": "",
+            "score": 0.7161
           },
           {
-            "ts_id": "d23xmvkh3vgqg8n",
-            "ts_name": "Korean National League",
-            "ts_country": "South Korea",
-            "score": 0.7863
+            "ts_id": "j1l4rjnhk4om7vx",
+            "ts_name": "Nepal Women's National League",
+            "ts_country": "",
+            "score": 0.7115
           }
         ],
         "topk_ids": [
-          "d23xmvkh43oqg8n",
           "z8yomo4h0llq0j6",
-          "jednm9whgw3ryox",
-          "e4wyrn4hd4lq86p",
-          "gy0or5jh42nqwzv",
-          "9k82rekh9n1repz",
-          "d23xmvkh3vgqg8n"
+          "z318q66hv8qo9jd",
+          "vl7oqdehejkr510",
+          "gx7lm7ph92ym2wd",
+          "jednm9whz6xryox",
+          "e4wyrn4hokwq86p",
+          "j1l4rjnhk4om7vx"
         ],
-        "status": "GT_NOT_IN_POOL"
+        "status": "TOPN_HIT"
       },
       {
         "src_id": "sr:tournament:9",
         "src_name": "FA Cup",
         "src_category": "",
         "sport": "football",
-        "gt_ts_id": "jednm9wh5zryox8",
-        "gt_in_pool": false,
+        "gt_ts_id": "9vjxm8gh8gr6odg",
+        "gt_in_pool": true,
         "top1_ts_id": "9vjxm8gh8gr6odg",
         "top1_ts_name": "FA Cup",
         "top1_score": 0.98,
@@ -1045,7 +1045,7 @@
           "j1l4rjnh6znm7vx",
           "yl5ergphwdjr8k0"
         ],
-        "status": "GT_NOT_IN_POOL"
+        "status": "TOP1_HIT"
       },
       {
         "src_id": "sr:tournament:22",
@@ -1121,13 +1121,13 @@
         "gt_in_pool": true,
         "top1_ts_id": "vl7oqdeheyr510j",
         "top1_ts_name": "Netherlands Eredivisie",
-        "top1_score": 0.985,
+        "top1_score": 0.995,
         "topk": [
           {
             "ts_id": "vl7oqdeheyr510j",
             "ts_name": "Netherlands Eredivisie",
             "ts_country": "Netherlands",
-            "score": 0.985
+            "score": 0.995
           },
           {
             "ts_id": "j1l4rjnhz1wm7vx",
@@ -1251,13 +1251,13 @@
         "gt_in_pool": true,
         "top1_ts_id": "8y39mp1h6jmojxg",
         "top1_ts_name": "Turkish Super League",
-        "top1_score": 0.9526,
+        "top1_score": 0.995,
         "topk": [
           {
             "ts_id": "8y39mp1h6jmojxg",
             "ts_name": "Turkish Super League",
             "ts_country": "Turkey",
-            "score": 0.9526
+            "score": 0.995
           },
           {
             "ts_id": "kjw2r09hk9rz84o",
@@ -1446,13 +1446,13 @@
         "gt_in_pool": true,
         "top1_ts_id": "kn54qllhg2qvy9d",
         "top1_ts_name": "United States Major League Soccer",
-        "top1_score": 0.985,
+        "top1_score": 0.995,
         "topk": [
           {
             "ts_id": "kn54qllhg2qvy9d",
             "ts_name": "United States Major League Soccer",
             "ts_country": "USA",
-            "score": 0.985
+            "score": 0.995
           },
           {
             "ts_id": "p4jwq2ghkdem0ve",
@@ -1511,31 +1511,31 @@
         "gt_in_pool": true,
         "top1_ts_id": "4zp5rzgh9zq82w1",
         "top1_ts_name": "Brazilian Serie A",
-        "top1_score": 0.985,
+        "top1_score": 0.995,
         "topk": [
           {
             "ts_id": "4zp5rzgh9zq82w1",
             "ts_name": "Brazilian Serie A",
             "ts_country": "Brazil",
-            "score": 0.985
+            "score": 0.995
           },
           {
             "ts_id": "gpxwrxlh9pyryk0",
             "ts_name": "Brazilian Serie D",
             "ts_country": "Brazil",
-            "score": 0.9718
+            "score": 0.9774
           },
           {
             "ts_id": "gx7lm7ph001m2wd",
             "ts_name": "Brazilian Serie C",
             "ts_country": "Brazil",
-            "score": 0.9718
+            "score": 0.9774
           },
           {
             "ts_id": "j1l4rjnh0xm7vx5",
             "ts_name": "Brazilian Serie B",
             "ts_country": "Brazil",
-            "score": 0.9718
+            "score": 0.9774
           },
           {
             "ts_id": "gpxwrxlho4ryk0j",
@@ -2632,24 +2632,6 @@
       "top7_accuracy": 0.7969
     },
     "by_sport": {
-      "football": {
-        "top1_hits": 32,
-        "top1_accuracy": 0.7805,
-        "top2_hits": 34,
-        "top2_accuracy": 0.8293,
-        "top3_hits": 37,
-        "top3_accuracy": 0.9024,
-        "top4_hits": 38,
-        "top4_accuracy": 0.9268,
-        "top5_hits": 38,
-        "top5_accuracy": 0.9268,
-        "top6_hits": 39,
-        "top6_accuracy": 0.9512,
-        "top7_hits": 39,
-        "top7_accuracy": 0.9512,
-        "evaluable": 41,
-        "total_leagues": 41
-      },
       "basketball": {
         "top1_hits": 6,
         "top1_accuracy": 0.2609,
@@ -2667,6 +2649,24 @@
         "top7_accuracy": 0.5217,
         "evaluable": 23,
         "total_leagues": 23
+      },
+      "football": {
+        "top1_hits": 32,
+        "top1_accuracy": 0.7805,
+        "top2_hits": 34,
+        "top2_accuracy": 0.8293,
+        "top3_hits": 37,
+        "top3_accuracy": 0.9024,
+        "top4_hits": 38,
+        "top4_accuracy": 0.9268,
+        "top5_hits": 38,
+        "top5_accuracy": 0.9268,
+        "top6_hits": 39,
+        "top6_accuracy": 0.9512,
+        "top7_hits": 39,
+        "top7_accuracy": 0.9512,
+        "evaluable": 41,
+        "total_leagues": 41
       }
     },
     "misclassified": [
@@ -2710,7 +2710,7 @@
         "gt_ts_id": "8y39mp1hwxmojxg",
         "top1_ts_id": "z318q66hgzqo9jd",
         "top1_ts_name": "Russian Football National League 2",
-        "top1_score": 0.9856,
+        "top1_score": 0.9958,
         "topk_ids": [
           "z318q66hgzqo9jd",
           "9k82rekh6lrepzj",
@@ -2750,7 +2750,7 @@
         "gt_ts_id": "gx7lm7pho13m2wd",
         "top1_ts_id": "gx7lm7phjem2wdk",
         "top1_ts_name": "Croatian Football League",
-        "top1_score": 0.985,
+        "top1_score": 0.995,
         "topk_ids": [
           "gx7lm7phjem2wdk",
           "gx7lm7pho13m2wd",
@@ -2810,7 +2810,7 @@
         "gt_ts_id": "kn54qllh25dqvy9",
         "top1_ts_id": "4zp5rzghjy0q82w",
         "top1_ts_name": "Korean K League 3 ",
-        "top1_score": 0.9718,
+        "top1_score": 0.9774,
         "topk_ids": [
           "4zp5rzghjy0q82w",
           "gy0or5jhlxgqwzv",
@@ -3193,13 +3193,13 @@
         "gt_in_pool": true,
         "top1_ts_id": "jednm9whz0ryox8",
         "top1_ts_name": "English Premier League",
-        "top1_score": 0.985,
+        "top1_score": 0.995,
         "topk": [
           {
             "ts_id": "jednm9whz0ryox8",
             "ts_name": "English Premier League",
             "ts_country": "England",
-            "score": 0.985
+            "score": 0.995
           },
           {
             "ts_id": "9k82rekhw2nrepz",
@@ -3258,19 +3258,19 @@
         "gt_in_pool": true,
         "top1_ts_id": "vl7oqdehlyr510j",
         "top1_ts_name": "Spanish La Liga",
-        "top1_score": 0.985,
+        "top1_score": 0.995,
         "topk": [
           {
             "ts_id": "vl7oqdehlyr510j",
             "ts_name": "Spanish La Liga",
             "ts_country": "Spain",
-            "score": 0.985
+            "score": 0.995
           },
           {
             "ts_id": "kdj2ryohnkq1zpg",
             "ts_name": "Spanish Segunda Division",
             "ts_country": "Spain",
-            "score": 0.9641
+            "score": 0.9671
           },
           {
             "ts_id": "e4wyrn4hvydq86p",
@@ -3323,25 +3323,25 @@
         "gt_in_pool": true,
         "top1_ts_id": "gy0or5jhg6qwzv3",
         "top1_ts_name": "Bundesliga",
-        "top1_score": 0.985,
+        "top1_score": 0.995,
         "topk": [
           {
             "ts_id": "gy0or5jhg6qwzv3",
             "ts_name": "Bundesliga",
             "ts_country": "Germany",
-            "score": 0.985
+            "score": 0.995
           },
           {
             "ts_id": "8y39mp1hjoemojx",
             "ts_name": "German Bundesliga 5",
             "ts_country": "Germany",
-            "score": 0.9739
+            "score": 0.9801
           },
           {
             "ts_id": "kn54qllhjzqvy9d",
             "ts_name": "German Bundesliga 2",
             "ts_country": "Germany",
-            "score": 0.9739
+            "score": 0.9801
           },
           {
             "ts_id": "56ypq3nhze2md7o",
@@ -3388,31 +3388,31 @@
         "gt_in_pool": true,
         "top1_ts_id": "4zp5rzghp5q82w1",
         "top1_ts_name": "Italian Serie A",
-        "top1_score": 0.985,
+        "top1_score": 0.995,
         "topk": [
           {
             "ts_id": "4zp5rzghp5q82w1",
             "ts_name": "Italian Serie A",
             "ts_country": "Italy",
-            "score": 0.985
+            "score": 0.995
           },
           {
             "ts_id": "j1l4rjnhx9m7vx5",
             "ts_name": "Italian Serie B",
             "ts_country": "Italy",
-            "score": 0.968
+            "score": 0.9723
           },
           {
             "ts_id": "p4jwq2ghxgm0veo",
             "ts_name": "Italian Serie C",
             "ts_country": "Italy",
-            "score": 0.968
+            "score": 0.9723
           },
           {
             "ts_id": "v2y8m4zhjlzql07",
             "ts_name": "Italian Serie D",
             "ts_country": "Italy",
-            "score": 0.968
+            "score": 0.9723
           },
           {
             "ts_id": "9vjxm8gh8dor6od",
@@ -3453,19 +3453,19 @@
         "gt_in_pool": true,
         "top1_ts_id": "yl5ergphnzr8k0o",
         "top1_ts_name": "French Ligue 1",
-        "top1_score": 0.985,
+        "top1_score": 0.995,
         "topk": [
           {
             "ts_id": "yl5ergphnzr8k0o",
             "ts_name": "French Ligue 1",
             "ts_country": "France",
-            "score": 0.985
+            "score": 0.995
           },
           {
             "ts_id": "kjw2r09hw8rz84o",
             "ts_name": "French Ligue 2",
             "ts_country": "France",
-            "score": 0.9657
+            "score": 0.9693
           },
           {
             "ts_id": "gpxwrxlhvzryk0j",
@@ -3778,13 +3778,13 @@
         "gt_in_pool": true,
         "top1_ts_id": "l965mkyh32r1ge4",
         "top1_ts_name": "English Football League Championship",
-        "top1_score": 0.985,
+        "top1_score": 0.995,
         "topk": [
           {
             "ts_id": "l965mkyh32r1ge4",
             "ts_name": "English Football League Championship",
             "ts_country": "England",
-            "score": 0.985
+            "score": 0.995
           },
           {
             "ts_id": "8y39mp1hjzmojxg",
@@ -3843,19 +3843,19 @@
         "gt_in_pool": true,
         "top1_ts_id": "8y39mp1hjzmojxg",
         "top1_ts_name": "English Football League One",
-        "top1_score": 0.985,
+        "top1_score": 0.995,
         "topk": [
           {
             "ts_id": "8y39mp1hjzmojxg",
             "ts_name": "English Football League One",
             "ts_country": "England",
-            "score": 0.985
+            "score": 0.995
           },
           {
             "ts_id": "9k82rekhygrepzj",
             "ts_name": "English Football League Two",
             "ts_country": "England",
-            "score": 0.9644
+            "score": 0.9676
           },
           {
             "ts_id": "gx7lm7phw0m2wdk",
@@ -3908,19 +3908,19 @@
         "gt_in_pool": true,
         "top1_ts_id": "9k82rekhygrepzj",
         "top1_ts_name": "English Football League Two",
-        "top1_score": 0.985,
+        "top1_score": 0.995,
         "topk": [
           {
             "ts_id": "9k82rekhygrepzj",
             "ts_name": "English Football League Two",
             "ts_country": "England",
-            "score": 0.985
+            "score": 0.995
           },
           {
             "ts_id": "8y39mp1hjzmojxg",
             "ts_name": "English Football League One",
             "ts_country": "England",
-            "score": 0.9644
+            "score": 0.9676
           },
           {
             "ts_id": "gy0or5jh33qwzv3",
@@ -4052,31 +4052,31 @@
         "gt_in_pool": true,
         "top1_ts_id": "j1l4rjnhx9m7vx5",
         "top1_ts_name": "Italian Serie B",
-        "top1_score": 0.985,
+        "top1_score": 0.995,
         "topk": [
           {
             "ts_id": "j1l4rjnhx9m7vx5",
             "ts_name": "Italian Serie B",
             "ts_country": "Italy",
-            "score": 0.985
+            "score": 0.995
           },
           {
             "ts_id": "4zp5rzghp5q82w1",
             "ts_name": "Italian Serie A",
             "ts_country": "Italy",
-            "score": 0.968
+            "score": 0.9723
           },
           {
             "ts_id": "p4jwq2ghxgm0veo",
             "ts_name": "Italian Serie C",
             "ts_country": "Italy",
-            "score": 0.968
+            "score": 0.9723
           },
           {
             "ts_id": "v2y8m4zhjlzql07",
             "ts_name": "Italian Serie D",
             "ts_country": "Italy",
-            "score": 0.968
+            "score": 0.9723
           },
           {
             "ts_id": "9vjxm8gh8dor6od",
@@ -4117,19 +4117,19 @@
         "gt_in_pool": true,
         "top1_ts_id": "kjw2r09hw8rz84o",
         "top1_ts_name": "French Ligue 2",
-        "top1_score": 0.985,
+        "top1_score": 0.995,
         "topk": [
           {
             "ts_id": "kjw2r09hw8rz84o",
             "ts_name": "French Ligue 2",
             "ts_country": "France",
-            "score": 0.985
+            "score": 0.995
           },
           {
             "ts_id": "yl5ergphnzr8k0o",
             "ts_name": "French Ligue 1",
             "ts_country": "France",
-            "score": 0.9657
+            "score": 0.9693
           },
           {
             "ts_id": "gpxwrxlhvzryk0j",
@@ -4182,19 +4182,19 @@
         "gt_in_pool": true,
         "top1_ts_id": "kdj2ryohnkq1zpg",
         "top1_ts_name": "Spanish Segunda Division",
-        "top1_score": 0.985,
+        "top1_score": 0.995,
         "topk": [
           {
             "ts_id": "kdj2ryohnkq1zpg",
             "ts_name": "Spanish Segunda Division",
             "ts_country": "Spain",
-            "score": 0.985
+            "score": 0.995
           },
           {
             "ts_id": "vl7oqdehlyr510j",
             "ts_name": "Spanish La Liga",
             "ts_country": "Spain",
-            "score": 0.9641
+            "score": 0.9671
           },
           {
             "ts_id": "v2y8m4zhzjql074",
@@ -4247,19 +4247,19 @@
         "gt_in_pool": true,
         "top1_ts_id": "9vjxm8gh22r6odg",
         "top1_ts_name": "Belgian Pro League",
-        "top1_score": 0.985,
+        "top1_score": 0.995,
         "topk": [
           {
             "ts_id": "9vjxm8gh22r6odg",
             "ts_name": "Belgian Pro League",
             "ts_country": "Belgium",
-            "score": 0.985
+            "score": 0.995
           },
           {
             "ts_id": "gy0or5jhgn5qwzv",
             "ts_name": "Belgian First Division B",
             "ts_country": "Belgium",
-            "score": 0.98
+            "score": 0.9883
           },
           {
             "ts_id": "gy0or5jh4xzqwzv",
@@ -4312,13 +4312,13 @@
         "gt_in_pool": true,
         "top1_ts_id": "vl7oqdeheyr510j",
         "top1_ts_name": "Netherlands Eredivisie",
-        "top1_score": 0.985,
+        "top1_score": 0.995,
         "topk": [
           {
             "ts_id": "vl7oqdeheyr510j",
             "ts_name": "Netherlands Eredivisie",
             "ts_country": "Netherlands",
-            "score": 0.985
+            "score": 0.995
           },
           {
             "ts_id": "j1l4rjnhz1wm7vx",
@@ -4377,19 +4377,19 @@
         "gt_in_pool": true,
         "top1_ts_id": "9vjxm8ghx2r6odg",
         "top1_ts_name": "Portuguese Primera Liga",
-        "top1_score": 0.9814,
+        "top1_score": 0.9902,
         "topk": [
           {
             "ts_id": "9vjxm8ghx2r6odg",
             "ts_name": "Portuguese Primera Liga",
             "ts_country": "Portugal",
-            "score": 0.9814
+            "score": 0.9902
           },
           {
             "ts_id": "gx7lm7phpnm2wdk",
             "ts_name": "Liga Portugal 2",
             "ts_country": "Portugal",
-            "score": 0.9666
+            "score": 0.9704
           },
           {
             "ts_id": "gpxwrxlhz00ryk0",
@@ -4442,13 +4442,13 @@
         "gt_in_pool": true,
         "top1_ts_id": "8y39mp1h6jmojxg",
         "top1_ts_name": "Turkish Super League",
-        "top1_score": 0.985,
+        "top1_score": 0.995,
         "topk": [
           {
             "ts_id": "8y39mp1h6jmojxg",
             "ts_name": "Turkish Super League",
             "ts_country": "Turkey",
-            "score": 0.985
+            "score": 0.995
           },
           {
             "ts_id": "kjw2r09hk9rz84o",
@@ -4507,19 +4507,19 @@
         "gt_in_pool": true,
         "top1_ts_id": "z318q66hgzqo9jd",
         "top1_ts_name": "Russian Football National League 2",
-        "top1_score": 0.9856,
+        "top1_score": 0.9958,
         "topk": [
           {
             "ts_id": "z318q66hgzqo9jd",
             "ts_name": "Russian Football National League 2",
             "ts_country": "Russia",
-            "score": 0.9856
+            "score": 0.9958
           },
           {
             "ts_id": "9k82rekh6lrepzj",
             "ts_name": "Russian First League",
             "ts_country": "Russia",
-            "score": 0.985
+            "score": 0.995
           },
           {
             "ts_id": "8y39mp1hwxmojxg",
@@ -4637,19 +4637,19 @@
         "gt_in_pool": true,
         "top1_ts_id": "gx7lm7phjem2wdk",
         "top1_ts_name": "Croatian Football League",
-        "top1_score": 0.985,
+        "top1_score": 0.995,
         "topk": [
           {
             "ts_id": "gx7lm7phjem2wdk",
             "ts_name": "Croatian Football League",
             "ts_country": "Croatia",
-            "score": 0.985
+            "score": 0.995
           },
           {
             "ts_id": "gx7lm7pho13m2wd",
             "ts_name": "Croatian First Football League",
             "ts_country": "Croatia",
-            "score": 0.985
+            "score": 0.995
           },
           {
             "ts_id": "l965mkyhy02r1ge",
@@ -4767,13 +4767,13 @@
         "gt_in_pool": true,
         "top1_ts_id": "e4wyrn4hoeq86pv",
         "top1_ts_name": "Greek Super League",
-        "top1_score": 0.9641,
+        "top1_score": 0.9671,
         "topk": [
           {
             "ts_id": "e4wyrn4hoeq86pv",
             "ts_name": "Greek Super League",
             "ts_country": "Greece",
-            "score": 0.9641
+            "score": 0.9671
           },
           {
             "ts_id": "yl5ergphlvr8k0o",
@@ -4832,13 +4832,13 @@
         "gt_in_pool": true,
         "top1_ts_id": "l965mkyhg0r1ge4",
         "top1_ts_name": "Sweden Allsvenskan",
-        "top1_score": 0.985,
+        "top1_score": 0.995,
         "topk": [
           {
             "ts_id": "l965mkyhg0r1ge4",
             "ts_name": "Sweden Allsvenskan",
             "ts_country": "Sweden",
-            "score": 0.985
+            "score": 0.995
           },
           {
             "ts_id": "yl5ergph5zr8k0o",
@@ -4962,13 +4962,13 @@
         "gt_in_pool": true,
         "top1_ts_id": "gy0or5jhj6qwzv3",
         "top1_ts_name": "Norwegian Eliteserien",
-        "top1_score": 0.985,
+        "top1_score": 0.995,
         "topk": [
           {
             "ts_id": "gy0or5jhj6qwzv3",
             "ts_name": "Norwegian Eliteserien",
             "ts_country": "Norway",
-            "score": 0.985
+            "score": 0.995
           },
           {
             "ts_id": "gx7lm7phnjm2wdk",
@@ -5417,25 +5417,25 @@
         "gt_in_pool": true,
         "top1_ts_id": "z318q66hl1qo9jd",
         "top1_ts_name": "Japanese J1 League",
-        "top1_score": 0.985,
+        "top1_score": 0.995,
         "topk": [
           {
             "ts_id": "z318q66hl1qo9jd",
             "ts_name": "Japanese J1 League",
             "ts_country": "Japan",
-            "score": 0.985
+            "score": 0.995
           },
           {
             "ts_id": "9dn1m1gh6gmoepl",
             "ts_name": "Japanese J2 League",
             "ts_country": "Japan",
-            "score": 0.9733
+            "score": 0.9794
           },
           {
             "ts_id": "vl7oqdeh7pr510j",
             "ts_name": "Japanese J3 League",
             "ts_country": "Japan",
-            "score": 0.9733
+            "score": 0.9794
           },
           {
             "ts_id": "gpxwrxlh167ryk0",
@@ -5612,19 +5612,19 @@
         "gt_in_pool": true,
         "top1_ts_id": "4zp5rzghjy0q82w",
         "top1_ts_name": "Korean K League 3 ",
-        "top1_score": 0.9718,
+        "top1_score": 0.9774,
         "topk": [
           {
             "ts_id": "4zp5rzghjy0q82w",
             "ts_name": "Korean K League 3 ",
             "ts_country": "South Korea",
-            "score": 0.9718
+            "score": 0.9774
           },
           {
             "ts_id": "gy0or5jhlxgqwzv",
             "ts_name": "Korean K League 1",
             "ts_country": "South Korea",
-            "score": 0.9718
+            "score": 0.9774
           },
           {
             "ts_id": "p4jwq2gh4o9m0ve",
@@ -5677,19 +5677,19 @@
         "gt_in_pool": true,
         "top1_ts_id": "gy0or5jhlxgqwzv",
         "top1_ts_name": "Korean K League 1",
-        "top1_score": 0.985,
+        "top1_score": 0.995,
         "topk": [
           {
             "ts_id": "gy0or5jhlxgqwzv",
             "ts_name": "Korean K League 1",
             "ts_country": "South Korea",
-            "score": 0.985
+            "score": 0.995
           },
           {
             "ts_id": "4zp5rzghjy0q82w",
             "ts_name": "Korean K League 3 ",
             "ts_country": "South Korea",
-            "score": 0.9718
+            "score": 0.9774
           },
           {
             "ts_id": "p4jwq2gh4o9m0ve",
@@ -7297,40 +7297,22 @@
   },
   "summary": {
     "sr_overall": {
-      "top1_hits": 22,
-      "top1_accuracy": 0.6875,
-      "top2_hits": 25,
-      "top2_accuracy": 0.7812,
-      "top3_hits": 25,
-      "top3_accuracy": 0.7812,
-      "top4_hits": 25,
-      "top4_accuracy": 0.7812,
-      "top5_hits": 25,
-      "top5_accuracy": 0.7812,
-      "top6_hits": 27,
-      "top6_accuracy": 0.8438,
-      "top7_hits": 27,
-      "top7_accuracy": 0.8438
+      "top1_hits": 26,
+      "top1_accuracy": 0.7222,
+      "top2_hits": 29,
+      "top2_accuracy": 0.8056,
+      "top3_hits": 29,
+      "top3_accuracy": 0.8056,
+      "top4_hits": 29,
+      "top4_accuracy": 0.8056,
+      "top5_hits": 29,
+      "top5_accuracy": 0.8056,
+      "top6_hits": 31,
+      "top6_accuracy": 0.8611,
+      "top7_hits": 31,
+      "top7_accuracy": 0.8611
     },
     "sr_by_sport": {
-      "football": {
-        "top1_hits": 18,
-        "top1_accuracy": 0.8182,
-        "top2_hits": 20,
-        "top2_accuracy": 0.9091,
-        "top3_hits": 20,
-        "top3_accuracy": 0.9091,
-        "top4_hits": 20,
-        "top4_accuracy": 0.9091,
-        "top5_hits": 20,
-        "top5_accuracy": 0.9091,
-        "top6_hits": 21,
-        "top6_accuracy": 0.9545,
-        "top7_hits": 21,
-        "top7_accuracy": 0.9545,
-        "evaluable": 22,
-        "total_leagues": 26
-      },
       "basketball": {
         "top1_hits": 4,
         "top1_accuracy": 0.4,
@@ -7348,6 +7330,24 @@
         "top7_accuracy": 0.6,
         "evaluable": 10,
         "total_leagues": 10
+      },
+      "football": {
+        "top1_hits": 22,
+        "top1_accuracy": 0.8462,
+        "top2_hits": 24,
+        "top2_accuracy": 0.9231,
+        "top3_hits": 24,
+        "top3_accuracy": 0.9231,
+        "top4_hits": 24,
+        "top4_accuracy": 0.9231,
+        "top5_hits": 24,
+        "top5_accuracy": 0.9231,
+        "top6_hits": 25,
+        "top6_accuracy": 0.9615,
+        "top7_hits": 25,
+        "top7_accuracy": 0.9615,
+        "evaluable": 26,
+        "total_leagues": 26
       }
     },
     "ls_overall": {
@@ -7367,24 +7367,6 @@
       "top7_accuracy": 0.7969
     },
     "ls_by_sport": {
-      "football": {
-        "top1_hits": 32,
-        "top1_accuracy": 0.7805,
-        "top2_hits": 34,
-        "top2_accuracy": 0.8293,
-        "top3_hits": 37,
-        "top3_accuracy": 0.9024,
-        "top4_hits": 38,
-        "top4_accuracy": 0.9268,
-        "top5_hits": 38,
-        "top5_accuracy": 0.9268,
-        "top6_hits": 39,
-        "top6_accuracy": 0.9512,
-        "top7_hits": 39,
-        "top7_accuracy": 0.9512,
-        "evaluable": 41,
-        "total_leagues": 41
-      },
       "basketball": {
         "top1_hits": 6,
         "top1_accuracy": 0.2609,
@@ -7402,6 +7384,24 @@
         "top7_accuracy": 0.5217,
         "evaluable": 23,
         "total_leagues": 23
+      },
+      "football": {
+        "top1_hits": 32,
+        "top1_accuracy": 0.7805,
+        "top2_hits": 34,
+        "top2_accuracy": 0.8293,
+        "top3_hits": 37,
+        "top3_accuracy": 0.9024,
+        "top4_hits": 38,
+        "top4_accuracy": 0.9268,
+        "top5_hits": 38,
+        "top5_accuracy": 0.9268,
+        "top6_hits": 39,
+        "top6_accuracy": 0.9512,
+        "top7_hits": 39,
+        "top7_accuracy": 0.9512,
+        "evaluable": 41,
+        "total_leagues": 41
       }
     }
   }

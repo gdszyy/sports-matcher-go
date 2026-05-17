@@ -253,6 +253,9 @@ def match_league_topk(src_name, src_category, src_sport, ts_pool, k=5):
             # v1.22 P0-B: alias canonical hit + country 不一致 → 强降
             if base >= 0.95 and loc < 0.4 and not sr_intl and not ts_intl:
                 base = 0.55
+            # v1.29 P0-2: alias canonical hit + country 高匹配 → 加分让 country 一致 ts_id 赢
+            elif base >= 0.95 and loc >= 0.8:
+                base = min(base + 0.015, 0.999)
             else:
                 if not sr_intl and not ts_intl:
                     if loc < 0.4:
