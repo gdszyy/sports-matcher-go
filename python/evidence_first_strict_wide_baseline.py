@@ -202,7 +202,7 @@ def main():
 
     if args.use_real_pool:
         ts_pool_base = json.load(open(os.path.join(DATA_DIR, 'ts_pool_real.json')))
-        # v1.27 P0: 真实池里 country 一半空，用 ts_name 推断填补，让 country 二次约束生效
+        # v1.27 P0: 真实池里 country 一半空，用 ts_name 推断填补
         infer_count = 0
         for t in ts_pool_base:
             if not t.get('country'):
@@ -233,11 +233,26 @@ def main():
     sr_eval_set, sr_gt, sr_ts_stubs = build_eval_set('SR', sr_entries, sr_leagues)
     ls_eval_set, ls_gt, ls_ts_stubs = build_eval_set('LS', ls_entries, ls_leagues)
 
-    # 把 stub 加入候选池（仅当 ts_id 不在池里）
-    for s in sr_ts_stubs + ls_ts_stubs:
-        if s['id'] not in ts_ids:
-            ts_pool.append(s)
-            ts_ids.add(s['id'])
+    # v1.28 use_real_pool 时跳过 stub 注入（stub 跟真实池同名 ts_id 冲突
+    # 让算法误选真实那个 → GT 指向 stub 旧 ts_id 算误匹配）
+    # 改：真实池模式下不补 stub，GT ts_id 不在真实池就标 GT_DRIFT（KnownLeagueMap 注释过时）
+    if not args.use_real_pool:
+        for s in sr_ts_stubs + ls_ts_stubs:
+            if s['id'] not in ts_ids:
+                ts_pool.append(s)
+                ts_ids.add(s['id'])
+    else:
+        # 检测并打印 drift（GT ts_id 不在真实池）
+        sr_drift = [e for e in sr_entries if e['ts_id'] not in ts_ids]
+        ls_drift = [e for e in ls_entries if e['ts_id'] not in ts_ids]
+        if sr_drift:
+            print(f'[wide_baseline] SR GT_DRIFT: {len(sr_drift)} 条 GT ts_id 不在真实池（KnownLeagueMap 注释过时）：')
+            for e in sr_drift[:10]:
+                print(f'  - {e["src_key"]} → {e["ts_id"]} ({e["comment"]})')
+        if ls_drift:
+            print(f'[wide_baseline] LS GT_DRIFT: {len(ls_drift)} 条 GT ts_id 不在真实池：')
+            for e in ls_drift[:10]:
+                print(f'  - {e["src_key"]} → {e["ts_id"]} ({e["comment"]})')
 
     print(f'TS 候选池: {len(ts_pool)} (base={len(ts_pool_base)} +GT={len(extra_from_gt)} '
           f'+SR_stub={sum(1 for s in sr_ts_stubs if s["id"] not in {t["id"] for t in ts_pool_base} - set(extra_from_gt.keys()))} '
