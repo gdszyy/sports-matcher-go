@@ -178,3 +178,99 @@ v1.18-v1.19 Python eval 算法**不等价**于 Go 真实算法，两个错位导
 - ✅ 算法字典（LeagueAliasGroup）是 strict 评估的核心组件 —— 没它，NBA / CBA 这类缩写联赛直接 0%
 - ✅ Basketball schema 不一致是数据层而非算法层问题（fetch 脚本对 ts_bb_competition 处理与 DB schema 不一致）
 - ⚠️ **当前评估集太小**（SR 14 / LS 2 evaluable），无法暴露真实算法弱点 —— 需要扩 ground_truth 评估集
+
+---
+
+## v1.21 — 扩评估集到 100 GT 联赛（真实算法分布出现）
+
+### 评估集扩展
+
+- 旧：14 个 SR + 2 个 LS evaluable（来自 sr_ts_ground_truth.json 反推）
+- 新：**36 SR + 64 LS = 100 个 GT 联赛**（来自 KnownLeagueMap + KnownLSLeagueMap 全量）
+- 候选池：99 个 TS 联赛（ts_leagues_2026 base + GT 反推 + KnownMap stub 补齐）
+- 评估脚本：`python/evidence_first_strict_wide_baseline.py`
+
+### v1.21 真实结果（这才是 mapping 替算法答题的真实掩盖幅度）
+
+```
+[SR] 36 个 GT 联赛 (basketball=10 + football=26)
+  整体 Top-K：
+  K=1     2      3      4      5      6      7
+  66.7%   69.4%  72.2%  77.8%  80.6%  80.6%  80.6%
+
+  football:   Top-1 80.8% / Top-5 88.5%
+  basketball: Top-1 30.0% / Top-5 60.0%
+
+[LS] 64 个 GT 联赛 (basketball=23 + football=41)
+  整体 Top-K：
+  K=1     2      3      4      5      6      7
+  53.1%   60.9%  65.6%  67.2%  71.9%  71.9%  71.9%
+
+  football:   Top-1 73.2% / Top-5 87.8%
+  basketball: Top-1 17.4% / Top-5 43.5%
+```
+
+### 真实算法弱点（按数量排序）
+
+#### 1. Alias canonical 跨地域错配（最严重）
+
+LeagueAliasGroup 把同名异国联赛归到同一 canonical，给 0.98 高分但选错 ts_id：
+
+- `Russian Premier League` → Top-1 `English Premier League` 0.98（同 canonical "Premier League"）
+- `League One (England)` → Top-1 `English Football League One` 0.98（不是 GT 的那个 ts_id）
+- `League Two (England)` → Top-1 `English Football League Two` 0.98（同样问题）
+- `2. Bundesliga (Germany)` → Top-1 `Bundesliga` 0.94（级别归并错误）
+- `Serie A (Brazil)` → Top-1 `Italian Serie A` 0.98（跨国同名）
+
+**根因**：alias group 内部多个 ts_id 都映射到同 canonical，算法选了字母序第一个或字面相似度最高的。
+**修复方向（v1.22+）**：alias 命中后要拿 country/category 二次排序，不能直接返回 0.98 给所有候选。
+
+#### 2. Basketball 严重失效（30% / 17% Top-1）
+
+- `EuroLeague` → Top-1 `B1 League` 0.615（缺 alias group）
+- `Lega Basket Serie A` → Top-1 `Lega Nazionale Pallacanestro Serie A2`（级别歧义）
+- `Liga ACB` → Top-1 `Liga Profesional de Baloncesto`（缩写未识别）
+
+**根因**：64 条 alias group 中 basketball 联赛覆盖严重不足（NBA / CBA / Euroleague 等只有缩写但没覆盖更多变体）。
+**修复方向（v1.22+）**：扩 basketball alias group（数量上 football=约 50 个 group / basketball=约 5 个）
+
+#### 3. 跨国杯赛 / 跨国联赛同名
+
+- `CONMEBOL Copa Libertadores` → 错选其它联赛（无 country 加持）
+- `Copa Sudamericana` → 错选 Brazilian Serie A（"Copa" 在 Brazilian 高频）
+
+**根因**：杯赛本身就跨国，category="" 时算法只有 name；当前 country bonus 公式不足以强约束。
+**修复方向**：同 v1.19 提的 **B. country 强约束**。
+
+### Top-K 衰减说明
+
+| K | SR overall | LS overall |
+|---|-----------|-----------|
+| 1 | 66.7% | 53.1% |
+| 5 | 80.6% | 71.9% |
+| 7 | 80.6% | 71.9% |
+
+Top-5 到 Top-7 都是平稳的 — 说明剩下的 ~20-30% 误匹配是**算法根本看不见 GT**（不在 Top-7 候选里），不是排序错位。这是真正的召回缺口。
+
+### 实际意义
+
+| 指标 | 默认 (KnownMap 命中) | strict (算法真实) | mapping 自证掩盖幅度 |
+|------|---------------------|-------------------|---------------------|
+| SR Top-1 | 100% | **66.7%** | **-33.3 pp** |
+| LS Top-1 | 100% | **53.1%** | **-46.9 pp** |
+| basketball SR Top-1 | 100% | **30.0%** | **-70.0 pp** |
+| basketball LS Top-1 | 100% | **17.4%** | **-82.6 pp** |
+
+**Basketball 算法实际严重失效 — KnownMap 在替算法答 80+% 的题。**
+
+这是 v1.18 决议要量化的真实数字。
+
+### v1.22+ 改进路线（基于 v1.21 数据）
+
+| 优先级 | 改进点 | 影响 |
+|--------|--------|------|
+| **P0** | **basketball alias group 大扩** | basketball Top-1: 17~30% → ~70%+ |
+| **P0** | **alias canonical 命中后用 country 二次排序** | football Top-1: 73~80% → ~90%+ |
+| P1 | country/category 强约束公式（base + 加性 0.15 而非乘性折扣） | 杯赛、跨国同名进一步改善 |
+| P1 | LeagueAliasGroup 按 level/region 拆细（区分 League One England vs League One Australia） | 5-10 pp 改善 |
+| P2 | LS↔TS 链路单独审视（53.1% 比 SR 低 13 pp） | LS 数据质量或 alias 字典对 LS 名变体覆盖不足 |

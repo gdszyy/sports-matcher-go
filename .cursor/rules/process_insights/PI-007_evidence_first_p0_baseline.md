@@ -1,6 +1,6 @@
 ---
 id: "PI-007"
-version: "v1.6"
+version: "v1.7"
 last_updated: "2026-05-16"
 author: "Manus AI, Claude Cowork"
 related_modules: ["python", "python/data", "docs", "internal/matcher"]
@@ -157,3 +157,22 @@ Top-1 100% 不代表算法完美 —— 是评估集太小（14 个有 GT 的联
 ### CI 哨兵补充
 
 `scripts/check_no_mapping_in_eval.py` 在 v1.19 已就位。`python/data/league_alias_groups.json` 不进哨兵扫描范围（它是算法字典 export，不是 SR_ID→TS_ID mapping）。
+
+## v1.7 扩评估集（2026-05-16）
+
+`python/evidence_first_strict_wide_baseline.py` — 从 KnownLeagueMap / KnownLSLeagueMap 全量构造 100 个 GT 联赛评估集。GT 由人工标注的 mapping 表提供，不进算法路径（符合 v1.18 决议）。
+
+**v1.20 vs v1.21 数字（同算法、不同评估集）**：
+
+| 指标 | v1.20 (14 GT) | v1.21 (100 GT) | 增量评估的发现 |
+|------|---------------|----------------|---------------|
+| SR Top-1 | 100% | **66.7%** | 真实算法只能处理 2/3 的 GT 联赛 |
+| LS Top-1 | 100% | **53.1%** | LS 链路明显弱于 SR |
+| basketball SR Top-1 | 100% | **30.0%** | basketball alias 严重不足 |
+| basketball LS Top-1 | 100% | **17.4%** | basketball 在 LS 链路几乎失效 |
+
+**Mapping 自证掩盖幅度**：SR -33.3 pp / LS -46.9 pp / basketball LS -82.6 pp。
+
+**v1.22+ 改进路线**：见 `docs/evidence_first_strict_eval.md` v1.21 段。
+
+**Alias 同步 CI**：`scripts/check_alias_sync.py` + `sync_alias.py`，校验 Python alias 字典与 Go 源同步。
