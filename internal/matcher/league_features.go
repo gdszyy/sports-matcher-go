@@ -638,6 +638,23 @@ func CheckLeagueVeto(a, b LeagueFeatures, confidenceLevel string) LeagueVetoResu
 			Detail: "tier " + strconv.Itoa(a.TierNumber) + " vs tier " + strconv.Itoa(b.TierNumber),
 		}
 	}
+	// v1.23 P0-C: 一侧 tier 数字 >= 2 另一侧未检测（tier=0，隐式视为 tier 1）→ 仍 veto。
+	// 典型场景：「Bundesliga」(tier=0 → 隐式 1) vs 「2. Bundesliga」(tier=2)
+	// 修：之前两侧都需 > 0 才 veto，导致顶级联赛 vs 次级名变体高分误配。
+	if a.TierNumber == 0 && b.TierNumber >= 2 {
+		return LeagueVetoResult{
+			Vetoed: true,
+			Reason: VetoTierNumber,
+			Detail: "implicit tier 1 vs tier " + strconv.Itoa(b.TierNumber),
+		}
+	}
+	if b.TierNumber == 0 && a.TierNumber >= 2 {
+		return LeagueVetoResult{
+			Vetoed: true,
+			Reason: VetoTierNumber,
+			Detail: "tier " + strconv.Itoa(a.TierNumber) + " vs implicit tier 1",
+		}
+	}
 
 	return LeagueVetoResult{Vetoed: false, Reason: VetoNone}
 }

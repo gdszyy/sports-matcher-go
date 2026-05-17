@@ -684,5 +684,42 @@
       "Polish Basketball League",
       "Polish PLK"
     ]
+  },
+  {
+    "canonical": "CONMEBOL Libertadores",
+    "aliases": [
+      "CONMEBOL Libertadores",
+      "Copa Libertadores",
+      "CONMEBOL Copa Libertadores",
+      "Libertadores",
+      "Copa CONMEBOL Libertadores"
+    ]
+  },
+  {
+    "canonical": "Copa Sudamericana",
+    "aliases": [
+      "Copa Sudamericana",
+      "CONMEBOL Sudamericana",
+      "CONMEBOL Copa Sudamericana",
+      "Sudamericana",
+      "South American Cup"
+    ]
+  },
+  {
+    "canonical": "AFC Champions League",
+    "aliases": [
+      "AFC Champions League",
+      "Asian Champions League",
+      "AFC Champions League Elite",
+      "ACL"
+    ]
+  },
+  {
+    "canonical": "CAF Champions League",
+    "aliases": [
+      "CAF Champions League",
+      "African Champions League",
+      "Africa Champions League"
+    ]
   }
 ]

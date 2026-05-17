@@ -171,6 +171,56 @@ def is_international(s):
     return bool(re.search(r'international|world|continental|cup', s.lower()))
 
 
+
+
+# v1.23 tier 提取 + veto，等价 Go league_features.go::extractTierNumber + CheckLeagueVeto
+_TIER_PATTERNS = [
+    # "2. Bundesliga", "3. Liga", "2.Bundesliga"
+    (re.compile(r'(\d+)\s*\.?\s*(?:bundesliga|liga|division|tier)', re.I), lambda m: int(m.group(1))),
+    # "Liga 1", "Liga 2", "League 1", "Series A2"
+    (re.compile(r'(?:liga|league|serie|series)\s+(\d+)', re.I), lambda m: int(m.group(1))),
+    # "Premier League 2", "Premier League 3"
+    (re.compile(r'premier league\s+(\d+)', re.I), lambda m: int(m.group(1))),
+    # "Serie A2", "Serie B3" — 罗马数字 + 数字组合
+    (re.compile(r'serie\s+[a-z]+(\d+)', re.I), lambda m: int(m.group(1))),
+    # 通用 "N. xxx" 前缀（德国式）
+    (re.compile(r'^\s*(\d+)\.\s*\w', re.I), lambda m: int(m.group(1))),
+]
+
+
+def extract_tier_number(name):
+    """从联赛名提取层级数字，0 表示未检测到（隐式 1 级或非分级赛事）。"""
+    if not name:
+        return 0
+    for pat, fn in _TIER_PATTERNS:
+        m = pat.search(name)
+        if m:
+            try:
+                v = fn(m)
+                if 1 <= v <= 9:
+                    return v
+            except (ValueError, IndexError):
+                pass
+    return 0
+
+
+def check_tier_veto(name_a, name_b):
+    """两侧 tier 冲突即 veto。
+    - 两侧都 >0 且不同 → veto
+    - 一侧 =0 另一侧 >=2 → veto（隐式 tier 1 vs N）
+    """
+    ta = extract_tier_number(name_a)
+    tb = extract_tier_number(name_b)
+    if ta > 0 and tb > 0 and ta != tb:
+        return True
+    if ta == 0 and tb >= 2:
+        return True
+    if tb == 0 and ta >= 2:
+        return True
+    return False
+
+
+
 # ─────────────────────────────────────────────────────────────────────────────
 # 联赛匹配（strict mode）
 # ─────────────────────────────────────────────────────────────────────────────
@@ -188,6 +238,9 @@ def match_league_topk(src_name, src_category, src_sport, ts_pool, k=5):
             continue
         ts_name = ts.get('name', '')
         ts_country = '' if is_basketball else (ts.get('country', '') or '')
+        # v1.23: tier veto（等价 Go CheckLeagueVeto P0-C）
+        if check_tier_veto(src_name, ts_name):
+            continue
         base = league_name_similarity_with_alias(src_name, ts_name)
         if src_category and ts_country:
             loc = name_similarity(src_category, ts_country)

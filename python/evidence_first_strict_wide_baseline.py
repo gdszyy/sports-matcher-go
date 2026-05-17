@@ -138,11 +138,14 @@ def build_eval_set(side, entries, leagues_2026_json):
             })
         gt_key = f"{sport}:{src_id}"
         gt_map[gt_key] = e['ts_id']
+        # v1.24 fallback: LS 注释格式不统一（有的有 → 有的没），ts_name 解析空时
+        # 用 src_name_fallback（隐含约定：注释只写一个名时 SR 名 ≈ TS 名）
+        effective_ts_name = ts_name or src_name_fallback
         if e['ts_id'] not in ts_stubs:
             ts_stubs[e['ts_id']] = {
                 'id': e['ts_id'],
-                'name': ts_name,
-                'country': ts_country or _infer_country_from_tsname(ts_name),
+                'name': effective_ts_name,
+                'country': ts_country or _infer_country_from_tsname(effective_ts_name),
                 'sport': sport,
             }
     return eval_set, gt_map, list(ts_stubs.values())

@@ -772,6 +772,44 @@ var staticLeagueAliasGroups = []LeagueAliasGroup{
 			"Polish PLK",
 		},
 	},
+	// ── 跨国杯赛 alias groups (v1.24) ──────────────────────────────────────
+	{
+		CanonicalName: "CONMEBOL Libertadores",
+		Aliases: []string{
+			"CONMEBOL Libertadores",
+			"Copa Libertadores",
+			"CONMEBOL Copa Libertadores",
+			"Libertadores",
+			"Copa CONMEBOL Libertadores",
+		},
+	},
+	{
+		CanonicalName: "Copa Sudamericana",
+		Aliases: []string{
+			"Copa Sudamericana",
+			"CONMEBOL Sudamericana",
+			"CONMEBOL Copa Sudamericana",
+			"Sudamericana",
+			"South American Cup",
+		},
+	},
+	{
+		CanonicalName: "AFC Champions League",
+		Aliases: []string{
+			"AFC Champions League",
+			"Asian Champions League",
+			"AFC Champions League Elite",
+			"ACL",
+		},
+	},
+	{
+		CanonicalName: "CAF Champions League",
+		Aliases: []string{
+			"CAF Champions League",
+			"African Champions League",
+			"Africa Champions League",
+		},
+	},
 }
 
 // ─────────────────────────────────────────────────────────────────────────────

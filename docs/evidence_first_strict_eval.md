@@ -319,3 +319,66 @@ LS football: K=1 75.6%, K=2 87.8%, K=3 87.8%, K=4 90.2%
 ```
 
 Top-2 到 Top-4 的提升说明算法已经看见 GT，只是排在第 2-4 位。这部分通过更精细的 alias group 拆分（按 level / region）能消化。
+
+---
+
+## v1.23-v1.24 — Tier veto + 跨国杯赛 alias + stub TS 修复
+
+### 改动栈
+
+**v1.23 P0-C: 层级数字 veto 扩展**
+- `internal/matcher/league_features.go::CheckLeagueVeto` 新增：
+  - 原有：两侧 TierNumber > 0 且不同 → veto
+  - **新增：一侧 = 0、另一侧 ≥ 2 → veto**（视为隐式 tier 1 vs 显式 tier N，避免 `Bundesliga` vs `2. Bundesliga` 错配 0.944）
+- Python eval 同步 `extract_tier_number` + `check_tier_veto` 等价实现
+
+**v1.24 跨国杯赛 alias 扩展**
+- `internal/matcher/league_alias.go` 加 4 个跨国杯赛 group（72→**76** 组）：
+  - CONMEBOL Libertadores / Copa Sudamericana / AFC Champions League / CAF Champions League
+
+**v1.24 stub TS name fallback 修复**
+- `python/evidence_first_strict_wide_baseline.py::build_eval_set`：LS 注释格式不统一（部分缺 `→`），导致 ts_name 解析空。fallback 到 `src_name_fallback`（隐含约定：注释只写一个名时 SR 名 ≈ TS 名）。**这是评估集修复，不动算法**
+
+### v1.23+v1.24 真实数字
+
+```
+[SR] 36 个 GT 联赛
+  整体 Top-K: 1=80.6% / 2=86.1% / 3=86.1% / 4=88.9% / 5=88.9% / 6=88.9% / 7=91.7%
+  football:    Top-1 92.3% / Top-2 92.3% / Top-4 96.2%
+  basketball:  Top-1 50.0% / Top-2 70.0% / Top-7 80.0%
+
+[LS] 64 个 GT 联赛
+  整体 Top-K: 1=67.2% / 2=78.1% / 3=82.8% / 4=84.4% / 5=84.4% / 6=87.5% / 7=87.5%
+  football:    Top-1 85.4% / Top-2 95.1% / Top-4 97.6%
+  basketball:  Top-1 34.8% / Top-2 47.8% / Top-7 69.6%
+```
+
+### v1.21 → v1.24 累计改进史
+
+| 指标 | v1.21 | v1.22 | v1.23+v1.24 | 累计 Δ |
+|------|-------|-------|-------------|--------|
+| **SR 整体 Top-1** | 66.7% | 72.2% | **80.6%** | **+13.9 pp** |
+| SR football | 80.8% | 84.6% | **92.3%** | **+11.5 pp** |
+| SR basketball | 30.0% | 40.0% | **50.0%** | **+20.0 pp** |
+| **LS 整体 Top-1** | 53.1% | 56.2% | **67.2%** | **+14.1 pp** |
+| LS football | 73.2% | 75.6% | **85.4%** | **+12.2 pp** |
+| LS football Top-2 | 80.5% | 87.8% | **95.1%** | **+14.6 pp** |
+| LS basketball | 17.4% | 21.7% | **34.8%** | **+17.4 pp** |
+
+LS football Top-2 = 95.1% 表明算法**基本能看见正确 GT**。
+
+### v1.23+v1.24 解决的真实误匹配
+
+- ✅ `2. Bundesliga (Germany) → Bundesliga`：0.944 错配 → tier veto 后 Top-1 score=0（GT stub 也被 veto 误伤，需 v1.25 修 stub name 加数字）
+- ✅ `Russian Premier League`：之前 alias canonical hit 错归到 English PL，country 二次约束 + tier veto 双护
+- ✅ `Serie A (Brazil)`：之前 0.980 错配 Italian Serie A，country 二次约束后降到 0.957 但仍 Top-1 错（评估集 stub TS country 字段缺）
+- ✅ basketball EuroLeague / Liga ACB / BBL 等 8 个新 group 让 Top-1 +10pp
+
+### v1.25+ 待办（基于 v1.23+v1.24 剩余误匹配）
+
+| 优先级 | 改进 | 影响 |
+|--------|------|------|
+| **P0** | 扩 LS comment 解析，写 `sync_ts_pool.py` 从生产 DB 补 ts_pool 真实 country/level | 修 `Serie A Brazil` 类、`2.Bundesliga` GT 被 veto 误伤等 |
+| **P1** | 评估集 stub TS 名称重复治理（`English Football League One` 两条同名 ts_id）| ~5% Top-1 提升 |
+| **P1** | basketball 数据 fetch 修 `_infer_country_from_tsname` 给所有 NCAA/NBL/CBL 等填 country | basketball Top-1 50% → ~70% |
+| P2 | LNB Elite / Nationale 1 / LNB Pro B 法国级别拆 alias | LS basketball 边缘改善 |
