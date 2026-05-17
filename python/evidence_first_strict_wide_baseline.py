@@ -31,9 +31,10 @@ from evidence_first_strict_baseline import (  # noqa: E402
 
 
 def _infer_country_from_tsname(tsname):
-    """从 TS 联赛名提取国别词作为 stub 的 country 字段（v1.22 P0-B 配套）。"""
+    """从 TS 联赛名提取国别词作为 stub 的 country 字段（v1.22 P0-B 配套, v1.27 大扩）。"""
     t = (tsname or '').lower()
     for kw, cn in [
+        # 形容词形式
         ('spanish', 'Spain'), ('italian', 'Italy'), ('english', 'England'),
         ('german', 'Germany'), ('french', 'France'), ('dutch', 'Netherlands'),
         ('portuguese', 'Portugal'), ('belgian', 'Belgium'), ('turkish', 'Turkey'),
@@ -42,8 +43,39 @@ def _infer_country_from_tsname(tsname):
         ('norwegian', 'Norway'), ('austrian', 'Austria'), ('greek', 'Greece'),
         ('brazilian', 'Brazil'), ('argentine', 'Argentina'), ('mexican', 'Mexico'),
         ('chinese', 'China'), ('japanese', 'Japan'), ('korean', 'Korea'),
+        ('egyptian', 'Egypt'), ('danish', 'Denmark'), ('finnish', 'Finland'),
+        ('israeli', 'Israel'), ('ukrainian', 'Ukraine'), ('czech', 'Czech Republic'),
+        ('australian', 'Australia'), ('peruvian', 'Peru'), ('chilean', 'Chile'),
+        ('colombian', 'Colombia'), ('saudi', 'Saudi Arabia'), ('uruguay', 'Uruguay'),
+        # 国家名前缀
+        ('england', 'England'), ('spain', 'Spain'), ('italy', 'Italy'),
+        ('france', 'France'), ('germany', 'Germany'), ('netherlands', 'Netherlands'),
+        ('portugal', 'Portugal'), ('belgium', 'Belgium'), ('turkey', 'Turkey'),
+        ('russia', 'Russia'), ('poland', 'Poland'), ('croatia', 'Croatia'),
+        ('scotland', 'Scotland'), ('sweden', 'Sweden'), ('norway', 'Norway'),
+        ('austria', 'Austria'), ('greece', 'Greece'), ('brazil', 'Brazil'),
+        ('argentina', 'Argentina'), ('mexico', 'Mexico'), ('china', 'China'),
+        ('japan', 'Japan'), ('korea', 'Korea'), ('united states', 'USA'),
+        ('usa', 'USA'), ('denmark', 'Denmark'), ('finland', 'Finland'),
+        ('ireland', 'Ireland'), ('australia', 'Australia'),
+        # 国际组织
         ('uefa', 'International'), ('conmebol', 'International'), ('fifa', 'International'),
-        ('egyptian', 'Egypt'),
+        ('afc ', 'International'), ('caf ', 'International'),
+        ('concacaf', 'International'), ('eurol', 'International'),
+        # 主流 ASCII 缩写 → 推断
+        ('mls', 'USA'), ('nba', 'USA'), ('nfl', 'USA'), ('nhl', 'USA'),
+        ('cba', 'China'), ('jpl', 'Japan'),
+        # NL/AU 等次级关键词
+        ('jupiler', 'Belgium'),     # Jupiler Pro League
+        ('eredivisie', 'Netherlands'),
+        ('allsvenskan', 'Sweden'),
+        ('superliga', 'Denmark'),
+        ('eliteserien', 'Norway'),
+        ('bundesliga', 'Germany'),
+        ('serie a', 'Italy'),        # 默认 — Brazil 等会被前缀覆盖
+        ('ligue', 'France'),
+        ('la liga', 'Spain'),
+        ('laliga', 'Spain'),
     ]:
         if kw in t:
             return cn
@@ -170,7 +202,15 @@ def main():
 
     if args.use_real_pool:
         ts_pool_base = json.load(open(os.path.join(DATA_DIR, 'ts_pool_real.json')))
-        print(f'[wide_baseline] real pool: {len(ts_pool_base)} TS leagues (production DB)')
+        # v1.27 P0: 真实池里 country 一半空，用 ts_name 推断填补，让 country 二次约束生效
+        infer_count = 0
+        for t in ts_pool_base:
+            if not t.get('country'):
+                c = _infer_country_from_tsname(t.get('name', ''))
+                if c:
+                    t['country'] = c
+                    infer_count += 1
+        print(f'[wide_baseline] real pool: {len(ts_pool_base)} TS leagues (production DB), country inferred for {infer_count} (v1.27 P0)')
     else:
         ts_pool_base = json.load(open(os.path.join(DATA_DIR, 'ts_leagues_2026.json')))
     gt_records = json.load(open(os.path.join(DATA_DIR, 'sr_ts_ground_truth.json')))
