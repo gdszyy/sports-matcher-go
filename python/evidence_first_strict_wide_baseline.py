@@ -28,6 +28,28 @@ from evidence_first_strict_baseline import (  # noqa: E402
 )
 
 
+
+
+def _infer_country_from_tsname(tsname):
+    """从 TS 联赛名提取国别词作为 stub 的 country 字段（v1.22 P0-B 配套）。"""
+    t = (tsname or '').lower()
+    for kw, cn in [
+        ('spanish', 'Spain'), ('italian', 'Italy'), ('english', 'England'),
+        ('german', 'Germany'), ('french', 'France'), ('dutch', 'Netherlands'),
+        ('portuguese', 'Portugal'), ('belgian', 'Belgium'), ('turkish', 'Turkey'),
+        ('russian', 'Russia'), ('polish', 'Poland'), ('croatian', 'Croatia'),
+        ('scottish', 'Scotland'), ('swiss', 'Switzerland'), ('swedish', 'Sweden'),
+        ('norwegian', 'Norway'), ('austrian', 'Austria'), ('greek', 'Greece'),
+        ('brazilian', 'Brazil'), ('argentine', 'Argentina'), ('mexican', 'Mexico'),
+        ('chinese', 'China'), ('japanese', 'Japan'), ('korean', 'Korea'),
+        ('uefa', 'International'), ('conmebol', 'International'), ('fifa', 'International'),
+        ('egyptian', 'Egypt'),
+    ]:
+        if kw in t:
+            return cn
+    return ''
+
+
 def extract_known_map_with_comments(go_filepath, var_name):
     with open(go_filepath) as f:
         src = f.read()
@@ -120,7 +142,7 @@ def build_eval_set(side, entries, leagues_2026_json):
             ts_stubs[e['ts_id']] = {
                 'id': e['ts_id'],
                 'name': ts_name,
-                'country': '',
+                'country': ts_country or _infer_country_from_tsname(ts_name),
                 'sport': sport,
             }
     return eval_set, gt_map, list(ts_stubs.values())
@@ -154,7 +176,7 @@ def main():
         tname = r.get('ts_competition_name', '')
         sport = r.get('sport', 'football')
         if tid and tid not in ts_ids and tid not in extra_from_gt:
-            extra_from_gt[tid] = {'id': tid, 'name': tname, 'country': '', 'sport': sport}
+            extra_from_gt[tid] = {'id': tid, 'name': tname, 'country': _infer_country_from_tsname(tname), 'sport': sport}
     ts_pool = list(ts_pool_base) + list(extra_from_gt.values())
     ts_ids = {t['id'] for t in ts_pool}
 

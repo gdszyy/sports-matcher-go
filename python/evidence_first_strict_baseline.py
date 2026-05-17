@@ -176,12 +176,11 @@ def is_international(s):
 # ─────────────────────────────────────────────────────────────────────────────
 
 def match_league_topk(src_name, src_category, src_sport, ts_pool, k=5):
-    """v1.20: 用 league_name_similarity_with_alias 等价 Go 真实算法。
+    """v1.20-v1.22: 用 league_name_similarity_with_alias 等价 Go 真实算法。
 
-    Basketball 注意：Go 侧 ts_bb_competition 表无 host_country 字段（见
-    internal/db/ts_competition.go:36-39），CountryName 恒为 ""。Python eval 数据
-    fetch 时却给 basketball 填了 country_id hash（脏数据），所以这里对 basketball
-    强制忽略 country 字段，与 Go 行为等价。"""
+    v1.22 P0-B 增量：alias canonical hit (base>=0.95) 但 country 完全不同
+    （非 international 且 locSim<0.4）→ 强降到 0.55（低于 NAME_LOW 阈值），
+    避免 Russian Premier League / Serie A Brazil 这类跨地域错配。"""
     is_basketball = (src_sport == 'basketball')
     scored = []
     for ts in ts_pool:
@@ -192,13 +191,19 @@ def match_league_topk(src_name, src_category, src_sport, ts_pool, k=5):
         base = league_name_similarity_with_alias(src_name, ts_name)
         if src_category and ts_country:
             loc = name_similarity(src_category, ts_country)
-            if not is_international(src_category) and not is_international(ts_country):
-                if loc < 0.4:
-                    continue
-            if loc >= 0.6:
-                base = base * 0.75 + 0.25 * loc
-            elif loc >= 0.4:
-                base = base * (0.70 + 0.30 * (loc - 0.4) / 0.2)
+            sr_intl = is_international(src_category)
+            ts_intl = is_international(ts_country)
+            # v1.22 P0-B: alias canonical hit + country 不一致 → 强降
+            if base >= 0.95 and loc < 0.4 and not sr_intl and not ts_intl:
+                base = 0.55
+            else:
+                if not sr_intl and not ts_intl:
+                    if loc < 0.4:
+                        continue
+                if loc >= 0.6:
+                    base = base * 0.75 + 0.25 * loc
+                elif loc >= 0.4:
+                    base = base * (0.70 + 0.30 * (loc - 0.4) / 0.2)
         if base < 0.30:
             continue
         scored.append((base, ts))

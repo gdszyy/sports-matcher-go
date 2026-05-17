@@ -604,5 +604,85 @@
       "Finalissima",
       "CONMEBOL-UEFA Cup of Champions"
     ]
+  },
+  {
+    "canonical": "EuroLeague",
+    "aliases": [
+      "EuroLeague",
+      "Euroleague",
+      "Euroleague Basketball",
+      "Turkish Airlines EuroLeague",
+      "Turkish Airlines Euroleague"
+    ]
+  },
+  {
+    "canonical": "Liga ACB",
+    "aliases": [
+      "Liga ACB",
+      "Liga ACB Endesa",
+      "Liga Endesa",
+      "ACB",
+      "Spanish ACB",
+      "Spanish Liga ACB"
+    ]
+  },
+  {
+    "canonical": "Lega Basket Serie A",
+    "aliases": [
+      "Lega Basket Serie A",
+      "LBA",
+      "Italian Lega Basket Serie A",
+      "Lega Nazionale Pallacanestro Serie A",
+      "Basketball Serie A",
+      "Italian Basketball Serie A",
+      "Serie A Italian Basketball"
+    ]
+  },
+  {
+    "canonical": "Basketball Bundesliga",
+    "aliases": [
+      "Basketball Bundesliga",
+      "BBL",
+      "German Basketball Bundesliga",
+      "easyCredit BBL",
+      "German BBL"
+    ]
+  },
+  {
+    "canonical": "VTB United League",
+    "aliases": [
+      "VTB United League",
+      "VTB League",
+      "VTB",
+      "Russian VTB"
+    ]
+  },
+  {
+    "canonical": "B.League B1",
+    "aliases": [
+      "B.League B1",
+      "B1 League",
+      "B1",
+      "Japan B.League B1",
+      "Japan B1 League"
+    ]
+  },
+  {
+    "canonical": "BNXT League",
+    "aliases": [
+      "BNXT League",
+      "BNXT",
+      "BNXT Pro League"
+    ]
+  },
+  {
+    "canonical": "Orlen Basket Liga",
+    "aliases": [
+      "Orlen Basket Liga",
+      "PLK",
+      "Polska Liga Koszykowki",
+      "Polish Basketball League",
+      "Polish PLK"
+    ]
   }
 ]

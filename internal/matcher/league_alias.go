@@ -691,6 +691,87 @@ var staticLeagueAliasGroups = []LeagueAliasGroup{
 			"CONMEBOL-UEFA Cup of Champions",
 		},
 	},
+	// ── Basketball alias groups (v1.22 P0-A 大扩) ──────────────────────────
+	{
+		CanonicalName: "EuroLeague",
+		Aliases: []string{
+			"EuroLeague",
+			"Euroleague",
+			"Euroleague Basketball",
+			"Turkish Airlines EuroLeague",
+			"Turkish Airlines Euroleague",
+		},
+	},
+	{
+		CanonicalName: "Liga ACB",
+		Aliases: []string{
+			"Liga ACB",
+			"Liga ACB Endesa",
+			"Liga Endesa",
+			"ACB",
+			"Spanish ACB",
+			"Spanish Liga ACB",
+		},
+	},
+	{
+		CanonicalName: "Lega Basket Serie A",
+		Aliases: []string{
+			"Lega Basket Serie A",
+			"LBA",
+			"Italian Lega Basket Serie A",
+			"Lega Nazionale Pallacanestro Serie A",
+			"Basketball Serie A",
+			"Italian Basketball Serie A",
+			"Serie A Italian Basketball",
+		},
+	},
+	{
+		CanonicalName: "Basketball Bundesliga",
+		Aliases: []string{
+			"Basketball Bundesliga",
+			"BBL",
+			"German Basketball Bundesliga",
+			"easyCredit BBL",
+			"German BBL",
+		},
+	},
+	{
+		CanonicalName: "VTB United League",
+		Aliases: []string{
+			"VTB United League",
+			"VTB League",
+			"VTB",
+			"Russian VTB",
+		},
+	},
+	{
+		CanonicalName: "B.League B1",
+		Aliases: []string{
+			"B.League B1",
+			"B1 League",
+			"B1",
+			"Japan B.League B1",
+			"Japan B1 League",
+		},
+	},
+	{
+		CanonicalName: "BNXT League",
+		Aliases: []string{
+			"BNXT League",
+			"BNXT",
+			"BNXT Pro League",
+		},
+	},
+	{
+		CanonicalName: "Orlen Basket Liga",
+		Aliases: []string{
+			"Orlen Basket Liga",
+			"PLK",
+			"Polska Liga Koszykowki",
+			"Polish Basketball League",
+			"Polish PLK",
+		},
+	},
 }
 
 // ─────────────────────────────────────────────────────────────────────────────

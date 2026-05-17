@@ -274,3 +274,48 @@ Top-5 到 Top-7 都是平稳的 — 说明剩下的 ~20-30% 误匹配是**算法
 | P1 | country/category 强约束公式（base + 加性 0.15 而非乘性折扣） | 杯赛、跨国同名进一步改善 |
 | P1 | LeagueAliasGroup 按 level/region 拆细（区分 League One England vs League One Australia） | 5-10 pp 改善 |
 | P2 | LS↔TS 链路单独审视（53.1% 比 SR 低 13 pp） | LS 数据质量或 alias 字典对 LS 名变体覆盖不足 |
+
+---
+
+## v1.22 — P0 改进落地（basketball alias 大扩 + alias canonical country 二次约束）
+
+### 改动栈
+
+**P0-A**: `internal/matcher/league_alias.go` 加 8 个 basketball group：EuroLeague / Liga ACB / Lega Basket Serie A / Basketball Bundesliga / VTB United League / B.League B1 / BNXT League / Orlen Basket Liga（64 组 → 72 组）。`python/data/league_alias_groups.json` 由 `scripts/sync_alias.py` 自动同步。
+
+**P0-B**: `internal/matcher/league.go::leagueNameScore`：alias canonical hit (`base >= 0.95`) 但 `sr.CategoryName` 与 `ts.CountryName` 完全不同（非 international 且 `geoSimilarity < 0.4`）→ 强降到 0.55（低于 NAME_LOW 阈值）。等价 Python eval 同步在 `match_league_topk`。
+
+### v1.22 vs v1.21 数字对比
+
+| 指标 | v1.21 | v1.22 | Δ |
+|------|-------|-------|---|
+| **SR 整体 Top-1** | 66.7% | **72.2%** | **+5.5 pp** |
+| SR football Top-1 | 80.8% | **84.6%** | +3.8 pp |
+| SR basketball Top-1 | 30.0% | **40.0%** | **+10.0 pp** |
+| **LS 整体 Top-1** | 53.1% | **56.2%** | **+3.1 pp** |
+| LS football Top-1 | 73.2% | **75.6%** | +2.4 pp |
+| LS football Top-2 | 80.5% | **87.8%** | **+7.3 pp** |
+| LS basketball Top-1 | 17.4% | **21.7%** | +4.3 pp |
+
+**LS football Top-2 +7.3 pp** 是 country 二次约束最显著的信号 —— 错配的 Russian Premier League / Serie A Brazil 被降到 0.55 后，真 GT 上浮到 Top-2。
+
+### v1.22 已修复的真实误匹配（举例）
+
+- `League Two (England) GT=9k82rekhygrepzj` → v1.21 选 `English Football League Two` (0.985 alias canonical 错 ts_id) → v1.22 仍 Top-1 错（这里 Top-1 名称完全相同，是评估集 stub 数据问题，非算法问题）
+- `Serie A (Brazil) GT=4zp5rzgh9zq82w1` → v1.21 选 `Italian Serie A` (0.980 跨国错配) → v1.22 仍选 `Italian Serie D` 0.957（Brazil 没在 stub 里被推断，仍有改进空间）
+
+### v1.22 未解决（v1.23+ 待办）
+
+- `League One/Two England` 等：评估集 stub TS 有两个 ts_id 名称完全相同（`English Football League One` 重复在 alias group 里），算法无法区分。需要 TS 真实数据补全 country / level 字段。
+- `Copa Sudamericana` → `Brazilian Serie A`：杯赛 category 空 + Brazilian 字面相似度高。需要扩 alias 覆盖南美杯赛。
+- `2. Bundesliga (Germany)` → `Bundesliga` 0.944：alias 把不同级别归到同 canonical，但 P0-B veto 不触发（base 0.944 < 0.95 阈值）。把阈值降到 0.90 ？需评估副作用。
+- basketball Top-1 40% / 17%：仍偏低，因为评估集 stub TS 数据没 country/level 信息。
+
+### Top-K 衰减仍有救空间
+
+```
+SR football: K=1 84.6%, K=2 84.6%, K=3 84.6%, K=4 88.5%
+LS football: K=1 75.6%, K=2 87.8%, K=3 87.8%, K=4 90.2%
+```
+
+Top-2 到 Top-4 的提升说明算法已经看见 GT，只是排在第 2-4 位。这部分通过更精细的 alias group 拆分（按 level / region）能消化。
