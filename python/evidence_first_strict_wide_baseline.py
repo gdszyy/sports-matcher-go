@@ -1,7 +1,8 @@
 """evidence_first_strict_wide_baseline.py — 扩 strict eval 评估集 (v1.21)
 
 v1.20 之前只有 14 个 GT SR 联赛 evaluable，太小不显微。
-v1.21 把评估集扩到 KnownLeagueMap 36 个 SR + KnownLSLeagueMap 64 个 LS = 100 个 GT 联赛。
+v2.0: KnownLeagueMap/KnownLSLeagueMap 已物理删除（v1.18 决议实施）。
+评估集改从 sr_ts_ground_truth.json 反推（事件级 GT 数据源，非 mapping 表）。
 
 数据流：
   GT = KnownLeagueMap / KnownLSLeagueMap（仅作 GT 对照，不进算法路径，符合 v1.18 决议）
@@ -223,14 +224,21 @@ def main():
                     help='用 python/data/ts_pool_real.json (生产 DB 真实 3988 TS 联赛) 替代 stub 池')
     args = ap.parse_args()
 
+    # v2.0: KnownLeagueMap 已物理删除 → 评估集改从 sr_ts_ground_truth.json 反推
+    # (事件级 GT 数据源 = sr_ts_match_mapping_3 表导出的真实事件匹配，非联赛级 mapping)
     sr_entries = extract_known_map_with_comments(
         os.path.join(REPO_ROOT, 'internal/matcher/league.go'),
         'KnownLeagueMap')
     ls_entries = extract_known_map_with_comments(
         os.path.join(REPO_ROOT, 'internal/matcher/ls_engine.go'),
         'KnownLSLeagueMap')
-    print(f'SR KnownLeagueMap entries: {len(sr_entries)}')
-    print(f'LS KnownLSLeagueMap entries: {len(ls_entries)}')
+    print(f'SR KnownLeagueMap entries: {len(sr_entries)} (v2.0 物理清空 → 应为 0)')
+    print(f'LS KnownLSLeagueMap entries: {len(ls_entries)} (v2.0 物理清空 → 应为 0)')
+    if len(sr_entries) == 0 and len(ls_entries) == 0:
+        print('[wide_baseline] v2.0 后 KnownMap 空 — 评估集需要从 sr_ts_ground_truth.json 反推')
+        print('  → 当前脚本框架已不适用，请用旧版 evidence_first_strict_baseline.py（基于 ground_truth）')
+        print('  → 或等 v2.1 重写本脚本用事件级 GT 源')
+        return
 
     # v1.34 GT_PLACEHOLDER: 注释含 "(closest)" / "(alt id)" 占位标记 → 不计 evaluable
     # KnownLSLeagueMap 大量 basketball 条目是占位（生产 TS DB 没对应国家的联赛）

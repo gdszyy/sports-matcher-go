@@ -7,75 +7,17 @@ import (
 	"github.com/gdszyy/sports-matcher/internal/db"
 )
 
-// KnownLeagueMap SR tournament_id → TS competition_id 已知映射
-// key 格式: "<sport>:<tournament_id>"，避免不同运动类型的 ID 冲突
-// 所有 TS ID 均经过数据库实际查询验证
+// KnownLeagueMap 已物理清空 (v2.0)。
 //
-// ⚠️ v1.18 决议：本表仅作为**生产链路的运营 override 层**，**严禁参与算法测评循环**。
+// v1.18 决议（杜绝任何 mapping）→ v2.0 实施。
+// 之前的 36 条 entries 全部从代码移除。生产 MatchLeague 不再走 KnownMap 短路，
+// 完全依赖名称相似度 + alias 字典 + country 推断算法。
 //
-//   - 算法测评必须用 `--strict-no-mapping` flag（main.go）或 Python 侧 evidence_first_strict_baseline.py
-//     强制走纯算法路径，本表不会被查询。
-//   - 任何"把推断结果回写本表"的便利化想法（v1.18 KnownMap writeback 提议已否决）都是禁止的，
-//     mapping 会让算法效果失真（参见 PI-007 v1.4: strict 模式 SR Top-1 71.4% vs 默认 100%，
-//     mapping 自证给算法效果造的虚是 28.6 pp）。
-//   - 本表可在生产 API 中作为人工 override 使用；本表变更不算"算法改进"。
+// 完整 git history 可恢复历史 entries：git log -p internal/matcher/league.go
+// 但**不应**恢复 — mapping 让算法效果失真（PI-006 v1.18, v1.34, v1.40）。
 //
-// 关联 CI 检查：`scripts/check_no_mapping_in_eval.sh` — 测评代码引用 KnownLeagueMap
-// 直接命中路径会 fail（白名单需加 `// ALLOW-KNOWNMAP-IN-EVAL` 行尾注释）。
-var KnownLeagueMap = map[string]string{
-	// ── 足球热门 ──────────────────────────────────────────────────────────
-	"football:sr:tournament:17":  "jednm9whz0ryox8", // Premier League (English Premier League)
-	"football:sr:tournament:8":   "vl7oqdehlyr510j", // LaLiga (Spanish La Liga)
-	"football:sr:tournament:35":  "gy0or5jhg6qwzv3", // Bundesliga
-	"football:sr:tournament:23":  "4zp5rzghp5q82w1", // Serie A (Italian Serie A)
-	"football:sr:tournament:34":  "yl5ergphnzr8k0o", // Ligue 1 (French Ligue 1)
-	"football:sr:tournament:7":   "z8yomo4h7wq0j6l", // UEFA Champions League
-	"football:sr:tournament:679": "56ypq3nh0xmd7oj", // UEFA Europa League
-
-	// ── 英格兰联赛体系（PI-002 新增）────────────────────────────────────
-	// SR 官方名称 "EFL League One" 在 TS 中对应 "League One"
-	// 别名索引已内置处理该差异，此处补充已知 SR tournament_id 映射
-	"football:sr:tournament:18":  "l965mkyh32r1ge4", // EFL Championship (English Football League Championship)
-	"football:sr:tournament:19":  "8y39mp1hjzmojxg", // EFL League One → English Football League One (v1.29 drift fix)
-	"football:sr:tournament:20":  "9k82rekhygrepzj", // EFL League Two → English Football League Two (v1.29 drift fix)
-	"football:sr:tournament:21":  "z318q66hv8qo9jd", // National League → English National League (v1.29 drift fix)
-	"football:sr:tournament:9":   "9vjxm8gh8gr6odg", // FA Cup (v1.29 drift fix)
-	"football:sr:tournament:22":  "56ypq3nh5xmd7oj", // EFL Cup (League Cup / Carabao Cup)
-
-	// ── 足球常规 ──────────────────────────────────────────────────────
-	// Championship 已移至英格兰联赛体系分组)
-	"football:sr:tournament:37":  "vl7oqdeheyr510j", // Eredivisie (Netherlands Eredivisie)
-	"football:sr:tournament:238": "gx7lm7phpnm2wdk", // Liga Portugal 2 (Liga Portugal 主联赛 TS 无独立 ID，用 Liga Portugal 2 代替)
-	"football:sr:tournament:52":  "8y39mp1h6jmojxg", // Super Lig (Turkish Super League)
-	"football:sr:tournament:203": "8y39mp1hwxmojxg", // Russian Premier League
-	"football:sr:tournament:11":  "9vjxm8gh22r6odg", // Belgian Pro League
-	"football:sr:tournament:242": "kn54qllhg2qvy9d", // MLS (United States Major League Soccer)
-	"football:sr:tournament:325": "4zp5rzgh9zq82w1", // Brasileiro Serie A (Brazilian Serie A)
-	"football:sr:tournament:955": "z318q66hl1qo9jd", // J1 League (Japanese J1 League)
-	"football:sr:tournament:572": "9k82rekh52repzj", // Chinese Super League (Chinese Football Super League)
-
-	// ── 足球冷门 ──────────────────────────────────────────────────────────
-	"football:sr:tournament:551": "e4wyrn4hoeq86pv", // Greek Super League
-	"football:sr:tournament:44":  "l965mkyhg0r1ge4", // Allsvenskan (Sweden Allsvenskan)
-	"football:sr:tournament:48":  "gy0or5jhj6qwzv3", // Eliteserien (Norwegian Eliteserien)
-	"football:sr:tournament:63":  "z8yomo4h92q0j6l", // Veikkausliiga (Finnish Veikkausliiga)
-
-	// ── 篮球热门 ──────────────────────────────────────────────────────────
-	"basketball:sr:tournament:132": "49vjxm8xt4q6odg", // NBA (National Basketball Association)
-	"basketball:sr:tournament:138": "jednm9ktd5ryox8", // EuroLeague (Basketball)
-
-	// ── 篮球常规 ──────────────────────────────────────────────────────────
-	"basketball:sr:tournament:390": "kjw2r02t6xqz84o", // FIBA Basketball Champions League
-	"basketball:sr:tournament:176": "v2y8m4ptx1ml074", // VTB United League
-	"basketball:sr:tournament:131": "v2y8m4ptdeml074", // Liga ACB (Spain ACB League)
-	"basketball:sr:tournament:53":  "x4zp5rzkt1r82w1", // Lega Basket Serie A
-	"basketball:sr:tournament:54":  "0l965mk8tom1ge4", // Basketball Bundesliga
-
-	// ── 篮球冷门 ──────────────────────────────────────────────────────────
-	"basketball:sr:tournament:955": "ngy0or5gteqwzv3", // CBA (Chinese Basketball Association)
-	"basketball:sr:tournament:551": "56ypq3kt0pymd7o", // NBL Australia (Australia NBL Blitz 暂用)
-	"basketball:sr:tournament:572": "8y39mp4tgkmojxg", // Liga Argentina (Argentina Liga Nacional)
-}
+// 变量 reference 保留是为了暂时不破坏所有引用代码（v2.1 会进一步删除）。
+var KnownLeagueMap = map[string]string{}
 
 // knownLeagueKey 生成已知映射的 key
 func knownLeagueKey(sport, tournamentID string) string {

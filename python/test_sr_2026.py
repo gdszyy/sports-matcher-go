@@ -37,35 +37,9 @@ DATA_DIR = os.path.join(os.path.dirname(__file__), 'data')
 # ─────────────────────────────────────────────────────────────────────────────
 # 已知联赛映射（与 internal/matcher/league.go KnownLeagueMap 保持同步）
 # ─────────────────────────────────────────────────────────────────────────────
-KNOWN_LEAGUE_MAP = {
-    # 足球热门
-    "football:sr:tournament:17":  "jednm9whz0ryox8",
-    "football:sr:tournament:8":   "vl7oqdehlyr510j",
-    "football:sr:tournament:35":  "gy0or5jhg6qwzv3",
-    "football:sr:tournament:23":  "4zp5rzghp5q82w1",
-    "football:sr:tournament:34":  "yl5ergphnzr8k0o",
-    "football:sr:tournament:7":   "z8yomo4h7wq0j6l",
-    "football:sr:tournament:679": "56ypq3nh0xmd7oj",
-    # 足球常规
-    "football:sr:tournament:18":  "l965mkyh32r1ge4",
-    "football:sr:tournament:37":  "vl7oqdeheyr510j",
-    "football:sr:tournament:238": "gx7lm7phpnm2wdk",
-    "football:sr:tournament:52":  "8y39mp1h6jmojxg",
-    "football:sr:tournament:203": "8y39mp1hwxmojxg",
-    "football:sr:tournament:11":  "9vjxm8gh22r6odg",
-    "football:sr:tournament:242": "kn54qllhg2qvy9d",
-    "football:sr:tournament:325": "4zp5rzgh9zq82w1",
-    "football:sr:tournament:955": "z318q66hl1qo9jd",
-    # 篮球热门
-    "basketball:sr:tournament:132": "49vjxm8xt4q6odg",
-    "basketball:sr:tournament:138": "jednm9ktd5ryox8",
-    # 篮球常规
-    "basketball:sr:tournament:390": "kjw2r02t6xqz84o",
-    "basketball:sr:tournament:176": "v2y8m4ptx1ml074",
-    "basketball:sr:tournament:131": "v2y8m4ptdeml074",
-    "basketball:sr:tournament:53":  "x4zp5rzkt1r82w1",
-    "basketball:sr:tournament:54":  "0l965mk8tom1ge4",
-}
+# KNOWN_LEAGUE_MAP 已物理清空 (v2.0 — 杜绝 mapping 决议)
+# 历史 entries 见 git log -p python/test_sr_2026.py
+KNOWN_LEAGUE_MAP = {}
 
 # SR 2026 联赛配置（热门+常规，与 cmd/server/main.go sr2026Leagues 保持同步）
 SR_2026_LEAGUES = [

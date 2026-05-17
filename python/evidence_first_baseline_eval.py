@@ -42,7 +42,7 @@ if SCRIPT_DIR not in sys.path:
     sys.path.insert(0, SCRIPT_DIR)
 
 from test_sr_2026 import (  # noqa: E402
-    KNOWN_LEAGUE_MAP as SR_KNOWN_LEAGUE_MAP,
+    KNOWN_LEAGUE_MAP as SR_KNOWN_LEAGUE_MAP,  # v2.0: 已物理清空，仅保留 import 不破坏代码
     SR_2026_LEAGUES,
     load_data as load_sr_data,
     match_events_for_league,

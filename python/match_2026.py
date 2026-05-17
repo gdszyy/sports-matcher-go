@@ -49,16 +49,9 @@ def get_conn(db):
 # ─────────────────────────────────────────────────────────────────────────────
 # 已知联赛映射
 # ─────────────────────────────────────────────────────────────────────────────
-KNOWN_LS_TS_MAP = {
-    "football:67":    "jednm9whz0ryox8",   # Premier League (England)
-    "football:8363":  "vl7oqdehlyr510j",   # LaLiga (Spain)
-    "football:61":    "yl5ergphnzr8k0o",   # Ligue 1 (France)
-    "football:65":    "gy0or5jhg6qwzv3",   # Bundesliga (Germany)
-    "football:66":    "kn54qllhjzqvy9d",   # 2.Bundesliga (Germany)
-    "football:32644": "z8yomo4h7wq0j6l",   # UEFA Champions League
-    "football:30444": "56ypq3nh0xmd7oj",   # UEFA Europa League
-    "basketball:64":  "49vjxm8xt4q6odg",   # NBA
-}
+# KNOWN_LS_TS_MAP 已物理清空 (v2.0 — 杜绝 mapping 决议)
+# 历史 entries 见 git log -p python/match_2026.py
+KNOWN_LS_TS_MAP = {}
 
 COUNTRY_NAME_MAP = {
     "chinese": "China", "china": "China",
