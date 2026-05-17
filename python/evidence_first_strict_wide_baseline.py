@@ -76,6 +76,32 @@ def _infer_country_from_tsname(tsname):
         ('ligue', 'France'),
         ('la liga', 'Spain'),
         ('laliga', 'Spain'),
+        # v1.38: 扩 30+ 国家关键词
+        ('laos', 'Laos'), ('vietnam', 'Vietnam'), ('thailand', 'Thailand'),
+        ('thai ', 'Thailand'), ('myanmar', 'Myanmar'), ('cambodia', 'Cambodia'),
+        ('indonesia', 'Indonesia'), ('malaysia', 'Malaysia'), ('singapore', 'Singapore'),
+        ('philippines', 'Philippines'), ('bermuda', 'Bermuda'), ('bahrain', 'Bahrain'),
+        ('qatar', 'Qatar'), ('emirates', 'UAE'), ('uae', 'UAE'),
+        ('jordan', 'Jordan'), ('lebanon', 'Lebanon'), ('iran', 'Iran'),
+        ('iraq', 'Iraq'), ('algeria', 'Algeria'), ('morocco', 'Morocco'),
+        ('tunisia', 'Tunisia'), ('nigeria', 'Nigeria'), ('south africa', 'South Africa'),
+        ('kenya', 'Kenya'), ('uganda', 'Uganda'), ('ghana', 'Ghana'),
+        ('zimbabwe', 'Zimbabwe'), ('chile', 'Chile'),
+        ('paraguay', 'Paraguay'), ('venezuela', 'Venezuela'), ('ecuador', 'Ecuador'),
+        ('bolivia', 'Bolivia'), ('honduras', 'Honduras'), ('panama', 'Panama'),
+        ('guatemala', 'Guatemala'), ('costa rica', 'Costa Rica'),
+        ('jamaica', 'Jamaica'), ('cuba', 'Cuba'), ('puerto rico', 'Puerto Rico'),
+        ('hungary', 'Hungary'), ('romania', 'Romania'), ('serbia', 'Serbia'),
+        ('bulgaria', 'Bulgaria'), ('slovakia', 'Slovakia'), ('slovenia', 'Slovenia'),
+        ('estonia', 'Estonia'), ('latvia', 'Latvia'), ('lithuania', 'Lithuania'),
+        ('georgia', 'Georgia'), ('armenia', 'Armenia'), ('belarus', 'Belarus'),
+        ('moldova', 'Moldova'), ('kazakhstan', 'Kazakhstan'),
+        ('iceland', 'Iceland'),
+        ('new zealand', 'New Zealand'), ('nz ', 'New Zealand'),
+        ('israel', 'Israel'), ('cyprus', 'Cyprus'), ('malta', 'Malta'),
+        # 特征词
+        ('chinese super league', 'China'), ('csl', 'China'),
+        ('k league', 'Korea'),
     ]:
         if kw in t:
             return cn

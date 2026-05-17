@@ -202,13 +202,13 @@ func leagueNameScore(sr *db.SRTournament, ts *db.TSCompetition) float64 {
 			!lsInternationalCategory(catNorm) && !lsInternationalCategory(cntNorm) {
 			return 0.55
 		}
-		// v1.37: alias canonical hit + ts.CountryName 空时用 default_country 二次约束
-		// 攻 Premier League (Russia/Egypt) → BPL（BPL country='' 但 default=England，跟 Russia 不同）
-		// 阈值 0.55 比 P0-B 的 0.4 严（default_country 不如 ts.country 可靠，country 字面易拐弯相似如 Egypt vs England=0.497）
-		if base >= 0.95 && ts.CountryName == "" {
+		// v1.37/v1.38: alias default_country vs src.category 二次约束（扩 base>=0.70）
+		// 攻 Premier League (Egypt) → Laos Premier League / Primera Division Apertura (Argentina) → Spanish La Liga
+		// 即便非 alias canonical hit (base<0.95)，只要 base>=NAME_MED 且 ts.country 空且 alias default 跟 src.cat 不一致 → 降到 0.55
+		if base >= 0.70 && ts.CountryName == "" && !lsInternationalCategory(catNorm) {
 			defCountry := GetLeagueAliasIndex().GetDefaultCountry(ts.Name)
-			if defCountry != "" && !lsInternationalCategory(catNorm) && !lsInternationalCategory(normalizeName(defCountry)) {
-				if geoSimilarity(catNorm, normalizeName(defCountry)) < 0.55 {
+			if defCountry != "" && !lsInternationalCategory(normalizeName(defCountry)) {
+				if geoSimilarity(catNorm, normalizeName(defCountry)) < 0.6 {
 					return 0.55
 				}
 			}

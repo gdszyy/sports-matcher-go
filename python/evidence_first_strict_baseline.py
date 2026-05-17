@@ -362,13 +362,15 @@ def match_league_topk(src_name, src_category, src_sport, ts_pool, k=5):
                     base = base * 0.75 + 0.25 * loc
                 elif loc >= 0.4:
                     base = base * (0.70 + 0.30 * (loc - 0.4) / 0.2)
-        # v1.37b: alias canonical hit + ts.country 空时用 default_country vs src.category 二次约束
-        # 攻 Premier League (Russia/Egypt) → BPL（BPL country='' 但 default=England）
-        # 用 country_equal (alias 表 + 字符串相等) 而非裸字面相似度，避免
-        # USA vs "United States" (字面 0.464) 误伤 NBA 类
-        if base >= 0.95 and not ts_country and src_category:
+        # v1.37b/v1.38: alias default_country vs src.category 二次约束（扩 base>=0.70）
+        # 攻 Premier League (Egypt) → Laos Premier League 0.912 类、
+        # Primera Division Apertura (Argentina) → Spanish La Liga 0.728 类。
+        # 用 country_equal 表（USA = United States）避免字面拐弯相似误判。
+        # v1.38 改：base>=0.70 (NAME_MED 阈值) 才检查，不只是 alias canonical hit。
+        # 既检查 alias default_country (ts.name 命中 alias) 也检查 ts.name 直接推断 country。
+        if base >= 0.70 and not ts_country and src_category and not is_international(src_category):
             def_c = alias_default_country(ts_name)
-            if def_c and not is_international(src_category) and not is_international(def_c):
+            if def_c and not is_international(def_c):
                 if not country_equal(src_category, def_c):
                     base = 0.55
         if base < 0.30:

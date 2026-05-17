@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-05-17T09:32:29.930231+00:00",
+  "generated_at": "2026-05-17T09:43:08.444501+00:00",
   "mode": "strict-no-mapping wide (v1.21)",
   "description": "Strict eval 扩到 KnownLeagueMap + KnownLSLeagueMap 全 100 个 GT 联赛",
   "ts_pool_size": 3988,
@@ -17,34 +17,16 @@
       "top2_accuracy": 0.8333,
       "top3_hits": 30,
       "top3_accuracy": 0.8333,
-      "top4_hits": 30,
-      "top4_accuracy": 0.8333,
+      "top4_hits": 31,
+      "top4_accuracy": 0.8611,
       "top5_hits": 31,
       "top5_accuracy": 0.8611,
-      "top6_hits": 31,
-      "top6_accuracy": 0.8611,
+      "top6_hits": 32,
+      "top6_accuracy": 0.8889,
       "top7_hits": 33,
       "top7_accuracy": 0.9167
     },
     "by_sport": {
-      "football": {
-        "top1_hits": 24,
-        "top1_accuracy": 0.9231,
-        "top2_hits": 24,
-        "top2_accuracy": 0.9231,
-        "top3_hits": 24,
-        "top3_accuracy": 0.9231,
-        "top4_hits": 24,
-        "top4_accuracy": 0.9231,
-        "top5_hits": 25,
-        "top5_accuracy": 0.9615,
-        "top6_hits": 25,
-        "top6_accuracy": 0.9615,
-        "top7_hits": 25,
-        "top7_accuracy": 0.9615,
-        "evaluable": 26,
-        "total_leagues": 26
-      },
       "basketball": {
         "top1_hits": 6,
         "top1_accuracy": 0.6,
@@ -56,12 +38,30 @@
         "top4_accuracy": 0.6,
         "top5_hits": 6,
         "top5_accuracy": 0.6,
-        "top6_hits": 6,
-        "top6_accuracy": 0.6,
+        "top6_hits": 7,
+        "top6_accuracy": 0.7,
         "top7_hits": 8,
         "top7_accuracy": 0.8,
         "evaluable": 10,
         "total_leagues": 10
+      },
+      "football": {
+        "top1_hits": 24,
+        "top1_accuracy": 0.9231,
+        "top2_hits": 24,
+        "top2_accuracy": 0.9231,
+        "top3_hits": 24,
+        "top3_accuracy": 0.9231,
+        "top4_hits": 25,
+        "top4_accuracy": 0.9615,
+        "top5_hits": 25,
+        "top5_accuracy": 0.9615,
+        "top6_hits": 25,
+        "top6_accuracy": 0.9615,
+        "top7_hits": 25,
+        "top7_accuracy": 0.9615,
+        "evaluable": 26,
+        "total_leagues": 26
       }
     },
     "misclassified": [
@@ -91,17 +91,17 @@
         "src_cat": "Russia",
         "sport": "football",
         "gt_ts_id": "8y39mp1hwxmojxg",
-        "top1_ts_id": "9vjxm8ghp8jr6od",
-        "top1_ts_name": "Laos Premier League",
-        "top1_score": 0.9122,
+        "top1_ts_id": "kn54qllhx18qvy9",
+        "top1_ts_name": "Barbados Premier League",
+        "top1_score": 0.9113,
         "topk_ids": [
-          "9vjxm8ghp8jr6od",
           "kn54qllhx18qvy9",
           "gpxwrxlh9xdryk0",
           "kjw2r09hje5rz84",
           "8y39mp1hwxmojxg",
           "d23xmvkh4g8qg8n",
-          "d23xmvkh3o8qg8n"
+          "kdj2ryohyzgq1zp",
+          "kn54qllhx26qvy9"
         ],
         "status": "TOPN_HIT"
       },
@@ -121,7 +121,7 @@
           "gpxwrx5tgv3qyk0",
           "kdj2ry7tj0gr1zp",
           "p4jwq25t4g7q0ve",
-          "l965mk8tzx1m1ge"
+          "yl5ergyt5w8r8k0"
         ],
         "status": "MISS"
       },
@@ -171,17 +171,17 @@
         "src_cat": "Argentina",
         "sport": "basketball",
         "gt_ts_id": "8y39mp4tgkmojxg",
-        "top1_ts_id": "4zp5rzktj6nr82w",
-        "top1_ts_name": "Romania Liga 1",
-        "top1_score": 0.7766,
+        "top1_ts_id": "l965mk8t7g6m1ge",
+        "top1_ts_name": "Argentina LDD",
+        "top1_score": 0.755,
         "topk_ids": [
-          "4zp5rzktj6nr82w",
-          "vl7oqd4t4dzq510",
           "l965mk8t7g6m1ge",
           "8y39mp4t9dymojx",
           "9dn1m17tel2moep",
-          "d9k82re8twrepzj",
-          "8y39mp4tgkmojxg"
+          "4zp5rzktj6nr82w",
+          "vl7oqd4t4dzq510",
+          "8y39mp4tgkmojxg",
+          "l965mk8t49km1ge"
         ],
         "status": "TOPN_HIT"
       }
@@ -223,12 +223,6 @@
             "score": 0.9355
           },
           {
-            "ts_id": "9vjxm8ghp8jr6od",
-            "ts_name": "Laos Premier League",
-            "ts_country": "",
-            "score": 0.9122
-          },
-          {
             "ts_id": "kn54qllhx18qvy9",
             "ts_name": "Barbados Premier League",
             "ts_country": "",
@@ -239,6 +233,12 @@
             "ts_name": "English Isthmian Premier League",
             "ts_country": "England",
             "score": 0.9004
+          },
+          {
+            "ts_id": "kjw2r09hxvrz84o",
+            "ts_name": "English Northern Premier League",
+            "ts_country": "England",
+            "score": 0.8963
           }
         ],
         "topk_ids": [
@@ -246,9 +246,9 @@
           "9k82rekhw2nrepz",
           "gpxwrxlhjpryk0j",
           "gy0or5jhlv1qwzv",
-          "9vjxm8ghp8jr6od",
           "kn54qllhx18qvy9",
-          "vl7oqdeh4wr510j"
+          "vl7oqdeh4wr510j",
+          "kjw2r09hxvrz84o"
         ],
         "status": "TOP1_HIT"
       },
@@ -934,7 +934,7 @@
           {
             "ts_id": "j1l4rjnh6znm7vx",
             "ts_name": "Thai FA Cup",
-            "ts_country": "",
+            "ts_country": "Thailand",
             "score": 0.8711
           },
           {
@@ -1234,16 +1234,10 @@
         "sport": "football",
         "gt_ts_id": "8y39mp1hwxmojxg",
         "gt_in_pool": true,
-        "top1_ts_id": "9vjxm8ghp8jr6od",
-        "top1_ts_name": "Laos Premier League",
-        "top1_score": 0.9122,
+        "top1_ts_id": "kn54qllhx18qvy9",
+        "top1_ts_name": "Barbados Premier League",
+        "top1_score": 0.9113,
         "topk": [
-          {
-            "ts_id": "9vjxm8ghp8jr6od",
-            "ts_name": "Laos Premier League",
-            "ts_country": "",
-            "score": 0.9122
-          },
           {
             "ts_id": "kn54qllhx18qvy9",
             "ts_name": "Barbados Premier League",
@@ -1275,20 +1269,26 @@
             "score": 0.8508
           },
           {
-            "ts_id": "d23xmvkh3o8qg8n",
-            "ts_name": "Malaysian Premier League",
+            "ts_id": "kdj2ryohyzgq1zp",
+            "ts_name": "Bangladesh Premier League",
             "ts_country": "",
-            "score": 0.8477
+            "score": 0.8451
+          },
+          {
+            "ts_id": "kn54qllhx26qvy9",
+            "ts_name": "Mumbai Premier League",
+            "ts_country": "",
+            "score": 0.8365
           }
         ],
         "topk_ids": [
-          "9vjxm8ghp8jr6od",
           "kn54qllhx18qvy9",
           "gpxwrxlh9xdryk0",
           "kjw2r09hje5rz84",
           "8y39mp1hwxmojxg",
           "d23xmvkh4g8qg8n",
-          "d23xmvkh3o8qg8n"
+          "kdj2ryohyzgq1zp",
+          "kn54qllhx26qvy9"
         ],
         "status": "TOPN_HIT"
       },
@@ -1860,10 +1860,10 @@
             "score": 0.6611
           },
           {
-            "ts_id": "p4jwq2ghgom0veo",
-            "ts_name": "Slovenia 1.Liga",
-            "ts_country": "",
-            "score": 0.6583
+            "ts_id": "d23xmvkhog7qg8n",
+            "ts_name": "Finland Women‘s Liiga Cup",
+            "ts_country": "Finland",
+            "score": 0.6403
           }
         ],
         "topk_ids": [
@@ -1873,7 +1873,7 @@
           "9dn1m1ghpy9moep",
           "z318q66h6yxqo9j",
           "gx7lm7phnnm2wdk",
-          "p4jwq2ghgom0veo"
+          "d23xmvkhog7qg8n"
         ],
         "status": "TOP1_HIT"
       },
@@ -1992,7 +1992,7 @@
           {
             "ts_id": "jednm9kt30ryox8",
             "ts_name": "UAE league",
-            "ts_country": "",
+            "ts_country": "UAE",
             "score": 0.775
           }
         ],
@@ -2055,10 +2055,10 @@
             "score": 0.7525
           },
           {
-            "ts_id": "l965mk8tzx1m1ge",
-            "ts_name": "Belarus Pro Series",
-            "ts_country": "",
-            "score": 0.7364
+            "ts_id": "yl5ergyt5w8r8k0",
+            "ts_name": "Brazil Amapaense",
+            "ts_country": "Brazil",
+            "score": 0.7311
           }
         ],
         "topk_ids": [
@@ -2068,7 +2068,7 @@
           "gpxwrx5tgv3qyk0",
           "kdj2ry7tj0gr1zp",
           "p4jwq25t4g7q0ve",
-          "l965mk8tzx1m1ge"
+          "yl5ergyt5w8r8k0"
         ],
         "status": "MISS"
       },
@@ -2161,12 +2161,6 @@
             "score": 0.7963
           },
           {
-            "ts_id": "d9k82re8twrepzj",
-            "ts_name": "Ligat HaAl",
-            "ts_country": "",
-            "score": 0.7887
-          },
-          {
             "ts_id": "p4jwq25t09kq0ve",
             "ts_name": "Spain Segunda FEB",
             "ts_country": "Spain",
@@ -2189,16 +2183,22 @@
             "ts_name": "Liga de Baloncesto",
             "ts_country": "",
             "score": 0.7413
+          },
+          {
+            "ts_id": "kdj2ry7t293r1zp",
+            "ts_name": "Spain Regional league",
+            "ts_country": "Spain",
+            "score": 0.7366
           }
         ],
         "topk_ids": [
           "v2y8m4ptdeml074",
           "vl7oqd4tnkq510j",
-          "d9k82re8twrepzj",
           "p4jwq25t09kq0ve",
           "8y39mp4tk41mojx",
           "l965mk8t4om1ge4",
-          "kdj2ry7tkler1zp"
+          "kdj2ry7tkler1zp",
+          "kdj2ry7t293r1zp"
         ],
         "status": "TOP1_HIT"
       },
@@ -2469,22 +2469,10 @@
         "sport": "basketball",
         "gt_ts_id": "8y39mp4tgkmojxg",
         "gt_in_pool": true,
-        "top1_ts_id": "4zp5rzktj6nr82w",
-        "top1_ts_name": "Romania Liga 1",
-        "top1_score": 0.7766,
+        "top1_ts_id": "l965mk8t7g6m1ge",
+        "top1_ts_name": "Argentina LDD",
+        "top1_score": 0.755,
         "topk": [
-          {
-            "ts_id": "4zp5rzktj6nr82w",
-            "ts_name": "Romania Liga 1",
-            "ts_country": "",
-            "score": 0.7766
-          },
-          {
-            "ts_id": "vl7oqd4t4dzq510",
-            "ts_name": "Romania Liga 1",
-            "ts_country": "",
-            "score": 0.7766
-          },
           {
             "ts_id": "l965mk8t7g6m1ge",
             "ts_name": "Argentina LDD",
@@ -2504,26 +2492,38 @@
             "score": 0.7399
           },
           {
-            "ts_id": "d9k82re8twrepzj",
-            "ts_name": "Ligat HaAl",
-            "ts_country": "",
-            "score": 0.7354
+            "ts_id": "4zp5rzktj6nr82w",
+            "ts_name": "Romania Liga 1",
+            "ts_country": "Romania",
+            "score": 0.7359
+          },
+          {
+            "ts_id": "vl7oqd4t4dzq510",
+            "ts_name": "Romania Liga 1",
+            "ts_country": "Romania",
+            "score": 0.7359
           },
           {
             "ts_id": "8y39mp4tgkmojxg",
             "ts_name": "Argentina Liga Nacional",
             "ts_country": "Argentina",
             "score": 0.7283
+          },
+          {
+            "ts_id": "l965mk8t49km1ge",
+            "ts_name": "Argentina SuperCopa",
+            "ts_country": "Argentina",
+            "score": 0.707
           }
         ],
         "topk_ids": [
-          "4zp5rzktj6nr82w",
-          "vl7oqd4t4dzq510",
           "l965mk8t7g6m1ge",
           "8y39mp4t9dymojx",
           "9dn1m17tel2moep",
-          "d9k82re8twrepzj",
-          "8y39mp4tgkmojxg"
+          "4zp5rzktj6nr82w",
+          "vl7oqd4t4dzq510",
+          "8y39mp4tgkmojxg",
+          "l965mk8t49km1ge"
         ],
         "status": "TOPN_HIT"
       }
@@ -2538,12 +2538,12 @@
     "overall": {
       "top1_hits": 43,
       "top1_accuracy": 0.8269,
-      "top2_hits": 47,
-      "top2_accuracy": 0.9038,
+      "top2_hits": 48,
+      "top2_accuracy": 0.9231,
       "top3_hits": 49,
       "top3_accuracy": 0.9423,
-      "top4_hits": 50,
-      "top4_accuracy": 0.9615,
+      "top4_hits": 51,
+      "top4_accuracy": 0.9808,
       "top5_hits": 51,
       "top5_accuracy": 0.9808,
       "top6_hits": 51,
@@ -2552,24 +2552,6 @@
       "top7_accuracy": 0.9808
     },
     "by_sport": {
-      "football": {
-        "top1_hits": 35,
-        "top1_accuracy": 0.8537,
-        "top2_hits": 38,
-        "top2_accuracy": 0.9268,
-        "top3_hits": 39,
-        "top3_accuracy": 0.9512,
-        "top4_hits": 39,
-        "top4_accuracy": 0.9512,
-        "top5_hits": 40,
-        "top5_accuracy": 0.9756,
-        "top6_hits": 40,
-        "top6_accuracy": 0.9756,
-        "top7_hits": 40,
-        "top7_accuracy": 0.9756,
-        "evaluable": 41,
-        "total_leagues": 41
-      },
       "basketball": {
         "top1_hits": 8,
         "top1_accuracy": 0.7273,
@@ -2587,6 +2569,24 @@
         "top7_accuracy": 1.0,
         "evaluable": 11,
         "total_leagues": 11
+      },
+      "football": {
+        "top1_hits": 35,
+        "top1_accuracy": 0.8537,
+        "top2_hits": 39,
+        "top2_accuracy": 0.9512,
+        "top3_hits": 39,
+        "top3_accuracy": 0.9512,
+        "top4_hits": 40,
+        "top4_accuracy": 0.9756,
+        "top5_hits": 40,
+        "top5_accuracy": 0.9756,
+        "top6_hits": 40,
+        "top6_accuracy": 0.9756,
+        "top7_hits": 40,
+        "top7_accuracy": 0.9756,
+        "evaluable": 41,
+        "total_leagues": 41
       }
     },
     "misclassified": [
@@ -2606,7 +2606,7 @@
           "e4wyrn4hd4lq86p",
           "gy0or5jh42nqwzv",
           "vl7oqdeh8odr510",
-          "z318q66hj96qo9j"
+          "jednm9whz6xryox"
         ],
         "status": "TOPN_HIT"
       },
@@ -2681,12 +2681,12 @@
         "top1_score": 0.7275,
         "topk_ids": [
           "vl7oqdehlyr510j",
-          "z8yomo4h2o5q0j6",
           "p3glrw7hevqdyjv",
           "9vjxm8ghonr6odg",
-          "56ypq3nhepnmd7o",
           "56ypq3nhyymd7oj",
-          "4zp5rzghkzq82w1"
+          "yl5ergphx4r8k0o",
+          "gx7lm7ph90wm2wd",
+          "9k82rekhk6repzj"
         ],
         "status": "TOPN_HIT"
       },
@@ -2696,17 +2696,17 @@
         "src_cat": "Egypt",
         "sport": "football",
         "gt_ts_id": "56ypq3nh01nmd7o",
-        "top1_ts_id": "9vjxm8ghp8jr6od",
-        "top1_ts_name": "Laos Premier League",
-        "top1_score": 0.9122,
+        "top1_ts_id": "kn54qllhx18qvy9",
+        "top1_ts_name": "Barbados Premier League",
+        "top1_score": 0.9113,
         "topk_ids": [
-          "9vjxm8ghp8jr6od",
           "kn54qllhx18qvy9",
           "gpxwrxlh9xdryk0",
           "kjw2r09hje5rz84",
           "56ypq3nh01nmd7o",
           "d23xmvkh4g8qg8n",
-          "d23xmvkh3o8qg8n"
+          "kdj2ryohyzgq1zp",
+          "kn54qllhx26qvy9"
         ],
         "status": "TOPN_HIT"
       },
@@ -2743,10 +2743,10 @@
           "9dn1m17teoomoep",
           "e4wyrn1tnoq86pv",
           "gx7lm73tp6gr2wd",
-          "9dn1m17t16dmoep",
           "xkn54ql7t8rvy9d",
-          "v2y8m4pt44xml07",
-          "e4wyrn1t9knq86p"
+          "e4wyrn1t9knq86p",
+          "49vjxm8xt4q6odg",
+          "gy0or5gt0lzqwzv"
         ],
         "status": "TOPN_HIT"
       },
@@ -2808,12 +2808,6 @@
             "score": 0.9355
           },
           {
-            "ts_id": "9vjxm8ghp8jr6od",
-            "ts_name": "Laos Premier League",
-            "ts_country": "",
-            "score": 0.9122
-          },
-          {
             "ts_id": "kn54qllhx18qvy9",
             "ts_name": "Barbados Premier League",
             "ts_country": "",
@@ -2824,6 +2818,12 @@
             "ts_name": "English Isthmian Premier League",
             "ts_country": "England",
             "score": 0.9004
+          },
+          {
+            "ts_id": "kjw2r09hxvrz84o",
+            "ts_name": "English Northern Premier League",
+            "ts_country": "England",
+            "score": 0.8963
           }
         ],
         "topk_ids": [
@@ -2831,9 +2831,9 @@
           "9k82rekhw2nrepz",
           "gpxwrxlhjpryk0j",
           "gy0or5jhlv1qwzv",
-          "9vjxm8ghp8jr6od",
           "kn54qllhx18qvy9",
-          "vl7oqdeh4wr510j"
+          "vl7oqdeh4wr510j",
+          "kjw2r09hxvrz84o"
         ],
         "status": "TOP1_HIT"
       },
@@ -3336,7 +3336,7 @@
           {
             "ts_id": "56ypq3nhzvzmd7o",
             "ts_name": "South Africa MTN 8 Cup",
-            "ts_country": "",
+            "ts_country": "South Africa",
             "score": 0.8614
           },
           {
@@ -3600,10 +3600,10 @@
             "score": 0.7818
           },
           {
-            "ts_id": "z318q66hj96qo9j",
-            "ts_name": "Nigeria National League",
+            "ts_id": "jednm9whz6xryox",
+            "ts_name": "National Premier Soccer League",
             "ts_country": "",
-            "score": 0.778
+            "score": 0.7587
           }
         ],
         "topk_ids": [
@@ -3613,7 +3613,7 @@
           "e4wyrn4hd4lq86p",
           "gy0or5jh42nqwzv",
           "vl7oqdeh8odr510",
-          "z318q66hj96qo9j"
+          "jednm9whz6xryox"
         ],
         "status": "TOPN_HIT"
       },
@@ -3647,38 +3647,38 @@
             "score": 0.5523
           },
           {
-            "ts_id": "9dn1m1ghn09moep",
-            "ts_name": "Latvian 2.Liga",
-            "ts_country": "",
-            "score": 0.5429
-          },
-          {
-            "ts_id": "9vjxm8gh9v5r6od",
-            "ts_name": "Cambodian League 2",
-            "ts_country": "",
-            "score": 0.5311
-          },
-          {
             "ts_id": "l965mkyh37lr1ge",
             "ts_name": "Peruvian Liga 2",
             "ts_country": "Peru",
             "score": 0.5278
           },
           {
-            "ts_id": "d23xmvkh3d8qg8n",
-            "ts_name": "Thai League 2",
-            "ts_country": "",
-            "score": 0.4952
+            "ts_id": "v2y8m4zhp4ql074",
+            "ts_name": "Poland Liga 2",
+            "ts_country": "Poland",
+            "score": 0.4853
+          },
+          {
+            "ts_id": "vl7oqdehoojr510",
+            "ts_name": "Austrian Frauen Bundesliga 2",
+            "ts_country": "Austria",
+            "score": 0.4475
+          },
+          {
+            "ts_id": "kn54qllh25dqvy9",
+            "ts_name": "Korean K League 2",
+            "ts_country": "Korea",
+            "score": 0.4332
           }
         ],
         "topk_ids": [
           "kn54qllhjzqvy9d",
           "l965mkyh04r1ge4",
           "9vjxm8gh5lr6odg",
-          "9dn1m1ghn09moep",
-          "9vjxm8gh9v5r6od",
           "l965mkyh37lr1ge",
-          "d23xmvkh3d8qg8n"
+          "v2y8m4zhp4ql074",
+          "vl7oqdehoojr510",
+          "kn54qllh25dqvy9"
         ],
         "status": "TOP1_HIT"
       },
@@ -4427,38 +4427,38 @@
             "score": 0.7598
           },
           {
-            "ts_id": "p3glrw7hw1lqdyj",
-            "ts_name": "UAE League Cup",
-            "ts_country": "",
-            "score": 0.7555
-          },
-          {
-            "ts_id": "9k82rekhw2nrepz",
-            "ts_name": "BPL",
-            "ts_country": "",
-            "score": 0.7412
-          },
-          {
-            "ts_id": "gx7lm7ph9ygm2wd",
-            "ts_name": "Supercopa Paraguay",
-            "ts_country": "",
-            "score": 0.7367
-          },
-          {
             "ts_id": "p4jwq2ghegxm0ve",
             "ts_name": "Suriname Major League",
             "ts_country": "",
             "score": 0.7335
+          },
+          {
+            "ts_id": "z318q66hw82qo9j",
+            "ts_name": "Suriname Major League",
+            "ts_country": "",
+            "score": 0.7335
+          },
+          {
+            "ts_id": "z8yomo4h0llq0j6",
+            "ts_name": "National Super League",
+            "ts_country": "",
+            "score": 0.7302
+          },
+          {
+            "ts_id": "vl7oqdeh3zor510",
+            "ts_name": "Guangdong Super League",
+            "ts_country": "",
+            "score": 0.7164
           }
         ],
         "topk_ids": [
           "e4wyrn4hoeq86pv",
           "kdj2ryoh290q1zp",
           "kn54qllhxz8qvy9",
-          "p3glrw7hw1lqdyj",
-          "9k82rekhw2nrepz",
-          "gx7lm7ph9ygm2wd",
-          "p4jwq2ghegxm0ve"
+          "p4jwq2ghegxm0ve",
+          "z318q66hw82qo9j",
+          "z8yomo4h0llq0j6",
+          "vl7oqdeh3zor510"
         ],
         "status": "TOP1_HIT"
       },
@@ -4557,18 +4557,6 @@
             "score": 0.7162
           },
           {
-            "ts_id": "l965mkyhn03r1ge",
-            "ts_name": "Supercopa Ecuador",
-            "ts_country": "",
-            "score": 0.6837
-          },
-          {
-            "ts_id": "e4wyrn4hv2jq86p",
-            "ts_name": "Supercopa de Costa Rica",
-            "ts_country": "",
-            "score": 0.6692
-          },
-          {
             "ts_id": "kjw2r09hx7drz84",
             "ts_name": "Sweden Southern League",
             "ts_country": "Sweden",
@@ -4579,16 +4567,28 @@
             "ts_name": "Sweden Folksam U21 Superettan",
             "ts_country": "Sweden",
             "score": 0.6476
+          },
+          {
+            "ts_id": "kdj2ryoh5kq1zpg",
+            "ts_name": "Sweden Super Cup",
+            "ts_country": "Sweden",
+            "score": 0.6411
+          },
+          {
+            "ts_id": "gpxwrxlhzlxryk0",
+            "ts_name": "Supercopa do Brasil",
+            "ts_country": "",
+            "score": 0.6354
           }
         ],
         "topk_ids": [
           "8y39mp1hk8mojxg",
           "kdj2ryoh290q1zp",
           "kjw2r09hp8rz84o",
-          "l965mkyhn03r1ge",
-          "e4wyrn4hv2jq86p",
           "kjw2r09hx7drz84",
-          "e4wyrn4h7kq86pv"
+          "e4wyrn4h7kq86pv",
+          "kdj2ryoh5kq1zpg",
+          "gpxwrxlhzlxryk0"
         ],
         "status": "TOP1_HIT"
       },
@@ -4681,44 +4681,44 @@
             "score": 0.7767
           },
           {
-            "ts_id": "v2y8m4zh3jgql07",
-            "ts_name": "United Arab Emirates Adnoc Pro-League",
-            "ts_country": "",
-            "score": 0.7633
-          },
-          {
             "ts_id": "p4jwq2gheygm0ve",
             "ts_name": "United Premier Soccer League",
             "ts_country": "",
             "score": 0.7331
           },
           {
-            "ts_id": "yl5ergphvx3r8k0",
-            "ts_name": "United Arab Emirates Super Cup",
+            "ts_id": "j1l4rjnh4o9m7vx",
+            "ts_name": "MNLW",
             "ts_country": "",
-            "score": 0.6987
+            "score": 0.6786
           },
           {
-            "ts_id": "v2y8m4zhjxvql07",
-            "ts_name": "United Arab Emirates Dubai Football Challenge",
+            "ts_id": "gpxwrxlh58pryk0",
+            "ts_name": "IMSL",
             "ts_country": "",
-            "score": 0.6983
+            "score": 0.6619
           },
           {
-            "ts_id": "8y39mp1hjg2mojx",
-            "ts_name": "United Arab Emirates Dubai Cup",
+            "ts_id": "p4jwq2gh7lzm0ve",
+            "ts_name": "SMSC",
             "ts_country": "",
-            "score": 0.688
+            "score": 0.6619
+          },
+          {
+            "ts_id": "4zp5rzghx59q82w",
+            "ts_name": "Madagascar Pro League",
+            "ts_country": "",
+            "score": 0.6566
           }
         ],
         "topk_ids": [
           "kn54qllhg2qvy9d",
           "kn54qllh1zdqvy9",
-          "v2y8m4zh3jgql07",
           "p4jwq2gheygm0ve",
-          "yl5ergphvx3r8k0",
-          "v2y8m4zhjxvql07",
-          "8y39mp1hjg2mojx"
+          "j1l4rjnh4o9m7vx",
+          "gpxwrxlh58pryk0",
+          "p4jwq2gh7lzm0ve",
+          "4zp5rzghx59q82w"
         ],
         "status": "TOP1_HIT"
       },
@@ -4935,12 +4935,6 @@
             "score": 0.7275
           },
           {
-            "ts_id": "z8yomo4h2o5q0j6",
-            "ts_name": "Iran Division 2",
-            "ts_country": "",
-            "score": 0.7219
-          },
-          {
             "ts_id": "p3glrw7hevqdyjv",
             "ts_name": "Argentine Division 1",
             "ts_country": "Argentina",
@@ -4953,32 +4947,38 @@
             "score": 0.6975
           },
           {
-            "ts_id": "56ypq3nhepnmd7o",
-            "ts_name": "Iraq Premier Division",
-            "ts_country": "",
-            "score": 0.6922
-          },
-          {
             "ts_id": "56ypq3nhyymd7oj",
             "ts_name": "Categoría Primera A",
             "ts_country": "",
             "score": 0.6767
           },
           {
-            "ts_id": "4zp5rzghkzq82w1",
-            "ts_name": "Honduras Primera Division",
+            "ts_id": "yl5ergphx4r8k0o",
+            "ts_name": "Paraguayan Primera Division",
+            "ts_country": "Paraguay",
+            "score": 0.6679
+          },
+          {
+            "ts_id": "gx7lm7ph90wm2wd",
+            "ts_name": "Grenada Premier Division",
             "ts_country": "",
-            "score": 0.6705
+            "score": 0.6602
+          },
+          {
+            "ts_id": "9k82rekhk6repzj",
+            "ts_name": "El Salvador Primera Division",
+            "ts_country": "",
+            "score": 0.6595
           }
         ],
         "topk_ids": [
           "vl7oqdehlyr510j",
-          "z8yomo4h2o5q0j6",
           "p3glrw7hevqdyjv",
           "9vjxm8ghonr6odg",
-          "56ypq3nhepnmd7o",
           "56ypq3nhyymd7oj",
-          "4zp5rzghkzq82w1"
+          "yl5ergphx4r8k0o",
+          "gx7lm7ph90wm2wd",
+          "9k82rekhk6repzj"
         ],
         "status": "TOPN_HIT"
       },
@@ -5148,12 +5148,6 @@
             "score": 0.6485
           },
           {
-            "ts_id": "9vjxm8gh0or6odg",
-            "ts_name": "Malta First Division League",
-            "ts_country": "",
-            "score": 0.6416
-          },
-          {
             "ts_id": "gpxwrxlh167ryk0",
             "ts_name": "Japanese Futsal League",
             "ts_country": "Japan",
@@ -5164,6 +5158,12 @@
             "ts_name": "Japanese U18 Prince League",
             "ts_country": "Japan",
             "score": 0.6206
+          },
+          {
+            "ts_id": "yl5ergphg6r8k0o",
+            "ts_name": "Japanese Nadeshiko League 1",
+            "ts_country": "Japan",
+            "score": 0.6169
           }
         ],
         "topk_ids": [
@@ -5171,9 +5171,9 @@
           "gy0or5jhn76qwzv",
           "kjw2r09hn96rz84",
           "kdj2ryohywgq1zp",
-          "9vjxm8gh0or6odg",
           "gpxwrxlh167ryk0",
-          "j1l4rjnhz6wm7vx"
+          "j1l4rjnhz6wm7vx",
+          "yl5ergphg6r8k0o"
         ],
         "status": "TOP1_HIT"
       },
@@ -5225,10 +5225,10 @@
             "score": 0.6208
           },
           {
-            "ts_id": "p3glrw7hw1lqdyj",
-            "ts_name": "UAE League Cup",
+            "ts_id": "56ypq3nhlp8md7o",
+            "ts_name": "Leagues Cup",
             "ts_country": "",
-            "score": 0.6179
+            "score": 0.6132
           }
         ],
         "topk_ids": [
@@ -5238,7 +5238,7 @@
           "d23xmvkh3vgqg8n",
           "4zp5rzgh557q82w",
           "8y39mp1h3v6mojx",
-          "p3glrw7hw1lqdyj"
+          "56ypq3nhlp8md7o"
         ],
         "status": "TOP1_HIT"
       },
@@ -5262,26 +5262,14 @@
           {
             "ts_id": "d23xmvkh3d8qg8n",
             "ts_name": "Thai League 2",
-            "ts_country": "",
-            "score": 0.7871
+            "ts_country": "Thailand",
+            "score": 0.5659
           },
           {
             "ts_id": "kdj2ryohjy4q1zp",
             "ts_name": "Qatar League 2",
-            "ts_country": "",
-            "score": 0.7641
-          },
-          {
-            "ts_id": "9vjxm8gh9v5r6od",
-            "ts_name": "Cambodian League 2",
-            "ts_country": "",
-            "score": 0.6927
-          },
-          {
-            "ts_id": "kjw2r09hl1wrz84",
-            "ts_name": "Tunisian Professional League 2",
-            "ts_country": "",
-            "score": 0.6007
+            "ts_country": "Qatar",
+            "score": 0.5536
           },
           {
             "ts_id": "9vjxm8gh5lr6odg",
@@ -5290,20 +5278,32 @@
             "score": 0.5147
           },
           {
-            "ts_id": "gx7lm7ph0k2m2wd",
-            "ts_name": "Costa Rica 2.Liga",
-            "ts_country": "",
-            "score": 0.51
+            "ts_id": "vl7oqdehoojr510",
+            "ts_name": "Austrian Frauen Bundesliga 2",
+            "ts_country": "Austria",
+            "score": 0.5063
+          },
+          {
+            "ts_id": "jednm9wh5kryox8",
+            "ts_name": "Slovenia 2.Liga",
+            "ts_country": "Slovenia",
+            "score": 0.5023
+          },
+          {
+            "ts_id": "jednm9whgv2ryox",
+            "ts_name": "South Australia State League 2",
+            "ts_country": "Australia",
+            "score": 0.5006
           }
         ],
         "topk_ids": [
           "kn54qllh25dqvy9",
           "d23xmvkh3d8qg8n",
           "kdj2ryohjy4q1zp",
-          "9vjxm8gh9v5r6od",
-          "kjw2r09hl1wrz84",
           "9vjxm8gh5lr6odg",
-          "gx7lm7ph0k2m2wd"
+          "vl7oqdehoojr510",
+          "jednm9wh5kryox8",
+          "jednm9whgv2ryox"
         ],
         "status": "TOP1_HIT"
       },
@@ -5379,16 +5379,10 @@
         "sport": "football",
         "gt_ts_id": "56ypq3nh01nmd7o",
         "gt_in_pool": true,
-        "top1_ts_id": "9vjxm8ghp8jr6od",
-        "top1_ts_name": "Laos Premier League",
-        "top1_score": 0.9122,
+        "top1_ts_id": "kn54qllhx18qvy9",
+        "top1_ts_name": "Barbados Premier League",
+        "top1_score": 0.9113,
         "topk": [
-          {
-            "ts_id": "9vjxm8ghp8jr6od",
-            "ts_name": "Laos Premier League",
-            "ts_country": "",
-            "score": 0.9122
-          },
           {
             "ts_id": "kn54qllhx18qvy9",
             "ts_name": "Barbados Premier League",
@@ -5420,20 +5414,26 @@
             "score": 0.8508
           },
           {
-            "ts_id": "d23xmvkh3o8qg8n",
-            "ts_name": "Malaysian Premier League",
+            "ts_id": "kdj2ryohyzgq1zp",
+            "ts_name": "Bangladesh Premier League",
             "ts_country": "",
-            "score": 0.8477
+            "score": 0.8451
+          },
+          {
+            "ts_id": "kn54qllhx26qvy9",
+            "ts_name": "Mumbai Premier League",
+            "ts_country": "",
+            "score": 0.8365
           }
         ],
         "topk_ids": [
-          "9vjxm8ghp8jr6od",
           "kn54qllhx18qvy9",
           "gpxwrxlh9xdryk0",
           "kjw2r09hje5rz84",
           "56ypq3nh01nmd7o",
           "d23xmvkh4g8qg8n",
-          "d23xmvkh3o8qg8n"
+          "kdj2ryohyzgq1zp",
+          "kn54qllhx26qvy9"
         ],
         "status": "TOPN_HIT"
       },
@@ -5552,7 +5552,7 @@
           {
             "ts_id": "jednm9kt30ryox8",
             "ts_name": "UAE league",
-            "ts_country": "",
+            "ts_country": "UAE",
             "score": 0.775
           }
         ],
@@ -5656,12 +5656,6 @@
             "score": 0.7963
           },
           {
-            "ts_id": "d9k82re8twrepzj",
-            "ts_name": "Ligat HaAl",
-            "ts_country": "",
-            "score": 0.7887
-          },
-          {
             "ts_id": "p4jwq25t09kq0ve",
             "ts_name": "Spain Segunda FEB",
             "ts_country": "Spain",
@@ -5684,16 +5678,22 @@
             "ts_name": "Liga de Baloncesto",
             "ts_country": "",
             "score": 0.7413
+          },
+          {
+            "ts_id": "kdj2ry7t293r1zp",
+            "ts_name": "Spain Regional league",
+            "ts_country": "Spain",
+            "score": 0.7366
           }
         ],
         "topk_ids": [
           "v2y8m4ptdeml074",
           "vl7oqd4tnkq510j",
-          "d9k82re8twrepzj",
           "p4jwq25t09kq0ve",
           "8y39mp4tk41mojx",
           "l965mk8t4om1ge4",
-          "kdj2ry7tkler1zp"
+          "kdj2ry7tkler1zp",
+          "kdj2ry7t293r1zp"
         ],
         "status": "TOP1_HIT"
       },
@@ -5780,12 +5780,6 @@
             "score": 0.98
           },
           {
-            "ts_id": "gx7lm73tkor2wdk",
-            "ts_name": "B1 League",
-            "ts_country": "",
-            "score": 0.8746
-          },
-          {
             "ts_id": "yl5ergytpjkr8k0",
             "ts_name": "Russia MLBL",
             "ts_country": "Russia",
@@ -5814,16 +5808,22 @@
             "ts_name": "Russia VTB United League U21",
             "ts_country": "Russia",
             "score": 0.8066
+          },
+          {
+            "ts_id": "4zp5rzkt1g8r82w",
+            "ts_name": "Russia UBA League",
+            "ts_country": "Russia",
+            "score": 0.7992
           }
         ],
         "topk_ids": [
           "v2y8m4ptx1ml074",
-          "gx7lm73tkor2wdk",
           "yl5ergytpjkr8k0",
           "l965mk8tz91m1ge",
           "gy0or5gt1klqwzv",
           "vl7oqd4tn5pq510",
-          "vl7oqd4to0q510j"
+          "vl7oqd4to0q510j",
+          "4zp5rzkt1g8r82w"
         ],
         "status": "TOP1_HIT"
       },
@@ -5922,38 +5922,38 @@
             "score": 0.807
           },
           {
-            "ts_id": "9dn1m17t16dmoep",
-            "ts_name": "Tunisia Nationale 1",
-            "ts_country": "",
-            "score": 0.7364
-          },
-          {
             "ts_id": "xkn54ql7t8rvy9d",
             "ts_name": "National Basketball League",
             "ts_country": "",
             "score": 0.7195
           },
           {
-            "ts_id": "v2y8m4pt44xml07",
-            "ts_name": "Estonian League 1",
-            "ts_country": "",
-            "score": 0.7034
-          },
-          {
             "ts_id": "e4wyrn1t9knq86p",
             "ts_name": "National Basketball League1 South",
             "ts_country": "",
             "score": 0.6935
+          },
+          {
+            "ts_id": "49vjxm8xt4q6odg",
+            "ts_name": "National Basketball Association",
+            "ts_country": "",
+            "score": 0.6863
+          },
+          {
+            "ts_id": "gy0or5gt0lzqwzv",
+            "ts_name": "National Women’s Basketball League1 East",
+            "ts_country": "",
+            "score": 0.6639
           }
         ],
         "topk_ids": [
           "9dn1m17teoomoep",
           "e4wyrn1tnoq86pv",
           "gx7lm73tp6gr2wd",
-          "9dn1m17t16dmoep",
           "xkn54ql7t8rvy9d",
-          "v2y8m4pt44xml07",
-          "e4wyrn1t9knq86p"
+          "e4wyrn1t9knq86p",
+          "49vjxm8xt4q6odg",
+          "gy0or5gt0lzqwzv"
         ],
         "status": "TOPN_HIT"
       },
@@ -6162,34 +6162,16 @@
       "top2_accuracy": 0.8333,
       "top3_hits": 30,
       "top3_accuracy": 0.8333,
-      "top4_hits": 30,
-      "top4_accuracy": 0.8333,
+      "top4_hits": 31,
+      "top4_accuracy": 0.8611,
       "top5_hits": 31,
       "top5_accuracy": 0.8611,
-      "top6_hits": 31,
-      "top6_accuracy": 0.8611,
+      "top6_hits": 32,
+      "top6_accuracy": 0.8889,
       "top7_hits": 33,
       "top7_accuracy": 0.9167
     },
     "sr_by_sport": {
-      "football": {
-        "top1_hits": 24,
-        "top1_accuracy": 0.9231,
-        "top2_hits": 24,
-        "top2_accuracy": 0.9231,
-        "top3_hits": 24,
-        "top3_accuracy": 0.9231,
-        "top4_hits": 24,
-        "top4_accuracy": 0.9231,
-        "top5_hits": 25,
-        "top5_accuracy": 0.9615,
-        "top6_hits": 25,
-        "top6_accuracy": 0.9615,
-        "top7_hits": 25,
-        "top7_accuracy": 0.9615,
-        "evaluable": 26,
-        "total_leagues": 26
-      },
       "basketball": {
         "top1_hits": 6,
         "top1_accuracy": 0.6,
@@ -6201,23 +6183,41 @@
         "top4_accuracy": 0.6,
         "top5_hits": 6,
         "top5_accuracy": 0.6,
-        "top6_hits": 6,
-        "top6_accuracy": 0.6,
+        "top6_hits": 7,
+        "top6_accuracy": 0.7,
         "top7_hits": 8,
         "top7_accuracy": 0.8,
         "evaluable": 10,
         "total_leagues": 10
+      },
+      "football": {
+        "top1_hits": 24,
+        "top1_accuracy": 0.9231,
+        "top2_hits": 24,
+        "top2_accuracy": 0.9231,
+        "top3_hits": 24,
+        "top3_accuracy": 0.9231,
+        "top4_hits": 25,
+        "top4_accuracy": 0.9615,
+        "top5_hits": 25,
+        "top5_accuracy": 0.9615,
+        "top6_hits": 25,
+        "top6_accuracy": 0.9615,
+        "top7_hits": 25,
+        "top7_accuracy": 0.9615,
+        "evaluable": 26,
+        "total_leagues": 26
       }
     },
     "ls_overall": {
       "top1_hits": 43,
       "top1_accuracy": 0.8269,
-      "top2_hits": 47,
-      "top2_accuracy": 0.9038,
+      "top2_hits": 48,
+      "top2_accuracy": 0.9231,
       "top3_hits": 49,
       "top3_accuracy": 0.9423,
-      "top4_hits": 50,
-      "top4_accuracy": 0.9615,
+      "top4_hits": 51,
+      "top4_accuracy": 0.9808,
       "top5_hits": 51,
       "top5_accuracy": 0.9808,
       "top6_hits": 51,
@@ -6226,24 +6226,6 @@
       "top7_accuracy": 0.9808
     },
     "ls_by_sport": {
-      "football": {
-        "top1_hits": 35,
-        "top1_accuracy": 0.8537,
-        "top2_hits": 38,
-        "top2_accuracy": 0.9268,
-        "top3_hits": 39,
-        "top3_accuracy": 0.9512,
-        "top4_hits": 39,
-        "top4_accuracy": 0.9512,
-        "top5_hits": 40,
-        "top5_accuracy": 0.9756,
-        "top6_hits": 40,
-        "top6_accuracy": 0.9756,
-        "top7_hits": 40,
-        "top7_accuracy": 0.9756,
-        "evaluable": 41,
-        "total_leagues": 41
-      },
       "basketball": {
         "top1_hits": 8,
         "top1_accuracy": 0.7273,
@@ -6261,6 +6243,24 @@
         "top7_accuracy": 1.0,
         "evaluable": 11,
         "total_leagues": 11
+      },
+      "football": {
+        "top1_hits": 35,
+        "top1_accuracy": 0.8537,
+        "top2_hits": 39,
+        "top2_accuracy": 0.9512,
+        "top3_hits": 39,
+        "top3_accuracy": 0.9512,
+        "top4_hits": 40,
+        "top4_accuracy": 0.9756,
+        "top5_hits": 40,
+        "top5_accuracy": 0.9756,
+        "top6_hits": 40,
+        "top6_accuracy": 0.9756,
+        "top7_hits": 40,
+        "top7_accuracy": 0.9756,
+        "evaluable": 41,
+        "total_leagues": 41
       }
     }
   }

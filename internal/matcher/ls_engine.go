@@ -780,12 +780,11 @@ func lsLeagueNameScore(ls *db.LSTournament, ts *db.TSCompetition) float64 {
 			!lsInternationalCategory(catNorm) && !lsInternationalCategory(cntNorm) {
 			return 0.55
 		}
-		// v1.37 (镜像 SR): alias canonical hit + ts.CountryName 空时用 default_country 二次约束
-		// 阈值 0.55 比 P0-B 严
-		if base >= 0.95 && ts.CountryName == "" {
+		// v1.37/v1.38 (镜像 SR): alias default_country vs src.category 二次约束（扩 base>=0.70）
+		if base >= 0.70 && ts.CountryName == "" && !lsInternationalCategory(catNorm) {
 			defCountry := GetLeagueAliasIndex().GetDefaultCountry(ts.Name)
-			if defCountry != "" && !lsInternationalCategory(catNorm) && !lsInternationalCategory(normalizeName(defCountry)) {
-				if geoSimilarity(catNorm, normalizeName(defCountry)) < 0.55 {
+			if defCountry != "" && !lsInternationalCategory(normalizeName(defCountry)) {
+				if geoSimilarity(catNorm, normalizeName(defCountry)) < 0.6 {
 					return 0.55
 				}
 			}
