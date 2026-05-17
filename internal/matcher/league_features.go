@@ -71,7 +71,7 @@ var ageGroupKeywords = map[string][]string{
 	"u16":   {"u16", "under 16", "under-16", "under16", "u-16"},
 	"u15":   {"u15", "under 15", "under-15", "under15", "u-15"},
 	"u14":   {"u14", "under 14", "under-14", "under14", "u-14"},
-	"youth": {"youth", "junior", "juniors", "reserve", "reserves", "academy", "b team", "b-team", "ii team"},
+	"youth": {"youth", "junior", "juniors", "reserve", "reserves", "academy", "b team", "b-team", "ii team", "mloda", "młoda", "jovenes", "jeunes", "giovani", "primavera", "sub", "feminin"},
 }
 
 // ageGroupOrder 用于按数字从大到小检测（避免 u23 被 u2 误匹配）
@@ -180,6 +180,13 @@ var tierPatterns = []*regexp.Regexp{
 //   - 葡萄牙语/西班牙语：primera/segunda/tercera/terceira division
 //   - 德语：erste/zweite/dritte liga
 var wordTierMap = map[string]int{
+	// v1.36: Spain basketball 次级
+	"liga eba": 4, "eba": 4, "liga leb": 2, "leb": 2, "leb oro": 2, "leb plata": 3,
+	// v1.36: Italy basketball 次级
+	"serie a2 basketball": 2, "serie a2 italian basketball": 2,
+	"basketball serie b": 2, "basketball serie c": 3,
+	// v1.36: Argentina basketball 次级
+	"liga argentina b": 2, "argentina liga b": 2,
 	// 英语文字层级
 	"first division": 1, "division 1": 1, "liga 1": 1, "1 liga": 1, "1. liga": 1,
 	"second division": 2, "division 2": 2, "liga 2": 2, "2 liga": 2, "2. liga": 2,

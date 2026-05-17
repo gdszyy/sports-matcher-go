@@ -202,6 +202,14 @@ def is_international(s):
 
 
 
+# v1.36: word-based tier map（次级缩写如 "Liga EBA"=4, "Liga B"=2）
+_WORD_TIER_MAP = {
+    'liga eba': 4, 'liga leb': 2, 'leb oro': 2, 'leb plata': 3,
+    'serie a2': 2, 'serie b basketball': 2, 'serie c basketball': 3,
+    'liga argentina b': 2, 'argentina liga b': 2,
+    'serie c': 3,  # 基础 fallback
+}
+
 # v1.23/v1.35 tier 提取 + veto，等价 Go league_features.go::extractTierNumber + CheckLeagueVeto
 _TIER_PATTERNS = [
     # "2. Bundesliga", "3. Liga", "2.Bundesliga"
@@ -234,7 +242,35 @@ def extract_tier_number(name):
                     return v
             except (ValueError, IndexError):
                 pass
+    # v1.36: word-based tier map fallback
+    lower = name.lower()
+    for phrase, t in _WORD_TIER_MAP.items():
+        if phrase in lower:
+            return t
     return 0
+
+
+_YOUTH_KEYWORDS = ['youth', 'junior', 'juniors', 'reserve', 'reserves',
+                   'academy', 'b team', 'b-team', 'ii team',
+                   'mloda', 'mloda', 'jovenes', 'jeunes', 'giovani',
+                   'primavera', 'sub', 'feminin']
+
+def has_youth_marker(name):
+    """检测联赛名是否含 youth/reserve 标记词（多语言）。"""
+    if not name:
+        return False
+    lower = name.lower()
+    for kw in _YOUTH_KEYWORDS:
+        if kw in lower:
+            return True
+    return False
+
+
+def check_youth_veto(name_a, name_b):
+    """一侧含 youth/reserve 标记另一侧没有 → veto（v1.36 多语言扩展）。"""
+    a_yth = has_youth_marker(name_a)
+    b_yth = has_youth_marker(name_b)
+    return a_yth != b_yth
 
 
 def check_tier_veto(name_a, name_b):
@@ -275,6 +311,9 @@ def match_league_topk(src_name, src_category, src_sport, ts_pool, k=5):
         ts_country = ts.get('country', '') or ''
         # v1.23: tier veto（等价 Go CheckLeagueVeto P0-C）
         if check_tier_veto(src_name, ts_name):
+            continue
+        # v1.36: youth/reserve veto（多语言 mloda/junior 等）
+        if check_youth_veto(src_name, ts_name):
             continue
         # v1.32 P0: international vs domestic veto
         # 一侧含 UEFA/CONMEBOL/CAF/AFC 等关键词、另一侧无 → veto
