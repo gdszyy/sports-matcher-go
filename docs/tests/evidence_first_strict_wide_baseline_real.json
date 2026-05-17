@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-05-17T09:05:41.303973+00:00",
+  "generated_at": "2026-05-17T09:32:29.930231+00:00",
   "mode": "strict-no-mapping wide (v1.21)",
   "description": "Strict eval 扩到 KnownLeagueMap + KnownLSLeagueMap 全 100 个 GT 联赛",
   "ts_pool_size": 3988,
@@ -19,14 +19,32 @@
       "top3_accuracy": 0.8333,
       "top4_hits": 30,
       "top4_accuracy": 0.8333,
-      "top5_hits": 30,
-      "top5_accuracy": 0.8333,
+      "top5_hits": 31,
+      "top5_accuracy": 0.8611,
       "top6_hits": 31,
       "top6_accuracy": 0.8611,
       "top7_hits": 33,
       "top7_accuracy": 0.9167
     },
     "by_sport": {
+      "football": {
+        "top1_hits": 24,
+        "top1_accuracy": 0.9231,
+        "top2_hits": 24,
+        "top2_accuracy": 0.9231,
+        "top3_hits": 24,
+        "top3_accuracy": 0.9231,
+        "top4_hits": 24,
+        "top4_accuracy": 0.9231,
+        "top5_hits": 25,
+        "top5_accuracy": 0.9615,
+        "top6_hits": 25,
+        "top6_accuracy": 0.9615,
+        "top7_hits": 25,
+        "top7_accuracy": 0.9615,
+        "evaluable": 26,
+        "total_leagues": 26
+      },
       "basketball": {
         "top1_hits": 6,
         "top1_accuracy": 0.6,
@@ -44,24 +62,6 @@
         "top7_accuracy": 0.8,
         "evaluable": 10,
         "total_leagues": 10
-      },
-      "football": {
-        "top1_hits": 24,
-        "top1_accuracy": 0.9231,
-        "top2_hits": 24,
-        "top2_accuracy": 0.9231,
-        "top3_hits": 24,
-        "top3_accuracy": 0.9231,
-        "top4_hits": 24,
-        "top4_accuracy": 0.9231,
-        "top5_hits": 24,
-        "top5_accuracy": 0.9231,
-        "top6_hits": 25,
-        "top6_accuracy": 0.9615,
-        "top7_hits": 25,
-        "top7_accuracy": 0.9615,
-        "evaluable": 26,
-        "total_leagues": 26
       }
     },
     "misclassified": [
@@ -91,17 +91,17 @@
         "src_cat": "Russia",
         "sport": "football",
         "gt_ts_id": "8y39mp1hwxmojxg",
-        "top1_ts_id": "9k82rekhw2nrepz",
-        "top1_ts_name": "BPL",
-        "top1_score": 0.98,
+        "top1_ts_id": "9vjxm8ghp8jr6od",
+        "top1_ts_name": "Laos Premier League",
+        "top1_score": 0.9122,
         "topk_ids": [
-          "9k82rekhw2nrepz",
           "9vjxm8ghp8jr6od",
           "kn54qllhx18qvy9",
           "gpxwrxlh9xdryk0",
           "kjw2r09hje5rz84",
           "8y39mp1hwxmojxg",
-          "d23xmvkh4g8qg8n"
+          "d23xmvkh4g8qg8n",
+          "d23xmvkh3o8qg8n"
         ],
         "status": "TOPN_HIT"
       },
@@ -1234,16 +1234,10 @@
         "sport": "football",
         "gt_ts_id": "8y39mp1hwxmojxg",
         "gt_in_pool": true,
-        "top1_ts_id": "9k82rekhw2nrepz",
-        "top1_ts_name": "BPL",
-        "top1_score": 0.98,
+        "top1_ts_id": "9vjxm8ghp8jr6od",
+        "top1_ts_name": "Laos Premier League",
+        "top1_score": 0.9122,
         "topk": [
-          {
-            "ts_id": "9k82rekhw2nrepz",
-            "ts_name": "BPL",
-            "ts_country": "",
-            "score": 0.98
-          },
           {
             "ts_id": "9vjxm8ghp8jr6od",
             "ts_name": "Laos Premier League",
@@ -1279,16 +1273,22 @@
             "ts_name": "Congo Premier League",
             "ts_country": "",
             "score": 0.8508
+          },
+          {
+            "ts_id": "d23xmvkh3o8qg8n",
+            "ts_name": "Malaysian Premier League",
+            "ts_country": "",
+            "score": 0.8477
           }
         ],
         "topk_ids": [
-          "9k82rekhw2nrepz",
           "9vjxm8ghp8jr6od",
           "kn54qllhx18qvy9",
           "gpxwrxlh9xdryk0",
           "kjw2r09hje5rz84",
           "8y39mp1hwxmojxg",
-          "d23xmvkh4g8qg8n"
+          "d23xmvkh4g8qg8n",
+          "d23xmvkh3o8qg8n"
         ],
         "status": "TOPN_HIT"
       },
@@ -2544,14 +2544,32 @@
       "top3_accuracy": 0.9423,
       "top4_hits": 50,
       "top4_accuracy": 0.9615,
-      "top5_hits": 50,
-      "top5_accuracy": 0.9615,
+      "top5_hits": 51,
+      "top5_accuracy": 0.9808,
       "top6_hits": 51,
       "top6_accuracy": 0.9808,
       "top7_hits": 51,
       "top7_accuracy": 0.9808
     },
     "by_sport": {
+      "football": {
+        "top1_hits": 35,
+        "top1_accuracy": 0.8537,
+        "top2_hits": 38,
+        "top2_accuracy": 0.9268,
+        "top3_hits": 39,
+        "top3_accuracy": 0.9512,
+        "top4_hits": 39,
+        "top4_accuracy": 0.9512,
+        "top5_hits": 40,
+        "top5_accuracy": 0.9756,
+        "top6_hits": 40,
+        "top6_accuracy": 0.9756,
+        "top7_hits": 40,
+        "top7_accuracy": 0.9756,
+        "evaluable": 41,
+        "total_leagues": 41
+      },
       "basketball": {
         "top1_hits": 8,
         "top1_accuracy": 0.7273,
@@ -2569,24 +2587,6 @@
         "top7_accuracy": 1.0,
         "evaluable": 11,
         "total_leagues": 11
-      },
-      "football": {
-        "top1_hits": 35,
-        "top1_accuracy": 0.8537,
-        "top2_hits": 38,
-        "top2_accuracy": 0.9268,
-        "top3_hits": 39,
-        "top3_accuracy": 0.9512,
-        "top4_hits": 39,
-        "top4_accuracy": 0.9512,
-        "top5_hits": 39,
-        "top5_accuracy": 0.9512,
-        "top6_hits": 40,
-        "top6_accuracy": 0.9756,
-        "top7_hits": 40,
-        "top7_accuracy": 0.9756,
-        "evaluable": 41,
-        "total_leagues": 41
       }
     },
     "misclassified": [
@@ -2696,17 +2696,17 @@
         "src_cat": "Egypt",
         "sport": "football",
         "gt_ts_id": "56ypq3nh01nmd7o",
-        "top1_ts_id": "9k82rekhw2nrepz",
-        "top1_ts_name": "BPL",
-        "top1_score": 0.98,
+        "top1_ts_id": "9vjxm8ghp8jr6od",
+        "top1_ts_name": "Laos Premier League",
+        "top1_score": 0.9122,
         "topk_ids": [
-          "9k82rekhw2nrepz",
           "9vjxm8ghp8jr6od",
           "kn54qllhx18qvy9",
           "gpxwrxlh9xdryk0",
           "kjw2r09hje5rz84",
           "56ypq3nh01nmd7o",
-          "d23xmvkh4g8qg8n"
+          "d23xmvkh4g8qg8n",
+          "d23xmvkh3o8qg8n"
         ],
         "status": "TOPN_HIT"
       },
@@ -5379,16 +5379,10 @@
         "sport": "football",
         "gt_ts_id": "56ypq3nh01nmd7o",
         "gt_in_pool": true,
-        "top1_ts_id": "9k82rekhw2nrepz",
-        "top1_ts_name": "BPL",
-        "top1_score": 0.98,
+        "top1_ts_id": "9vjxm8ghp8jr6od",
+        "top1_ts_name": "Laos Premier League",
+        "top1_score": 0.9122,
         "topk": [
-          {
-            "ts_id": "9k82rekhw2nrepz",
-            "ts_name": "BPL",
-            "ts_country": "",
-            "score": 0.98
-          },
           {
             "ts_id": "9vjxm8ghp8jr6od",
             "ts_name": "Laos Premier League",
@@ -5424,16 +5418,22 @@
             "ts_name": "Congo Premier League",
             "ts_country": "",
             "score": 0.8508
+          },
+          {
+            "ts_id": "d23xmvkh3o8qg8n",
+            "ts_name": "Malaysian Premier League",
+            "ts_country": "",
+            "score": 0.8477
           }
         ],
         "topk_ids": [
-          "9k82rekhw2nrepz",
           "9vjxm8ghp8jr6od",
           "kn54qllhx18qvy9",
           "gpxwrxlh9xdryk0",
           "kjw2r09hje5rz84",
           "56ypq3nh01nmd7o",
-          "d23xmvkh4g8qg8n"
+          "d23xmvkh4g8qg8n",
+          "d23xmvkh3o8qg8n"
         ],
         "status": "TOPN_HIT"
       },
@@ -6164,14 +6164,32 @@
       "top3_accuracy": 0.8333,
       "top4_hits": 30,
       "top4_accuracy": 0.8333,
-      "top5_hits": 30,
-      "top5_accuracy": 0.8333,
+      "top5_hits": 31,
+      "top5_accuracy": 0.8611,
       "top6_hits": 31,
       "top6_accuracy": 0.8611,
       "top7_hits": 33,
       "top7_accuracy": 0.9167
     },
     "sr_by_sport": {
+      "football": {
+        "top1_hits": 24,
+        "top1_accuracy": 0.9231,
+        "top2_hits": 24,
+        "top2_accuracy": 0.9231,
+        "top3_hits": 24,
+        "top3_accuracy": 0.9231,
+        "top4_hits": 24,
+        "top4_accuracy": 0.9231,
+        "top5_hits": 25,
+        "top5_accuracy": 0.9615,
+        "top6_hits": 25,
+        "top6_accuracy": 0.9615,
+        "top7_hits": 25,
+        "top7_accuracy": 0.9615,
+        "evaluable": 26,
+        "total_leagues": 26
+      },
       "basketball": {
         "top1_hits": 6,
         "top1_accuracy": 0.6,
@@ -6189,24 +6207,6 @@
         "top7_accuracy": 0.8,
         "evaluable": 10,
         "total_leagues": 10
-      },
-      "football": {
-        "top1_hits": 24,
-        "top1_accuracy": 0.9231,
-        "top2_hits": 24,
-        "top2_accuracy": 0.9231,
-        "top3_hits": 24,
-        "top3_accuracy": 0.9231,
-        "top4_hits": 24,
-        "top4_accuracy": 0.9231,
-        "top5_hits": 24,
-        "top5_accuracy": 0.9231,
-        "top6_hits": 25,
-        "top6_accuracy": 0.9615,
-        "top7_hits": 25,
-        "top7_accuracy": 0.9615,
-        "evaluable": 26,
-        "total_leagues": 26
       }
     },
     "ls_overall": {
@@ -6218,14 +6218,32 @@
       "top3_accuracy": 0.9423,
       "top4_hits": 50,
       "top4_accuracy": 0.9615,
-      "top5_hits": 50,
-      "top5_accuracy": 0.9615,
+      "top5_hits": 51,
+      "top5_accuracy": 0.9808,
       "top6_hits": 51,
       "top6_accuracy": 0.9808,
       "top7_hits": 51,
       "top7_accuracy": 0.9808
     },
     "ls_by_sport": {
+      "football": {
+        "top1_hits": 35,
+        "top1_accuracy": 0.8537,
+        "top2_hits": 38,
+        "top2_accuracy": 0.9268,
+        "top3_hits": 39,
+        "top3_accuracy": 0.9512,
+        "top4_hits": 39,
+        "top4_accuracy": 0.9512,
+        "top5_hits": 40,
+        "top5_accuracy": 0.9756,
+        "top6_hits": 40,
+        "top6_accuracy": 0.9756,
+        "top7_hits": 40,
+        "top7_accuracy": 0.9756,
+        "evaluable": 41,
+        "total_leagues": 41
+      },
       "basketball": {
         "top1_hits": 8,
         "top1_accuracy": 0.7273,
@@ -6243,24 +6261,6 @@
         "top7_accuracy": 1.0,
         "evaluable": 11,
         "total_leagues": 11
-      },
-      "football": {
-        "top1_hits": 35,
-        "top1_accuracy": 0.8537,
-        "top2_hits": 38,
-        "top2_accuracy": 0.9268,
-        "top3_hits": 39,
-        "top3_accuracy": 0.9512,
-        "top4_hits": 39,
-        "top4_accuracy": 0.9512,
-        "top5_hits": 39,
-        "top5_accuracy": 0.9512,
-        "top6_hits": 40,
-        "top6_accuracy": 0.9756,
-        "top7_hits": 40,
-        "top7_accuracy": 0.9756,
-        "evaluable": 41,
-        "total_leagues": 41
       }
     }
   }

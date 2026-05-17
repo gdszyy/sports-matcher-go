@@ -200,6 +200,29 @@ def is_international(s):
         r'europe|europa|asia|africa|america|oceania', s.lower()))
 
 
+# v1.37b country alias 等价（等价 Go geoAliasIndex）
+_COUNTRY_ALIASES = {
+    'usa': 'usa', 'united states': 'usa', 'us': 'usa', 'america': 'usa',
+    'uk': 'uk', 'united kingdom': 'uk', 'britain': 'uk', 'great britain': 'uk',
+    'south korea': 'korea', 'korea republic': 'korea', 'republic of korea': 'korea', 'korea': 'korea',
+    'czech republic': 'czech', 'czech': 'czech',
+    'macedonia': 'macedonia', 'north macedonia': 'macedonia',
+    'ivory coast': 'civ', "cote d'ivoire": 'civ', 'cote divoire': 'civ',
+    'congo dr': 'cd', 'dr congo': 'cd', 'democratic republic of the congo': 'cd',
+}
+
+def country_canonical(c):
+    if not c:
+        return ''
+    n = c.strip().lower()
+    return _COUNTRY_ALIASES.get(n, n)
+
+
+def country_equal(a, b):
+    """v1.37b: country 是否同 (用 alias 表 + 字符串相等)。"""
+    return country_canonical(a) == country_canonical(b)
+
+
 
 
 # v1.36: word-based tier map（次级缩写如 "Liga EBA"=4, "Liga B"=2）
@@ -339,6 +362,15 @@ def match_league_topk(src_name, src_category, src_sport, ts_pool, k=5):
                     base = base * 0.75 + 0.25 * loc
                 elif loc >= 0.4:
                     base = base * (0.70 + 0.30 * (loc - 0.4) / 0.2)
+        # v1.37b: alias canonical hit + ts.country 空时用 default_country vs src.category 二次约束
+        # 攻 Premier League (Russia/Egypt) → BPL（BPL country='' 但 default=England）
+        # 用 country_equal (alias 表 + 字符串相等) 而非裸字面相似度，避免
+        # USA vs "United States" (字面 0.464) 误伤 NBA 类
+        if base >= 0.95 and not ts_country and src_category:
+            def_c = alias_default_country(ts_name)
+            if def_c and not is_international(src_category) and not is_international(def_c):
+                if not country_equal(src_category, def_c):
+                    base = 0.55
         if base < 0.30:
             continue
         scored.append((base, ts))
