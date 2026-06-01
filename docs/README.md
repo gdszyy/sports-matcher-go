@@ -11,6 +11,7 @@
 | `tsk-f64e9bdf-ebf` | **自底向上校验** | 实现 med 置信度场景下强制触发球员匹配反向验证机制，增强结果可靠性。 | ✅ 已验收 |
 
 ## 核心文档
+- [SR 与 LSports 数据库连接固化文档](db_connection_guide.md)
 - [PI-002: 匹配算法优化与歧义处理](.cursor/rules/process_insights/PI-002_matching_algorithm_optimization.md)
 - [2026-04-17 测试报告](docs/tests/2026-04-17_matching_test/REPORT.md)
 
